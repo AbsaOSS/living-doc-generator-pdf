@@ -1,10 +1,9 @@
-import os
 from pathlib import Path
 
 from generator.generator import PdfGenerator
 
 
-def test_pdf_generator_writes_minimal_pdf(tmp_path: Path, monkeypatch) -> None:
+def test_generator_writes_minimal_pdf(tmp_path: Path, monkeypatch) -> None:
     output_path = tmp_path / "out.pdf"
 
     monkeypatch.setenv("INPUT_OUTPUT_PATH", str(output_path))
