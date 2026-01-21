@@ -81,14 +81,14 @@ repos:
 # - Automatic pre-commit hook execution on pull requests
 # - Auto-fixes pushed directly to PR branches
 # - Automatic hook version updates
-# 
+#
 # To enable pre-commit.ci:
 # 1. Uncomment the 'ci:' section below
 # 2. Sign up at https://pre-commit.ci and enable for this repository
 # 3. The service will automatically run hooks on PRs and push fixes
 #
 # Note: This is separate from the GitHub Actions pre-commit job in test.yml
-# 
+#
 # ci:
 #   autofix_commit_msg: '[pre-commit.ci] auto fixes from pre-commit hooks'
 #   autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
