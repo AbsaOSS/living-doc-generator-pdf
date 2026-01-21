@@ -24,4 +24,3 @@ Double-check review
 - **Response format:**
   - Only add comments where risk/impact is non‑trivial.
   - Avoid repeating minor style notes already covered by default review.
-  

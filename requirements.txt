@@ -11,3 +11,4 @@ mypy==1.19.1
 mypy-extensions==1.1.0
 types-requests==2.32.4.20260107
 types-PyYAML==6.0.12.20250915
+pre-commit==4.0.1
