@@ -1,7 +1,7 @@
 # Living Documentation PDF Generator - Implementation Tasks
 
-**Specification Reference:** [SPEC.md](./SPEC.md)  
-**Version:** 1.0  
+**Specification Reference:** [SPEC.md](./SPEC.md)
+**Version:** 1.0
 **Last Updated:** 2026-01-21
 
 ---
@@ -18,8 +18,8 @@ This document breaks down the implementation of the Living Documentation PDF Gen
 
 #### Task 1.1: Define JSON Schema for pdf_ready.json
 
-**Owner:** Specification Master (complete) ✓  
-**Priority:** Critical  
+**Owner:** Specification Master (complete) ✓
+**Priority:** Critical
 **Spec Reference:** [SPEC.md § 3.2](./SPEC.md#32-pdf-ready-json-schema-v10)
 
 **Acceptance Criteria:**
@@ -60,8 +60,8 @@ with pytest.raises(ValidationError, match="Missing required field 'schema_versio
 
 #### Task 1.2: Implement Schema Validator
 
-**Owner:** Senior Developer  
-**Priority:** Critical  
+**Owner:** Senior Developer
+**Priority:** Critical
 **Spec Reference:** [SPEC.md § 3.2](./SPEC.md#32-pdf-ready-json-schema-v10), [SPEC.md § 3.1.3](./SPEC.md#313-exit-codes)
 
 **Acceptance Criteria:**
@@ -89,8 +89,8 @@ Schema validation failed: 'document_title' must be a non-empty string. Provide a
 
 #### Task 1.3: Update ActionInputs for New Contract
 
-**Owner:** Senior Developer  
-**Priority:** Critical  
+**Owner:** Senior Developer
+**Priority:** Critical
 **Spec Reference:** [SPEC.md § 3.1.1](./SPEC.md#311-action-inputs)
 
 **Acceptance Criteria:**
@@ -125,8 +125,8 @@ debug = ActionInputs.get_debug_html()          # False
 
 #### Task 2.1: Create Built-in Template Pack
 
-**Owner:** Senior Developer  
-**Priority:** Critical  
+**Owner:** Senior Developer
+**Priority:** Critical
 **Spec Reference:** [SPEC.md § 3.4.1](./SPEC.md#341-built-in-template-pack)
 
 **Acceptance Criteria:**
@@ -177,8 +177,8 @@ debug = ActionInputs.get_debug_html()          # False
 
 #### Task 2.2: Implement Template Renderer
 
-**Owner:** Senior Developer  
-**Priority:** Critical  
+**Owner:** Senior Developer
+**Priority:** Critical
 **Spec Reference:** [SPEC.md § 3.4](./SPEC.md#34-template-pack-structure)
 
 **Acceptance Criteria:**
@@ -210,8 +210,8 @@ Template error: Syntax error in 'user_story.html.jinja' at line 42. Fix template
 
 #### Task 2.3: Implement Markdown Filter
 
-**Owner:** Senior Developer  
-**Priority:** High  
+**Owner:** Senior Developer
+**Priority:** High
 **Spec Reference:** [SPEC.md § 3.4.2](./SPEC.md#342-custom-template-pack)
 
 **Acceptance Criteria:**
@@ -244,8 +244,8 @@ Template error: Syntax error in 'user_story.html.jinja' at line 42. Fix template
 
 #### Task 3.1: Implement PDF Generator
 
-**Owner:** Senior Developer  
-**Priority:** Critical  
+**Owner:** Senior Developer
+**Priority:** Critical
 **Spec Reference:** [SPEC.md § 3.5](./SPEC.md#35-asset-resolution)
 
 **Acceptance Criteria:**
@@ -275,8 +275,8 @@ Rendering failed: CSS parsing error in 'styles.css' at line 15. Fix CSS syntax.
 
 #### Task 3.2: Implement Debug HTML Output
 
-**Owner:** Senior Developer  
-**Priority:** Medium  
+**Owner:** Senior Developer
+**Priority:** Medium
 **Spec Reference:** [SPEC.md § 3.1.1](./SPEC.md#311-action-inputs)
 
 **Acceptance Criteria:**
@@ -303,8 +303,8 @@ Rendering failed: CSS parsing error in 'styles.css' at line 15. Fix CSS syntax.
 
 #### Task 3.3: Implement PDF Report Generator
 
-**Owner:** Senior Developer  
-**Priority:** High  
+**Owner:** Senior Developer
+**Priority:** High
 **Spec Reference:** [SPEC.md § 3.3](./SPEC.md#33-pdf-report-json-schema)
 
 **Acceptance Criteria:**
@@ -350,8 +350,8 @@ Rendering failed: CSS parsing error in 'styles.css' at line 15. Fix CSS syntax.
 
 #### Task 4.1: Implement Comprehensive Error Handling
 
-**Owner:** Senior Developer  
-**Priority:** Critical  
+**Owner:** Senior Developer
+**Priority:** Critical
 **Spec Reference:** [SPEC.md § 3.1.3](./SPEC.md#313-exit-codes), [SPEC.md § 5.2](./SPEC.md#52-error-handling-strategy)
 
 **Acceptance Criteria:**
@@ -377,8 +377,8 @@ Rendering failed: CSS parsing error in 'styles.css' at line 15. Fix CSS syntax.
 
 #### Task 4.2: Update Main Entrypoint
 
-**Owner:** Senior Developer  
-**Priority:** Critical  
+**Owner:** Senior Developer
+**Priority:** Critical
 **Spec Reference:** [SPEC.md § 5.1](./SPEC.md#51-processing-pipeline)
 
 **Acceptance Criteria:**
@@ -405,8 +405,8 @@ Rendering failed: CSS parsing error in 'styles.css' at line 15. Fix CSS syntax.
 
 #### Task 4.3: Create Example JSON Files
 
-**Owner:** Specification Master  
-**Priority:** High  
+**Owner:** Specification Master
+**Priority:** High
 **Spec Reference:** [SPEC.md § 3.2.4](./SPEC.md#324-complete-example)
 
 **Acceptance Criteria:**
@@ -429,8 +429,8 @@ Rendering failed: CSS parsing error in 'styles.css' at line 15. Fix CSS syntax.
 
 #### Task 5.1: Create Action Definition (action.yml)
 
-**Owner:** DevOps Engineer  
-**Priority:** Critical  
+**Owner:** DevOps Engineer
+**Priority:** Critical
 **Spec Reference:** [SPEC.md § 3.1](./SPEC.md#31-github-action-interface)
 
 **Acceptance Criteria:**
@@ -493,8 +493,8 @@ runs:
 
 #### Task 5.2: Update README with New Contract
 
-**Owner:** Senior Developer  
-**Priority:** High  
+**Owner:** Senior Developer
+**Priority:** High
 **Spec Reference:** [SPEC.md § 3.1](./SPEC.md#31-github-action-interface)
 
 **Acceptance Criteria:**
@@ -528,13 +528,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Generate PDF
         uses: AbsaOSS/living-doc-generator-pdf@v1
         with:
           pdf_ready_json: 'data/pdf_ready.json'
           output_path: 'docs/documentation.pdf'
-      
+
       - name: Upload PDF
         uses: actions/upload-artifact@v4
         with:
@@ -546,8 +546,8 @@ jobs:
 
 #### Task 5.3: Create Verification Scripts
 
-**Owner:** SDET  
-**Priority:** High  
+**Owner:** SDET
+**Priority:** High
 **Spec Reference:** [SPEC.md § 8.3](./SPEC.md#83-verification-scripts)
 
 **Acceptance Criteria:**
@@ -580,7 +580,7 @@ def main():
         "full_example.json",
         "multiple_stories.json"
     ]
-    
+
     failures = []
     for example in valid_examples:
         try:
@@ -589,7 +589,7 @@ def main():
         except Exception as e:
             print(f"✗ {example} - FAIL: {e}")
             failures.append(example)
-    
+
     if failures:
         print(f"\n{len(failures)} validation(s) failed")
         sys.exit(1)
@@ -607,8 +607,8 @@ if __name__ == "__main__":
 
 #### Task 6.1: Achieve 80%+ Unit Test Coverage
 
-**Owner:** SDET  
-**Priority:** Critical  
+**Owner:** SDET
+**Priority:** Critical
 **Spec Reference:** [SPEC.md § 8.1](./SPEC.md#81-unit-tests)
 
 **Acceptance Criteria:**
@@ -631,8 +631,8 @@ if __name__ == "__main__":
 
 #### Task 6.2: Create Integration Tests
 
-**Owner:** SDET  
-**Priority:** Critical  
+**Owner:** SDET
+**Priority:** Critical
 **Spec Reference:** [SPEC.md § 8.2](./SPEC.md#82-integration-tests)
 
 **Acceptance Criteria:**
@@ -654,8 +654,8 @@ if __name__ == "__main__":
 
 #### Task 6.3: CI/CD Workflow Integration
 
-**Owner:** DevOps Engineer  
-**Priority:** Critical  
+**Owner:** DevOps Engineer
+**Priority:** Critical
 **Spec Reference:** [SPEC.md § 6](./SPEC.md#6-phase-by-phase-acceptance-criteria)
 
 **Acceptance Criteria:**

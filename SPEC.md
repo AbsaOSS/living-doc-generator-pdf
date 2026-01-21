@@ -1,7 +1,7 @@
 # Living Documentation PDF Generator - System Specification
 
-**Version:** 1.0  
-**Last Updated:** 2026-01-21  
+**Version:** 1.0
+**Last Updated:** 2026-01-21
 **Status:** Active
 
 ---
@@ -117,16 +117,16 @@ Rendering failed: WeasyPrint could not load font 'Arial.ttf'. Verify font files 
 
 #### 3.2.1 Schema Version
 
-**Field:** `schema_version`  
-**Type:** String  
-**Required:** Yes  
-**Allowed Values:** `"1.0"`  
+**Field:** `schema_version`
+**Type:** String
+**Required:** Yes
+**Allowed Values:** `"1.0"`
 **Validation:** Must be exactly `"1.0"`
 
 #### 3.2.2 Metadata Section
 
-**Field:** `meta`  
-**Type:** Object  
+**Field:** `meta`
+**Type:** Object
 **Required:** Yes
 
 **Required Fields:**
@@ -165,8 +165,8 @@ Rendering failed: WeasyPrint could not load font 'Arial.ttf'. Verify font files 
 
 #### 3.2.3 Content Section
 
-**Field:** `content`  
-**Type:** Object  
+**Field:** `content`
+**Type:** Object
 **Required:** Yes
 
 **Required Fields:**
@@ -273,7 +273,7 @@ Rendering failed: WeasyPrint could not load font 'Arial.ttf'. Verify font files 
 
 ### 3.3 PDF Report JSON Schema
 
-**File:** `pdf_report.json`  
+**File:** `pdf_report.json`
 **Purpose:** Diagnostics and metadata about the PDF generation process
 
 **Required Fields:**
@@ -401,28 +401,28 @@ All templates receive the entire `pdf_ready.json` structure:
 
 ### 4.1 Input File
 
-**Format:** JSON (UTF-8 encoded)  
-**Size Limit:** 50 MB (soft limit for CI performance)  
+**Format:** JSON (UTF-8 encoded)
+**Size Limit:** 50 MB (soft limit for CI performance)
 **Validation:** JSON schema validation before processing
 
 ### 4.2 Output Files
 
 #### 4.2.1 PDF Document
 
-**Format:** PDF/A-1b (archival quality)  
-**Encoding:** UTF-8 for text content  
+**Format:** PDF/A-1b (archival quality)
+**Encoding:** UTF-8 for text content
 **Metadata:** Embedded (title, author, creation date)
 
 #### 4.2.2 Debug HTML
 
-**Format:** HTML5  
-**Purpose:** Intermediate rendering for debugging template issues  
+**Format:** HTML5
+**Purpose:** Intermediate rendering for debugging template issues
 **Generated:** Only if `debug_html=true`
 
 #### 4.2.3 PDF Report
 
-**Format:** JSON (UTF-8 encoded)  
-**Purpose:** Machine-readable diagnostics  
+**Format:** JSON (UTF-8 encoded)
+**Purpose:** Machine-readable diagnostics
 **Always Generated:** Yes
 
 ---
@@ -593,7 +593,7 @@ All templates receive the entire `pdf_ready.json` structure:
 
 ### 8.1 Unit Tests
 
-**Coverage Target:** ≥ 80%  
+**Coverage Target:** ≥ 80%
 **Focus:**
 - JSON schema validation logic
 - Input parsing and validation
