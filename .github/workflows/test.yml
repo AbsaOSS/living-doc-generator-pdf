@@ -49,7 +49,7 @@ jobs:
 
       - name: Run pre-commit hooks
         run: |
-          pre-commit run --all-files
+          SKIP=black,pylint,mypy pre-commit run --all-files
 
   static-code-analysis:
     runs-on: ubuntu-latest
