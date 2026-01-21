@@ -111,10 +111,10 @@ jobs:
           pip install -r requirements.txt
 
       - name: Set PYTHONPATH environment variable
-        run: echo "PYTHONPATH=${GITHUB_WORKSPACE}/living-doc-generator-pdf/living-doc-generator-pdf" >> $GITHUB_ENV
+        run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
 
       - name: Check code coverage with Pytest
-        run: pytest --cov=. -v tests/unit --cov-fail-under=80
+        run: python -m pytest --cov=. -v tests/unit --cov-fail-under=80
 
   mypy-check:
     runs-on: ubuntu-latest
