@@ -93,6 +93,7 @@ jobs:
         env:
           TAG_NAME: ${{ github.event.inputs.tag-name }}
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const tag = process.env.TAG_NAME
             const ref = `refs/tags/${tag}`;
@@ -106,7 +107,6 @@ jobs:
             });
 
             console.log(`Tag created: ${tag}`);
-          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Create Draft Release
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b

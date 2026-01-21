@@ -12,18 +12,18 @@
 ## **Contributing to Development**
 
 * Check _Issues_ logs for the desired feature or bug. Ensure that no one else is already working on it.
-    * If the feature/bug is not yet filed, please create a detailed issue first:
-        * **"Detail Your Idea or Issue"**
+  * If the feature/bug is not yet filed, please create a detailed issue first:
+    * **"Detail Your Idea or Issue"**
 * Fork the repository.
 * Begin coding. Feel free to ask questions and collaborate with us.
-    * Commit messages should reference the GitHub Issue and provide a concise description:
-        * **"#34 Implement Feature X"**
-    * Remember to include tests for your code.
+  * Commit messages should reference the GitHub Issue and provide a concise description:
+    * **"#34 Implement Feature X"**
+  * Remember to include tests for your code.
 * Once done, push to your fork and submit a Pull Request to our `master` branch:
-    * Pull Request titles should begin with the GitHub Issue number:
-        * **"45 Implementing New Analytics Feature"**
-    * Ensure the Pull Request description clearly outlines your solution.
-    * Link your PR to the relevant _Issue_.
+  * Pull Request titles should begin with the GitHub Issue number:
+    * **"45 Implementing New Analytics Feature"**
+  * Ensure the Pull Request description clearly outlines your solution.
+  * Link your PR to the relevant _Issue_.
 
 ## Branch Naming (PID:H-1)
 Branches MUST start with one of the allowed prefixes: `feature/`, `fix/`, `docs/`, `chore/`

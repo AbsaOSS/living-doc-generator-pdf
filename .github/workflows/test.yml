@@ -49,11 +49,15 @@ jobs:
         id: analyze-code
         run: |
           pylint_score=$(pylint $(git ls-files '*.py')| grep 'rated at' | awk '{print $7}' | cut -d'/' -f1)
+          if [ -z "$pylint_score" ]; then
+            echo "Failed to extract Pylint score"
+            exit 1
+          fi
           echo "score=$pylint_score" >> "$GITHUB_OUTPUT"
 
       - name: Check Pylint score
         run: |
-          score=${{ steps.analyze-code.outputs.score }}
+          score="${{ steps.analyze-code.outputs.score }}"
           echo "Pylint score is $score"
           
           if (( $(echo "$score < 9.5" | bc -l) )); then

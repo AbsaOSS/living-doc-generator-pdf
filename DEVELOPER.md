@@ -7,7 +7,7 @@
 - [Running Unit Test](#running-unit-test)
 - [Code Coverage](#code-coverage)
 - [Run Action Locally](#run-action-locally)
-- [Branch Naming Convention (PID:H-1)](#branch-naming-convention-pidh-1)
+- [Branch Naming Convention](#branch-naming-convention)
 
 ## Get Started
 
@@ -117,7 +117,7 @@ To run my[py] check on a specific file, follow the pattern `mypy <path_to_file>/
 
 Example:
 ```shell
-   mypy living_documentation_regime/living_documentation_generator.py
+   mypy living-doc-generator-pdf/generator.py --check-untyped-defs
 ``` 
 
 ## Running Unit Test
@@ -170,7 +170,7 @@ echo "Current working directory: ${PROJECT_ROOT}"
 python3 ./living-doc-generator-pdf/main.py
 ```
 
-## Branch Naming Convention (PID:H-1)
+## Branch Naming Convention
 All work branches MUST use an allowed prefix followed by a concise kebab-case descriptor (optional numeric ID):
 Allowed prefixes:
 - feature/ : new functionality & enhancements
