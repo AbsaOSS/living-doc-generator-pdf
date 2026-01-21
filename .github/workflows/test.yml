@@ -48,6 +48,9 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run pre-commit hooks
+        # Black, Pylint, and mypy are skipped here because they are run in dedicated
+        # workflow jobs (code-format-check, static-code-analysis, and mypy) to avoid
+        # duplicate execution of the same checks.
         run: |
           SKIP=black,pylint,mypy pre-commit run --all-files
 
