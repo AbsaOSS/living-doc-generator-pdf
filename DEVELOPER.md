@@ -1,6 +1,7 @@
 # Living Doc Generator PDF—for Developers
 
 - [Get Started](#get-started)
+- [Pre-commit Hooks](#pre-commit-hooks)
 - [Run Static Code Analysis](#running-static-code-analysis)
 - [Run Black Tool Locally](#run-black-tool-locally)
 - [Run mypy Tool Locally](#run-mypy-tool-locally)
@@ -24,6 +25,72 @@ Install the dependencies:
 pip install -r requirements.txt
 export PYTHONPATH=<your path>/living-doc-generator-pdf/src
 ```
+
+## Pre-commit Hooks
+
+This project uses [pre-commit](https://pre-commit.com/) to enforce code quality and consistency before commits. Pre-commit automatically runs formatting, linting, and type checking on your code.
+
+### Install Pre-commit
+
+After installing project dependencies, set up pre-commit hooks:
+
+```shell
+pip install pre-commit
+pre-commit install
+```
+
+This configures Git to run pre-commit hooks before each commit.
+
+### Using Pre-commit
+
+Pre-commit runs automatically on staged files when you commit:
+
+```shell
+git add <files>
+git commit -m "Your commit message"
+```
+
+If any hook fails, the commit will be blocked, and you'll see which checks failed. Fix the issues and try committing again.
+
+### Manual Pre-commit Runs
+
+Run pre-commit on all files manually:
+
+```shell
+pre-commit run --all-files
+```
+
+Run pre-commit on specific files:
+
+```shell
+pre-commit run --files <file1> <file2>
+```
+
+### Update Pre-commit Hooks
+
+Keep hooks up to date:
+
+```shell
+pre-commit autoupdate
+```
+
+### Pre-commit Hooks in This Project
+
+The `.pre-commit-config.yaml` configuration includes:
+- **Black**: Code formatting (line length 120, target Python 3.14)
+- **Pylint**: Static code analysis (score threshold ≥ 9.5)
+- **mypy**: Type checking
+- **General hooks**: Trailing whitespace, end-of-file fixer, YAML syntax, etc.
+
+### Skip Pre-commit (Not Recommended)
+
+In rare cases, you can skip pre-commit hooks:
+
+```shell
+git commit --no-verify -m "Your commit message"
+```
+
+Note: CI will still run all checks, so skipping pre-commit locally may result in CI failures.
 
 ## Running Static Code Analysis
 
@@ -52,7 +119,7 @@ To run Pylint on a specific file, follow the pattern `pylint <path_to_file>/<nam
 Example:
 ```shell
 pylint living-doc-generator-pdf/generator.py
-``` 
+```
 
 ## Run Black Tool Locally
 This project uses the [Black](https://github.com/psf/black) tool for code formatting.
@@ -86,7 +153,7 @@ To run Black on a specific file, follow the pattern `black <path_to_file>/<name_
 Example:
 ```shell
 black living-doc-generator-pdf/generator.py
-``` 
+```
 
 ### Expected Output
 This is the console's expected output example after running the tool:
@@ -118,7 +185,7 @@ To run my[py] check on a specific file, follow the pattern `mypy <path_to_file>/
 Example:
 ```shell
    mypy living-doc-generator-pdf/generator.py --check-untyped-defs
-``` 
+```
 
 ## Running Unit Test
 

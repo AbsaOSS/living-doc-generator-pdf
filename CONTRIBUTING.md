@@ -16,6 +16,12 @@
     * **"Detail Your Idea or Issue"**
 * Fork the repository.
 * Begin coding. Feel free to ask questions and collaborate with us.
+  * **Set up pre-commit hooks** to automatically check code quality before commits:
+    ```shell
+    pip install pre-commit
+    pre-commit install
+    ```
+    This will run automatic checks (Black, Pylint, mypy, etc.) before each commit.
   * Commit messages should reference the GitHub Issue and provide a concise description:
     * **"#34 Implement Feature X"**
   * Remember to include tests for your code.
