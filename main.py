@@ -38,9 +38,8 @@ def run() -> None:
     logger = logging.getLogger(__name__)
     logger.info("Starting 'Living Doc Generator PDF' GitHub Action")
 
-    ActionInputs.validate_inputs()
-
     try:
+        ActionInputs.validate_inputs()
         generator = PdfGenerator()
         pdf_path = generator.generate()
     except Exception as exc:  # pylint: disable=broad-except
