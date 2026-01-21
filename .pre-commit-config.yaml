@@ -41,6 +41,8 @@ repos:
         name: Fix mixed line endings
 
   # Black - Python code formatter (matching project config in pyproject.toml)
+  # Note: Hook versions (rev:) are managed by 'pre-commit autoupdate', not dependabot
+  # These are independent from the Python package versions in requirements.txt
   - repo: https://github.com/psf/black
     rev: 26.1.0
     hooks:
@@ -74,7 +76,19 @@ repos:
           - requests==2.32.5
           - PyYAML==6.0.3
 
-# CI mode: set to true when running in GitHub Actions for faster execution
+# CI mode configuration (currently disabled)
+# This section is for pre-commit.ci service integration, which provides:
+# - Automatic pre-commit hook execution on pull requests
+# - Auto-fixes pushed directly to PR branches
+# - Automatic hook version updates
+# 
+# To enable pre-commit.ci:
+# 1. Uncomment the 'ci:' section below
+# 2. Sign up at https://pre-commit.ci and enable for this repository
+# 3. The service will automatically run hooks on PRs and push fixes
+#
+# Note: This is separate from the GitHub Actions pre-commit job in test.yml
+# 
 # ci:
 #   autofix_commit_msg: '[pre-commit.ci] auto fixes from pre-commit hooks'
 #   autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
