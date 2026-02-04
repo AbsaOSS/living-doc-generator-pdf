@@ -1,114 +1,118 @@
-Copilot instructions for living-doc-generator-pdf
-
 Purpose
-This repo contains a Python 3.14 GitHub Action that compiles structured documentation into professional-looking PDF files using customizable templates.
+- Define consistent, portable rules for this repository's `.github/copilot-instructions.md`.
+- Keep rules concrete and testable (a reviewer can verify them).
+
+Structure
+- Must keep sections ordered exactly as listed in this file.
+- Prefer bullet lists over paragraphs.
+- Must write rules as constraints using: Must / Must not / Prefer / Avoid.
+- Must end the file with a single blank line.
 
 Context
-- The action is intended to run on GitHub Actions runners.
-- Inputs are read from `INPUT_*` environment variables provided by GitHub Actions.
+- Runs as a GitHub Action on GitHub-hosted runners.
+- Must read action inputs via `INPUT_*` environment variables.
+- Prefer keeping environment access at module boundaries (input layer + entrypoint).
 
 Coding guidelines
-- Keep changes small and focused
-- Prefer clear, explicit code over clever tricks
-- Do not change existing error messages or log texts without a good reason, because tests check them
-- Keep behaviour of action inputs stable unless the contract is intentionally updated
+- Must keep changes small and focused.
+- Prefer clear, explicit code over clever tricks.
+- Must keep externally-visible behavior stable unless intentionally updating the contract.
+- Must not change existing error messages or log texts without a strong reason (tests may assert exact strings).
+- Prefer keeping pure logic free of environment access where practical.
 
-Python and style
-- Target Python 3.14 or later
-- Add type hints for new public functions and classes
-- Use logging, not print
-- All Python imports must be placed at the top of the file, not inside methods or functions
+Output discipline (reduce review time)
+- Prefer concise final recaps (aim for ≤ 10 lines).
+- Avoid restating large file contents/configs/checklists; link and summarize deltas.
+- Must end code-change work with:
+  - What changed
+  - Why
+  - How to verify (commands/tests)
+- Avoid long rationale, alternatives, or big examples unless explicitly requested.
+
+PR Body Management (optional but recommended)
+- Prefer treating the PR description as a changelog and appending updates.
+- Must not rewrite/replace the entire PR body when adding new information.
+- Prefer this structure:
+  - Keep the original description at the top
+  - Add updates chronologically below (e.g., `## Update YYYY-MM-DD`)
+  - Each update references the commit hash that introduced the change
+
+Inputs (if applicable)
+- Must treat inputs as coming from environment variables with the `INPUT_` prefix.
+- Must centralize input parsing and validation in a single input layer.
+- Avoid duplicating validation logic across modules.
+
+Language and style
+- Must target Python 3.14+.
+- Must add type hints for new public functions and classes.
+- Must use logging (not `print`).
+- Must keep Python imports at the top of the file (no imports inside functions/methods).
+- Must not disable linter rules inline unless this file documents an allowed exception.
+
+String formatting
+- Must use lazy `%` formatting for logging (e.g., `logger.info("msg %s", value)`).
+- Must not use f-strings in logging calls.
+- Prefer the clearest formatting for exceptions/errors when constructing failure messages.
+
+Docstrings and comments
+- Prefer self-explanatory code over comments.
+- Prefer comments only for intent, edge cases, and the “why”.
+- Docstrings:
+  - Prefer a short summary line.
+  - Avoid tutorial-style prose and long examples.
+
+Patterns
+- Error handling contract:
+  - Prefer leaf modules raising exceptions.
+  - Must have the entry point translate failures into GitHub Action failure output.
+- Internal helpers:
+  - Prefer private helpers for internal behavior (e.g., `_helper_name`).
+- Testability:
+  - Must keep integration boundaries explicit and mockable.
+  - Must not call external APIs in unit tests.
 
 Testing
-- Use pytest with tests located in tests/
-- Test behaviour: return values, raised errors, log messages, exit codes
-- Mock environment variables; do not call external APIs in unit tests
+- Must use `pytest` with tests under `tests/`.
+- Must test behavior (return values, raised errors, log messages, exit codes).
+- Must mock environment variables in unit tests.
+- Prefer shared fixtures in `conftest.py`.
 
 Tooling
-- Format with Black using pyproject.toml
-- Run Pylint on tracked Python files, excluding tests/, and aim for score 9.5 or higher
-- Run mypy and prefer fixing types instead of ignoring errors
-- Use pytest-cov and keep coverage at or above 80 percent
+- Must format with Black (configuration in `pyproject.toml`).
+- Must run Pylint on tracked Python files (excluding `tests/`).
+- Must run mypy and prefer fixing types over ignoring errors.
+- Must run tests with coverage and keep coverage ≥ 80% when enforced.
 
-Pre-commit Quality Gates:
-Before submitting any PR or claiming work is complete, ALWAYS run these checks locally:
+Quality gates
+- Run after changes; fix only if below threshold:
+  - Unit tests: `pytest tests/unit/`
+  - Full tests (if needed): `pytest tests/`
+  - Coverage (minimum 80%): `pytest --ignore=tests/integration --cov=. tests/ --cov-fail-under=80 --cov-report=html`
+  - Format: `black $(git ls-files '*.py')`
+  - Lint (target ≥ 9.5/10): `pylint --ignore=tests $(git ls-files '*.py')`
+  - Types: `mypy .`
 
-1. Testing
-- Run unit tests: `pytest tests/unit/` (or relevant test directory)
-- Run integration/verification tests if they exist
-- Ensure exit code 0 for all tests
-- Fix any test failures before proceeding
+Common pitfalls to avoid
+- Dependencies: must verify compatibility with the target Python version before adding.
+- Logging: must follow lazy `%` formatting; avoid “workarounds”.
+- Cleanup: must remove unused imports/variables promptly; avoid dead code.
+- Stability: avoid changing externally-visible strings/outputs unless intentional.
 
-2. Code Quality
-- Format with Black: `black $(git ls-files '*.py')`
-- Run Pylint: `pylint $(git ls-files '*.py')`
-  - Target score: ≥ 9.5/10
-  - Fix warnings before submitting
-- Run mypy: `mypy .` or `mypy <changed_files>`
-  - Resolve type errors or use appropriate type ignore comments
-  - Document why type ignores are necessary
+Learned rules (optional)
+- Must keep error messages stable where tests assert exact strings.
+- Must not change exit codes for existing failure scenarios.
 
-3. Verification Workflow
-3.1. **After writing code**: Run tests immediately
-3.2. **After tests pass**: Run linters (Black, Pylint, mypy)
-3.3. **After linters pass**: Commit changes
-3.4. **Before pushing**: Run full quality gate again
-
-4. Early Detection
-- Run quality checks EARLY in development, not at the end
-- Fix issues incrementally as they appear
-- Don't accumulate technical debt
-
-Common Pitfalls to Avoid:
-
-Dependencies
-- Check library compatibility with target Python version BEFORE using
-- Test imports locally before committing
-- For untyped libraries: add `# type: ignore[import-untyped]` comments
-
-Logging
-- Always use lazy % formatting: `logger.info("msg %s", var)`
-- NEVER use f-strings in logging: ~~`logger.info(f"msg {var}")`~~
-- Reason: avoids string interpolation when logging is disabled
-
-Variable Cleanup
-- Remove unused variables promptly
-- Run linters to catch them early
-- Don't leave dead code
-
-Checklist Template
-Use this for every PR:
-- All tests pass locally (pytest)
-- Black formatting applied
-- Pylint score ≥ 9.5
-- Mypy passes (or documented type ignores)
-- No unused imports/variables
-- Logging uses lazy % formatting
-- Dependencies tested locally
-- Documentation updated
-
-Architecture notes
-- Action must work on a GitHub Actions runner with only `requirements.txt` dependencies
-- Keep core logic free of I/O where practical; keep environment access at the edges
-
-File overview
-- main.py: sets up logging and runs the action (if present)
-- action.yml: composite action definition (if present)
-
-Common commands
-- Create and activate venv, install deps:
-  - python3 -m venv .venv
-  -	source .venv/bin/activate
-  - pip install -r requirements.txt
-- Run tests:
-  - pytest tests/
-- Run coverage:
-  - pytest --ignore=tests/integration --cov=. tests/ --cov-fail-under=80 --cov-report=html
-- Format and lint:
-  - black
-  - pylint --ignore=tests $(git ls-files "*.py")
-  - mypy .
-
-Learned rules
-- Keep error messages stable; tests assert on exact strings
-- Do not change exit codes for existing failure scenarios
+Repo additions (required)
+- Project name: `Living Doc Generator PDF`.
+- Entry points:
+  - `main.py` (function `run()`).
+  - Input layer: `generator/action_inputs.py` (class `ActionInputs`).
+- Inputs (via `INPUT_*` env vars):
+  - Required/behavioral: `output-path`, `source-path`.
+  - Optional: `template-path`, `document-title`, `verbose`, `github-token`.
+- Contract-sensitive outputs:
+  - GitHub Action failure strings and log texts (tests may assert exact content).
+  - Action output key: `pdf-path`.
+- Commands (canonical): see “Quality gates”.
+- Allowed exceptions to this template:
+  - None.
