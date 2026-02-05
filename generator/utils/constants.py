@@ -24,8 +24,13 @@ Inputs are read from `INPUT_*` environment variables using
 GITHUB_TOKEN = "github-token"
 VERBOSE = "verbose"
 
-# Living-doc PDF inputs (temporary contract)
-SOURCE_PATH = "source-path"
-TEMPLATE_PATH = "template-path"
-DOCUMENT_TITLE = "document-title"
+# New PDF-ready JSON inputs
+PDF_READY_JSON = "pdf-ready-json"
 OUTPUT_PATH = "output-path"
+TEMPLATE_DIR = "template-dir"
+DEBUG_HTML = "debug-html"
+
+# Legacy inputs (deprecated - to be removed in v2.0)
+SOURCE_PATH = "source-path"  # Deprecated
+TEMPLATE_PATH = "template-path"  # Deprecated
+DOCUMENT_TITLE = "document-title"  # Deprecated

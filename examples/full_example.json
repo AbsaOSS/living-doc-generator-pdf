@@ -1,0 +1,44 @@
+{
+  "schema_version": "1.0",
+  "meta": {
+    "document_title": "Product Requirements - Release 2.1",
+    "document_version": "2.1.0",
+    "generated_at": "2026-01-21T12:00:00Z",
+    "source_set": ["github:AbsaOSS/living-doc-generator-pdf"],
+    "selection_summary": {
+      "total_items": 15,
+      "included_items": 12,
+      "excluded_items": 3
+    },
+    "run_context": {
+      "ci_run_id": "123456",
+      "triggered_by": "user@example.com",
+      "branch": "main",
+      "commit_sha": "abc123def456"
+    }
+  },
+  "content": {
+    "user_stories": [
+      {
+        "id": "github:AbsaOSS/project#42",
+        "title": "User login with SSO",
+        "state": "open",
+        "tags": ["authentication", "priority:high"],
+        "url": "https://github.com/AbsaOSS/project/issues/42",
+        "timestamps": {
+          "created": "2026-01-10T08:00:00Z",
+          "updated": "2026-01-20T14:30:00Z"
+        },
+        "sections": {
+          "description": "As a user, I want to log in using SSO...",
+          "business_value": "Reduces friction for enterprise users",
+          "preconditions": "SSO provider configured",
+          "acceptance_criteria": "- User can click SSO button\n- Redirect to provider\n- Return with session",
+          "user_guide": null,
+          "connections": "Related to #41, #43",
+          "last_edited": "Updated by alice@example.com on 2026-01-20"
+        }
+      }
+    ]
+  }
+}
