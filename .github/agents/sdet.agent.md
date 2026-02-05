@@ -80,5 +80,3 @@ Repo additions (required per repo; keep short)
 - Coverage target:
 
   - Coverage threshold is enforced per “Quality gates” in `.github/copilot-instructions.md`.
-
-

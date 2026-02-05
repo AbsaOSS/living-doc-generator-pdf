@@ -75,5 +75,3 @@ Repo additions (required per repo; keep short)
   - `TASKS.md` tracks planned/accepted work.
 - Contract-sensitive behavior:
   - Exact error messages and exit codes may be asserted by tests.
-
-
