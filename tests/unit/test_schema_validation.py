@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from pytest_mock import MockerFixture
 
 from generator.schema_validator import SchemaValidationError, validate_pdf_ready_json
 
@@ -228,7 +229,7 @@ def test_invalid_json_file(tmp_path: Path) -> None:
         validate_pdf_ready_json(str(test_file))
 
 
-def test_schema_file_not_found(tmp_path: Path, mocker) -> None:
+def test_schema_file_not_found(tmp_path: Path, mocker: MockerFixture) -> None:
     """Test that missing schema file raises RuntimeError."""
     test_file = tmp_path / "test.json"
     test_file.write_text('{"schema_version": "1.0"}', encoding="utf-8")
