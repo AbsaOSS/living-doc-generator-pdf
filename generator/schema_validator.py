@@ -102,38 +102,35 @@ def _format_validation_errors(errors: list[jsonschema.ValidationError]) -> str:
     path = ".".join(str(p) for p in error.absolute_path) if error.absolute_path else "root"
 
     # Handle specific error types with actionable guidance
+    message = None
+
     if error.validator == "required":
         missing_field = error.message.split("'")[1] if "'" in error.message else "unknown"
-        return f"Missing required field '{missing_field}' at {path}"
-
-    if error.validator == "const":
-        if "schema_version" in path or error.absolute_path and error.absolute_path[-1] == "schema_version":
-            return f"Invalid schema_version: expected '1.0', got '{error.instance}'"
-
-    if error.validator == "format":
+        message = f"Missing required field '{missing_field}' at {path}"
+    elif error.validator == "const" and (
+        "schema_version" in path or (error.absolute_path and error.absolute_path[-1] == "schema_version")
+    ):
+        message = f"Invalid schema_version: expected '1.0', got '{error.instance}'"
+    elif error.validator == "format":
         if error.validator_value == "date-time":
-            return f"'{path}' is not a valid ISO 8601 timestamp. Use format: YYYY-MM-DDTHH:MM:SSZ"
-        if error.validator_value == "uri":
-            return f"'{path}' is not a valid URL. Use format: http:// or https://"
-
-    if error.validator == "type":
+            message = f"'{path}' is not a valid ISO 8601 timestamp. Use format: YYYY-MM-DDTHH:MM:SSZ"
+        elif error.validator_value == "uri":
+            message = f"'{path}' is not a valid URL. Use format: http:// or https://"
+    elif error.validator == "type":
         expected = error.validator_value
         actual = type(error.instance).__name__
-        return f"'{path}' must be of type {expected}, got {actual}"
-
-    if error.validator == "minLength" or (error.validator == "pattern" and "\\S" in str(error.validator_value)):
-        return f"'{path}' must be a non-empty string"
-
-    if error.validator == "pattern":
+        message = f"'{path}' must be of type {expected}, got {actual}"
+    elif error.validator == "minLength" or (error.validator == "pattern" and "\\S" in str(error.validator_value)):
+        message = f"'{path}' must be a non-empty string"
+    elif error.validator == "pattern":
         if "https?://" in str(error.validator_value):
-            return f"'{path}' is not a valid URL. Use format: http:// or https://"
-        return f"'{path}' does not match required pattern"
+            message = f"'{path}' is not a valid URL. Use format: http:// or https://"
+        else:
+            message = f"'{path}' does not match required pattern"
+    elif error.validator == "minItems":
+        message = f"'{path}' must be a non-empty array"
+    elif error.validator == "minimum":
+        message = f"'{path}' must be >= {error.validator_value}, got {error.instance}"
 
-    if error.validator == "minItems":
-        return f"'{path}' must be a non-empty array"
-
-    if error.validator == "minimum":
-        return f"'{path}' must be >= {error.validator_value}, got {error.instance}"
-
-    # Default message
-    return f"{error.message} at {path}"
+    # Default message if no specific handler matched
+    return message if message else f"{error.message} at {path}"

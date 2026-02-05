@@ -17,30 +17,30 @@
 
 """Verify that ActionInputs has all required methods and constants are defined."""
 
-import inspect
 import sys
 from pathlib import Path
 
 # Add repo root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from generator.action_inputs import ActionInputs  # noqa: E402
-from generator.utils import constants  # noqa: E402
+# pylint: disable=wrong-import-position
+from generator.action_inputs import ActionInputs
+from generator.utils import constants
 
 
 def main() -> int:
     """Verify all input methods exist and have correct signatures."""
-    # Define expected methods and their signatures
-    expected_methods = {
-        "get_pdf_ready_json": {"return": str, "params": []},
-        "get_output_path": {"return": str, "params": []},
-        "get_template_dir": {"return": "Optional[str]", "params": []},
-        "get_debug_html": {"return": bool, "params": []},
-        "get_verbose": {"return": bool, "params": []},
-    }
+    # Define expected methods
+    expected_methods = [
+        "get_pdf_ready_json",
+        "get_output_path",
+        "get_template_dir",
+        "get_debug_html",
+        "get_verbose",
+    ]
 
     # Check each method exists
-    for method_name, expected in expected_methods.items():
+    for method_name in expected_methods:
         if not hasattr(ActionInputs, method_name):
             print(f"❌ Missing method: ActionInputs.{method_name}")
             return 1
