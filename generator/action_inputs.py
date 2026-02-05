@@ -97,27 +97,6 @@ class ActionInputs:
         normalized = (raw or "false").strip().lower()
         return os.getenv("RUNNER_DEBUG", "0") == "1" or normalized in ("true", "1", "yes")
 
-    # Legacy methods (deprecated - to be removed in v2.0)
-
-    @staticmethod
-    def get_document_title() -> str:
-        """Return the document title to embed in the generated PDF (deprecated)."""
-        raw = get_action_input(DOCUMENT_TITLE, "Living Documentation")
-        return (raw or "Living Documentation").strip()
-
-    @staticmethod
-    def get_source_path() -> str:
-        """Return the source directory path containing documentation inputs (deprecated)."""
-        raw = get_action_input(SOURCE_PATH, "docs")
-        return (raw or "docs").strip()
-
-    @staticmethod
-    def get_template_path() -> Optional[str]:
-        """Return an optional template path used for PDF rendering (deprecated)."""
-        raw = get_action_input(TEMPLATE_PATH, "")
-        value = (raw or "").strip()
-        return value or None
-
     @staticmethod
     def validate_inputs() -> None:
         """Validate required inputs and raise ValueError on invalid configuration."""

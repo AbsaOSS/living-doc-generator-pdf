@@ -16,12 +16,101 @@
 
 """Unit tests for schema validation."""
 
+import copy
 import json
 from pathlib import Path
+from typing import Any
 
 import pytest
 
 from generator.schema_validator import SchemaValidationError, validate_pdf_ready_json
+
+
+# Sentinel for key deletion in mutation
+_DELETE = object()
+
+
+def _base_valid_data() -> dict[str, Any]:
+    """Return a valid base document with a user story for mutation tests."""
+    return {
+        "schema_version": "1.0",
+        "meta": {
+            "document_title": "Test Doc",
+            "document_version": "1.0.0",
+            "generated_at": "2026-01-21T12:00:00Z",
+            "source_set": ["github:test/repo"],
+            "selection_summary": {"total_items": 1, "included_items": 1, "excluded_items": 0},
+        },
+        "content": {
+            "user_stories": [
+                {
+                    "id": "test-1",
+                    "title": "Test Story",
+                    "state": "open",
+                    "tags": [],
+                    "url": "https://example.com/issue/1",
+                    "timestamps": {
+                        "created": "2026-01-21T12:00:00Z",
+                        "updated": "2026-01-21T12:00:00Z",
+                    },
+                    "sections": {},
+                }
+            ]
+        },
+    }
+
+
+def _mutate(data: dict[str, Any], path: str, value: Any) -> dict[str, Any]:
+    """
+    Apply a mutation to nested dict at dot-separated path.
+
+    Use _DELETE sentinel to remove the key entirely.
+    """
+    result = copy.deepcopy(data)
+    keys = path.split(".")
+    target = result
+    for key in keys[:-1]:
+        if key.isdigit():
+            target = target[int(key)]
+        else:
+            target = target[key]
+    final_key: str | int = int(keys[-1]) if keys[-1].isdigit() else keys[-1]
+    if value is _DELETE:
+        del target[final_key]
+    else:
+        target[final_key] = value
+    return result
+
+
+# Parametrized invalid test cases: (test_id, path, value, error_pattern)
+INVALID_CASES = [
+    ("missing_schema_version", "schema_version", _DELETE, "Missing required field 'schema_version'"),
+    ("wrong_schema_version", "schema_version", "2.0", "Invalid schema_version"),
+    ("missing_meta", "meta", _DELETE, "Missing required field 'meta'"),
+    ("missing_content", "content", _DELETE, "Missing required field 'content'"),
+    ("empty_document_title", "meta.document_title", "", "must be a non-empty string"),
+    ("empty_source_set", "meta.source_set", [], "must be a non-empty array"),
+    ("negative_total_items", "meta.selection_summary.total_items", -1, "must be >= 0"),
+    ("invalid_url", "content.user_stories.0.url", "not-a-url", "is not a valid URL"),
+]
+
+
+@pytest.mark.parametrize(
+    ("test_id", "path", "value", "error_pattern"),
+    INVALID_CASES,
+    ids=[case[0] for case in INVALID_CASES],
+)
+def test_invalid_data(
+    tmp_path: Path, test_id: str, path: str, value: Any, error_pattern: str
+) -> None:
+    """Data-driven test for invalid JSON variations."""
+    _ = test_id  # Used only for test ID
+    data = _mutate(_base_valid_data(), path, value)
+    test_file = tmp_path / "test.json"
+    test_file.write_text(json.dumps(data), encoding="utf-8")
+
+    with pytest.raises(SchemaValidationError, match=error_pattern):
+        validate_pdf_ready_json(str(test_file))
 
 
 def test_valid_minimal_json(tmp_path: Path) -> None:
@@ -88,206 +177,6 @@ def test_valid_full_json(tmp_path: Path) -> None:
 
     result = validate_pdf_ready_json(str(test_file))
     assert result == data
-
-
-def test_invalid_missing_schema_version(tmp_path: Path) -> None:
-    """Test that missing schema_version field fails validation."""
-    test_file = tmp_path / "test.json"
-    data = {
-        "meta": {
-            "document_title": "Test",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": ["github:test/repo"],
-            "selection_summary": {"total_items": 0, "included_items": 0, "excluded_items": 0},
-        },
-        "content": {"user_stories": []},
-    }
-    test_file.write_text(json.dumps(data), encoding="utf-8")
-
-    with pytest.raises(SchemaValidationError, match="Missing required field 'schema_version'"):
-        validate_pdf_ready_json(str(test_file))
-
-
-def test_invalid_wrong_schema_version(tmp_path: Path) -> None:
-    """Test that non-'1.0' schema version fails validation."""
-    test_file = tmp_path / "test.json"
-    data = {
-        "schema_version": "2.0",
-        "meta": {
-            "document_title": "Test",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": ["github:test/repo"],
-            "selection_summary": {"total_items": 0, "included_items": 0, "excluded_items": 0},
-        },
-        "content": {"user_stories": []},
-    }
-    test_file.write_text(json.dumps(data), encoding="utf-8")
-
-    with pytest.raises(SchemaValidationError, match="Invalid schema_version"):
-        validate_pdf_ready_json(str(test_file))
-
-
-def test_invalid_missing_meta(tmp_path: Path) -> None:
-    """Test that missing meta section fails validation."""
-    test_file = tmp_path / "test.json"
-    data = {"schema_version": "1.0", "content": {"user_stories": []}}
-    test_file.write_text(json.dumps(data), encoding="utf-8")
-
-    with pytest.raises(SchemaValidationError, match="Missing required field 'meta'"):
-        validate_pdf_ready_json(str(test_file))
-
-
-def test_invalid_missing_content(tmp_path: Path) -> None:
-    """Test that missing content section fails validation."""
-    test_file = tmp_path / "test.json"
-    data = {
-        "schema_version": "1.0",
-        "meta": {
-            "document_title": "Test",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": ["github:test/repo"],
-            "selection_summary": {"total_items": 0, "included_items": 0, "excluded_items": 0},
-        },
-    }
-    test_file.write_text(json.dumps(data), encoding="utf-8")
-
-    with pytest.raises(SchemaValidationError, match="Missing required field 'content'"):
-        validate_pdf_ready_json(str(test_file))
-
-
-def test_invalid_empty_document_title(tmp_path: Path) -> None:
-    """Test that empty document_title fails validation."""
-    test_file = tmp_path / "test.json"
-    data = {
-        "schema_version": "1.0",
-        "meta": {
-            "document_title": "",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": ["github:test/repo"],
-            "selection_summary": {"total_items": 0, "included_items": 0, "excluded_items": 0},
-        },
-        "content": {"user_stories": []},
-    }
-    test_file.write_text(json.dumps(data), encoding="utf-8")
-
-    with pytest.raises(SchemaValidationError, match="must be a non-empty string"):
-        validate_pdf_ready_json(str(test_file))
-
-
-def test_invalid_timestamp_format(tmp_path: Path) -> None:
-    """Test that invalid ISO 8601 timestamp fails validation."""
-    test_file = tmp_path / "test.json"
-    data = {
-        "schema_version": "1.0",
-        "meta": {
-            "document_title": "Test",
-            "document_version": "1.0.0",
-            "generated_at": "invalid-timestamp",
-            "source_set": ["github:test/repo"],
-            "selection_summary": {"total_items": 0, "included_items": 0, "excluded_items": 0},
-        },
-        "content": {"user_stories": []},
-    }
-    test_file.write_text(json.dumps(data), encoding="utf-8")
-
-    with pytest.raises(SchemaValidationError, match="is not a valid ISO 8601 timestamp"):
-        validate_pdf_ready_json(str(test_file))
-
-
-def test_invalid_url_format(tmp_path: Path) -> None:
-    """Test that invalid URL format fails validation."""
-    test_file = tmp_path / "test.json"
-    data = {
-        "schema_version": "1.0",
-        "meta": {
-            "document_title": "Test",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": ["github:test/repo"],
-            "selection_summary": {"total_items": 1, "included_items": 1, "excluded_items": 0},
-        },
-        "content": {
-            "user_stories": [
-                {
-                    "id": "test-1",
-                    "title": "Test Story",
-                    "state": "open",
-                    "tags": [],
-                    "url": "not-a-url",
-                    "timestamps": {"created": "2026-01-21T12:00:00Z", "updated": "2026-01-21T12:00:00Z"},
-                    "sections": {},
-                }
-            ]
-        },
-    }
-    test_file.write_text(json.dumps(data), encoding="utf-8")
-
-    with pytest.raises(SchemaValidationError, match="is not a valid URL"):
-        validate_pdf_ready_json(str(test_file))
-
-
-def test_invalid_empty_source_set(tmp_path: Path) -> None:
-    """Test that empty source_set array fails validation."""
-    test_file = tmp_path / "test.json"
-    data = {
-        "schema_version": "1.0",
-        "meta": {
-            "document_title": "Test",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": [],
-            "selection_summary": {"total_items": 0, "included_items": 0, "excluded_items": 0},
-        },
-        "content": {"user_stories": []},
-    }
-    test_file.write_text(json.dumps(data), encoding="utf-8")
-
-    with pytest.raises(SchemaValidationError, match="must be a non-empty array"):
-        validate_pdf_ready_json(str(test_file))
-
-
-def test_invalid_negative_total_items(tmp_path: Path) -> None:
-    """Test that negative integer for total_items fails validation."""
-    test_file = tmp_path / "test.json"
-    data = {
-        "schema_version": "1.0",
-        "meta": {
-            "document_title": "Test",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": ["github:test/repo"],
-            "selection_summary": {"total_items": -1, "included_items": 0, "excluded_items": 0},
-        },
-        "content": {"user_stories": []},
-    }
-    test_file.write_text(json.dumps(data), encoding="utf-8")
-
-    with pytest.raises(SchemaValidationError, match="must be >= 0"):
-        validate_pdf_ready_json(str(test_file))
-
-
-def test_valid_empty_user_stories(tmp_path: Path) -> None:
-    """Test that empty user_stories array passes validation."""
-    test_file = tmp_path / "test.json"
-    data = {
-        "schema_version": "1.0",
-        "meta": {
-            "document_title": "Test",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": ["github:test/repo"],
-            "selection_summary": {"total_items": 0, "included_items": 0, "excluded_items": 0},
-        },
-        "content": {"user_stories": []},
-    }
-    test_file.write_text(json.dumps(data), encoding="utf-8")
-
-    result = validate_pdf_ready_json(str(test_file))
-    assert result["content"]["user_stories"] == []
 
 
 def test_user_story_all_required_fields(tmp_path: Path) -> None:

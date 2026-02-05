@@ -43,12 +43,6 @@ def test_get_template_dir_from_env(monkeypatch) -> None:
     assert ActionInputs.get_template_dir() == "custom/templates"
 
 
-def test_get_template_path_returns_none_when_empty(monkeypatch) -> None:
-    """Test that get_template_path returns None when empty (deprecated)."""
-    monkeypatch.setenv("INPUT_TEMPLATE_PATH", "")
-    assert ActionInputs.get_template_path() is None
-
-
 def test_get_debug_html_boolean_variations(monkeypatch) -> None:
     """Test that get_debug_html accepts various boolean formats."""
     test_cases = [

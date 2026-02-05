@@ -29,8 +29,3 @@ PDF_READY_JSON = "pdf-ready-json"
 OUTPUT_PATH = "output-path"
 TEMPLATE_DIR = "template-dir"
 DEBUG_HTML = "debug-html"
-
-# Legacy inputs (deprecated - to be removed in v2.0)
-SOURCE_PATH = "source-path"  # Deprecated
-TEMPLATE_PATH = "template-path"  # Deprecated
-DOCUMENT_TITLE = "document-title"  # Deprecated
