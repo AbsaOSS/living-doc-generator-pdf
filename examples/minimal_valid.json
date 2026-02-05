@@ -1,0 +1,17 @@
+{
+  "schema_version": "1.0",
+  "meta": {
+    "document_title": "Test Documentation",
+    "document_version": "1.0.0",
+    "generated_at": "2026-01-21T12:00:00Z",
+    "source_set": ["github:AbsaOSS/living-doc-generator-pdf"],
+    "selection_summary": {
+      "total_items": 0,
+      "included_items": 0,
+      "excluded_items": 0
+    }
+  },
+  "content": {
+    "user_stories": []
+  }
+}

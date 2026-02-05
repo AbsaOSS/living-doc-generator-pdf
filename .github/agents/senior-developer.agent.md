@@ -93,5 +93,3 @@ Repo additions (required per repo; keep short)
 - Quality gates:
 
   - Must run the “Quality gates” commands in `.github/copilot-instructions.md`.
-
-

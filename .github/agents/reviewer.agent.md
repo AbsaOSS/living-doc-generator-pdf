@@ -47,6 +47,8 @@ Responsibilities
 - Quality
 
   - Must ensure formatting, lint, type-check, and tests are passing (or clearly justified exceptions exist).
+  - Must review all changed files comprehensively in a single pass to minimize review rounds.
+  - Must deliver all observed issues (blockers, important, nits) together rather than incrementally.
 - Compatibility & contracts
 
   - Must not accept unintended changes to externally-visible outputs (API schemas, action outputs, exit codes, log/error texts).
@@ -74,5 +76,3 @@ Repo additions (required per repo; keep short)
 - Required test location:
 
   - Unit tests live under `tests/unit/`.
-
-

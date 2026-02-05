@@ -35,3 +35,21 @@ def test_setup_logging_uses_debug_when_runner_debug(monkeypatch) -> None:
 
     setup_logging()
     assert captured["level"] == logging.DEBUG
+
+
+def test_setup_logging_uses_debug_when_verbose(monkeypatch) -> None:
+    """Test that verbose input enables debug logging."""
+    captured = {}
+
+    def fake_basic_config(**kwargs):
+        captured.update(kwargs)
+
+    monkeypatch.delenv("RUNNER_DEBUG", raising=False)
+    monkeypatch.setenv("INPUT_VERBOSE", "true")
+
+    monkeypatch.setattr(logging, "basicConfig", fake_basic_config)
+    monkeypatch.setattr(logging, "info", lambda *args, **kwargs: None)
+    monkeypatch.setattr(logging, "debug", lambda *args, **kwargs: None)
+
+    setup_logging()
+    assert captured["level"] == logging.DEBUG

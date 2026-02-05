@@ -24,46 +24,102 @@ import logging
 import os
 from typing import Optional
 
-from generator.utils.constants import DOCUMENT_TITLE, OUTPUT_PATH, SOURCE_PATH, TEMPLATE_PATH, VERBOSE
+from generator.utils.constants import (
+    DEBUG_HTML,
+    DOCUMENT_TITLE,
+    OUTPUT_PATH,
+    PDF_READY_JSON,
+    TEMPLATE_DIR,
+    VERBOSE,
+)
 from generator.utils.gh_action import get_action_input
 
 logger = logging.getLogger(__name__)
+
+
+def _parse_boolean(value: str | None, default: str = "false") -> bool:
+    """Parse a boolean string value.
+
+    Accepts: true, false, 1, 0, yes, no (case-insensitive)
+
+    Args:
+        value: The string value to parse (can be None)
+        default: Default value if input is empty or None
+
+    Returns:
+        Boolean interpretation of the value
+    """
+    normalized = (value or default).strip().lower()
+    return normalized in ("true", "1", "yes")
 
 
 class ActionInputs:
     """Read inputs from the GitHub Actions environment."""
 
     @staticmethod
+    def get_pdf_ready_json() -> str:
+        """Return path to pdf_ready.json file (required).
+
+        Returns:
+            Path to pdf_ready.json file
+
+        Raises:
+            ValueError: If the input is missing or empty
+        """
+        raw = get_action_input(PDF_READY_JSON, "")
+        value = (raw or "").strip()
+        if not value:
+            logger.error("pdf_ready_json input is required but was not provided.")
+            raise ValueError("pdf_ready_json input is required but was not provided.")
+        return value
+
+    @staticmethod
     def get_output_path() -> str:
-        """Return the output file path for the generated PDF."""
+        """Return the output file path for the generated PDF (default: 'output.pdf')."""
         raw = get_action_input(OUTPUT_PATH, "output.pdf")
         return (raw or "output.pdf").strip()
 
     @staticmethod
     def get_document_title() -> str:
-        """Return the document title to embed in the generated PDF."""
-        raw = get_action_input(DOCUMENT_TITLE, "Living Documentation")
-        return (raw or "Living Documentation").strip()
+        """Return the document title (optional, default: 'Document').
+
+        Returns:
+            Document title string
+        """
+        raw = get_action_input(DOCUMENT_TITLE, "Document")
+        return (raw or "Document").strip()
 
     @staticmethod
-    def get_source_path() -> str:
-        """Return the source directory path containing documentation inputs."""
-        raw = get_action_input(SOURCE_PATH, "docs")
-        return (raw or "docs").strip()
+    def get_template_dir() -> Optional[str]:
+        """Return custom template directory path (optional).
 
-    @staticmethod
-    def get_template_path() -> Optional[str]:
-        """Return an optional template path used for PDF rendering."""
-        raw = get_action_input(TEMPLATE_PATH, "")
+        Returns:
+            Path to template directory or None if not provided
+        """
+        raw = get_action_input(TEMPLATE_DIR, "")
         value = (raw or "").strip()
         return value or None
 
     @staticmethod
+    def get_debug_html() -> bool:
+        """Return True if debug HTML should be saved.
+
+        Accepts: true, false, 1, 0, yes, no (case-insensitive)
+        """
+        raw = get_action_input(DEBUG_HTML, "false")
+        return _parse_boolean(raw)
+
+    @staticmethod
     def get_verbose() -> bool:
-        """Return True if verbose/debug logging should be enabled."""
+        """Return True if verbose/debug logging should be enabled.
+
+        Accepts: true, false, 1, 0, yes, no (case-insensitive)
+        Also returns True if RUNNER_DEBUG is set to '1'
+        """
+        if os.getenv("RUNNER_DEBUG", "0") == "1":
+            return True
         raw = get_action_input(VERBOSE, "false")
-        normalized = (raw or "false").strip().lower()
-        return os.getenv("RUNNER_DEBUG", "0") == "1" or normalized in ("true", "1", "yes", "y", "on")
+        return _parse_boolean(raw)
 
     @staticmethod
     def validate_inputs() -> None:
@@ -72,3 +128,10 @@ class ActionInputs:
         if not output_path:
             logger.error("Output path must be a non-empty string.")
             raise ValueError("Output path must be a non-empty string.")
+
+        # Validate pdf_ready_json if using new contract
+        try:
+            ActionInputs.get_pdf_ready_json()
+        except ValueError:
+            # pdf_ready_json is optional during transition period
+            pass
