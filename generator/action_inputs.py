@@ -115,10 +115,7 @@ class ActionInputs:
 
         # Validate pdf_ready_json if using new contract
         try:
-            pdf_ready_json = ActionInputs.get_pdf_ready_json()
-            if pdf_ready_json and not pdf_ready_json.strip():
-                logger.error("pdf_ready_json must be a non-empty string.")
-                raise ValueError("pdf_ready_json must be a non-empty string.")
+            ActionInputs.get_pdf_ready_json()
         except ValueError:
             # pdf_ready_json is optional during transition period
             pass
