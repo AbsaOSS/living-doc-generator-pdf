@@ -25,12 +25,6 @@ def test_get_output_path_default(monkeypatch) -> None:
     assert ActionInputs.get_output_path() == "output.pdf"
 
 
-def test_get_output_path_defaults_when_missing(monkeypatch) -> None:
-    """Test that get_output_path defaults when missing."""
-    monkeypatch.delenv("INPUT_OUTPUT_PATH", raising=False)
-    assert ActionInputs.get_output_path() == "output.pdf"
-
-
 def test_get_output_path_strips_whitespace(monkeypatch) -> None:
     """Test that get_output_path strips whitespace."""
     monkeypatch.setenv("INPUT_OUTPUT_PATH", "  my.pdf  ")
@@ -80,13 +74,6 @@ def test_get_debug_html_boolean_variations(monkeypatch) -> None:
 
 def test_get_verbose_with_runner_debug(monkeypatch) -> None:
     """Test that get_verbose returns True when RUNNER_DEBUG is set."""
-    monkeypatch.setenv("INPUT_VERBOSE", "false")
-    monkeypatch.setenv("RUNNER_DEBUG", "1")
-    assert ActionInputs.get_verbose() is True
-
-
-def test_get_verbose_true_when_runner_debug(monkeypatch) -> None:
-    """Test that get_verbose is True when RUNNER_DEBUG is set."""
     monkeypatch.setenv("INPUT_VERBOSE", "false")
     monkeypatch.setenv("RUNNER_DEBUG", "1")
     assert ActionInputs.get_verbose() is True
