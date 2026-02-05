@@ -1,0 +1,25 @@
+<div class="cover-page">
+    <div class="cover-content">
+        <h1 class="document-title">{{ meta.document_title }}</h1>
+        <div class="document-version">Version {{ meta.document_version }}</div>
+        <div class="generated-at">Generated on {{ meta.generated_at | format_datetime }}</div>
+        
+        <div class="selection-summary">
+            <h2>Selection Summary</h2>
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <span class="stat-label">Total Items:</span>
+                    <span class="stat-value">{{ meta.selection_summary.total_items }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Included:</span>
+                    <span class="stat-value">{{ meta.selection_summary.included_items }}</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-label">Excluded:</span>
+                    <span class="stat-value">{{ meta.selection_summary.excluded_items }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
