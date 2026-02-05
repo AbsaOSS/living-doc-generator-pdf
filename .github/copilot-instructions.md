@@ -73,6 +73,7 @@ Patterns
 
 Testing
 - Must use `pytest` with tests under `tests/`.
+- Must not use `unittest` module; use `pytest` and `pytest-mock` exclusively.
 - Must test behavior (return values, raised errors, log messages, exit codes).
 - Must mock environment variables in unit tests.
 - Prefer shared fixtures in `conftest.py`.

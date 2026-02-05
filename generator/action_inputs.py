@@ -29,9 +29,7 @@ from generator.utils.constants import (
     DOCUMENT_TITLE,
     OUTPUT_PATH,
     PDF_READY_JSON,
-    SOURCE_PATH,
     TEMPLATE_DIR,
-    TEMPLATE_PATH,
     VERBOSE,
 )
 from generator.utils.gh_action import get_action_input
@@ -64,6 +62,16 @@ class ActionInputs:
         """Return the output file path for the generated PDF (default: 'output.pdf')."""
         raw = get_action_input(OUTPUT_PATH, "output.pdf")
         return (raw or "output.pdf").strip()
+
+    @staticmethod
+    def get_document_title() -> str:
+        """Return the document title (optional, default: 'Document').
+
+        Returns:
+            Document title string
+        """
+        raw = get_action_input(DOCUMENT_TITLE, "Document")
+        return (raw or "Document").strip()
 
     @staticmethod
     def get_template_dir() -> Optional[str]:

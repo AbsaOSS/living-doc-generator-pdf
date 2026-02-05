@@ -92,6 +92,8 @@ INVALID_CASES = [
     ("empty_source_set", "meta.source_set", [], "must be a non-empty array"),
     ("negative_total_items", "meta.selection_summary.total_items", -1, "must be >= 0"),
     ("invalid_url", "content.user_stories.0.url", "not-a-url", "is not a valid URL"),
+    ("wrong_type_title", "meta.document_title", 123, "must be of type string"),
+    ("whitespace_only_version", "meta.document_version", "   ", "must be a non-empty string"),
 ]
 
 
@@ -223,4 +225,14 @@ def test_invalid_json_file(tmp_path: Path) -> None:
     test_file.write_text("{ invalid json }", encoding="utf-8")
 
     with pytest.raises(ValueError, match="contains invalid JSON"):
+        validate_pdf_ready_json(str(test_file))
+
+
+def test_schema_file_not_found(tmp_path: Path, mocker) -> None:
+    """Test that missing schema file raises RuntimeError."""
+    test_file = tmp_path / "test.json"
+    test_file.write_text('{"schema_version": "1.0"}', encoding="utf-8")
+
+    mocker.patch("builtins.open", side_effect=[open(test_file), FileNotFoundError("schema missing")])
+    with pytest.raises(RuntimeError, match="Internal error: Schema file not found"):
         validate_pdf_ready_json(str(test_file))
