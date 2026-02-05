@@ -1,6 +1,8 @@
+from typing import TYPE_CHECKING
 from pathlib import Path
 
-import pytest
+if TYPE_CHECKING:
+    import pytest
 from pytest_mock import MockerFixture
 
 from generator.generator import PdfGenerator
