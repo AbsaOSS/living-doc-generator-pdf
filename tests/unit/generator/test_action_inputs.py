@@ -98,7 +98,7 @@ def test_validate_inputs_raises_on_blank_output_path(monkeypatch, caplog) -> Non
     monkeypatch.setenv("INPUT_OUTPUT_PATH", "   ")
 
     caplog.set_level(logging.ERROR)
-    with pytest.raises(ValueError, match="Output path must be a non-empty string"):
+    with pytest.raises(ValueError, match=r"Output path must be a non-empty string\."):
         ActionInputs.validate_inputs()
 
     assert "Output path must be a non-empty string." in caplog.text

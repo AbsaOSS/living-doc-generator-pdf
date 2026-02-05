@@ -94,43 +94,79 @@ def _format_validation_errors(errors: list[jsonschema.ValidationError]) -> str:
     Returns:
         Formatted error message with guidance
     """
-    # Prioritize the first error for clarity
     if not errors:
         return "Unknown validation error"
 
     error = errors[0]
     path = ".".join(str(p) for p in error.absolute_path) if error.absolute_path else "root"
 
-    # Handle specific error types with actionable guidance
-    message = None
+    handlers = {
+        "required": _format_required_error,
+        "const": _format_const_error,
+        "format": _format_format_error,
+        "type": _format_type_error,
+        "minLength": _format_string_error,
+        "pattern": _format_pattern_error,
+        "minItems": _format_array_error,
+        "minimum": _format_minimum_error,
+    }
 
-    if error.validator == "required":
-        missing_field = error.message.split("'")[1] if "'" in error.message else "unknown"
-        message = f"Missing required field '{missing_field}' at {path}"
-    elif error.validator == "const" and (
-        "schema_version" in path or (error.absolute_path and error.absolute_path[-1] == "schema_version")
-    ):
-        message = f"Invalid schema_version: expected '1.0', got '{error.instance}'"
-    elif error.validator == "format":
-        if error.validator_value == "date-time":
-            message = f"'{path}' is not a valid ISO 8601 timestamp. Use format: YYYY-MM-DDTHH:MM:SSZ"
-        elif error.validator_value == "uri":
-            message = f"'{path}' is not a valid URL. Use format: http:// or https://"
-    elif error.validator == "type":
-        expected = error.validator_value
-        actual = type(error.instance).__name__
-        message = f"'{path}' must be of type {expected}, got {actual}"
-    elif error.validator == "minLength" or (error.validator == "pattern" and "\\S" in str(error.validator_value)):
-        message = f"'{path}' must be a non-empty string"
-    elif error.validator == "pattern":
-        if "https?://" in str(error.validator_value):
-            message = f"'{path}' is not a valid URL. Use format: http:// or https://"
-        else:
-            message = f"'{path}' does not match required pattern"
-    elif error.validator == "minItems":
-        message = f"'{path}' must be a non-empty array"
-    elif error.validator == "minimum":
-        message = f"'{path}' must be >= {error.validator_value}, got {error.instance}"
+    handler = handlers.get(str(error.validator))
+    if handler:
+        result = handler(error, path)
+        if result:
+            return result
 
-    # Default message if no specific handler matched
-    return message if message else f"{error.message} at {path}"
+    return f"{error.message} at {path}"
+
+
+def _format_required_error(error: jsonschema.ValidationError, path: str) -> str:
+    """Format a 'required' validator error."""
+    missing_field = error.message.split("'")[1] if "'" in error.message else "unknown"
+    return f"Missing required field '{missing_field}' at {path}"
+
+
+def _format_const_error(error: jsonschema.ValidationError, path: str) -> str | None:
+    """Format a 'const' validator error for schema_version."""
+    if "schema_version" in path or (error.absolute_path and error.absolute_path[-1] == "schema_version"):
+        return f"Invalid schema_version: expected '1.0', got '{error.instance}'"
+    return None
+
+
+def _format_format_error(error: jsonschema.ValidationError, path: str) -> str | None:
+    """Format a 'format' validator error."""
+    format_messages = {
+        "date-time": f"'{path}' is not a valid ISO 8601 timestamp. Use format: YYYY-MM-DDTHH:MM:SSZ",
+        "uri": f"'{path}' is not a valid URL. Use format: http:// or https://",
+    }
+    return format_messages.get(str(error.validator_value))
+
+
+def _format_type_error(error: jsonschema.ValidationError, path: str) -> str:
+    """Format a 'type' validator error."""
+    return f"'{path}' must be of type {error.validator_value}, got {type(error.instance).__name__}"
+
+
+def _format_string_error(_error: jsonschema.ValidationError, path: str) -> str:
+    """Format a 'minLength' validator error."""
+    return f"'{path}' must be a non-empty string"
+
+
+def _format_pattern_error(error: jsonschema.ValidationError, path: str) -> str:
+    """Format a 'pattern' validator error."""
+    pattern = str(error.validator_value)
+    if "\\S" in pattern:
+        return f"'{path}' must be a non-empty string"
+    if "https?://" in pattern:
+        return f"'{path}' is not a valid URL. Use format: http:// or https://"
+    return f"'{path}' does not match required pattern"
+
+
+def _format_array_error(_error: jsonschema.ValidationError, path: str) -> str:
+    """Format a 'minItems' validator error."""
+    return f"'{path}' must be a non-empty array"
+
+
+def _format_minimum_error(error: jsonschema.ValidationError, path: str) -> str:
+    """Format a 'minimum' validator error."""
+    return f"'{path}' must be >= {error.validator_value}, got {error.instance}"

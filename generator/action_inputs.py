@@ -37,6 +37,22 @@ from generator.utils.gh_action import get_action_input
 logger = logging.getLogger(__name__)
 
 
+def _parse_boolean(value: str | None, default: str = "false") -> bool:
+    """Parse a boolean string value.
+
+    Accepts: true, false, 1, 0, yes, no (case-insensitive)
+
+    Args:
+        value: The string value to parse (can be None)
+        default: Default value if input is empty or None
+
+    Returns:
+        Boolean interpretation of the value
+    """
+    normalized = (value or default).strip().lower()
+    return normalized in ("true", "1", "yes")
+
+
 class ActionInputs:
     """Read inputs from the GitHub Actions environment."""
 
@@ -91,8 +107,7 @@ class ActionInputs:
         Accepts: true, false, 1, 0, yes, no (case-insensitive)
         """
         raw = get_action_input(DEBUG_HTML, "false")
-        normalized = (raw or "false").strip().lower()
-        return normalized in ("true", "1", "yes")
+        return _parse_boolean(raw)
 
     @staticmethod
     def get_verbose() -> bool:
@@ -101,9 +116,10 @@ class ActionInputs:
         Accepts: true, false, 1, 0, yes, no (case-insensitive)
         Also returns True if RUNNER_DEBUG is set to '1'
         """
+        if os.getenv("RUNNER_DEBUG", "0") == "1":
+            return True
         raw = get_action_input(VERBOSE, "false")
-        normalized = (raw or "false").strip().lower()
-        return os.getenv("RUNNER_DEBUG", "0") == "1" or normalized in ("true", "1", "yes")
+        return _parse_boolean(raw)
 
     @staticmethod
     def validate_inputs() -> None:

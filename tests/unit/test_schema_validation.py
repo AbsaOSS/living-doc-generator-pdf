@@ -99,15 +99,14 @@ INVALID_CASES = [
 
 
 @pytest.mark.parametrize(
-    ("test_id", "path", "value", "error_pattern"),
-    INVALID_CASES,
+    ("path", "value", "error_pattern"),
+    [(case[1], case[2], case[3]) for case in INVALID_CASES],
     ids=[case[0] for case in INVALID_CASES],
 )
 def test_invalid_data(
-    tmp_path: Path, test_id: str, path: str, value: Any, error_pattern: str
+    tmp_path: Path, path: str, value: Any, error_pattern: str
 ) -> None:
     """Data-driven test for invalid JSON variations."""
-    _ = test_id  # Used only for test ID
     data = _mutate(_base_valid_data(), path, value)
     test_file = tmp_path / "test.json"
     test_file.write_text(json.dumps(data), encoding="utf-8")
