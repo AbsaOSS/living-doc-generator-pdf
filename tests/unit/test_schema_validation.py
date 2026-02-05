@@ -234,6 +234,13 @@ def test_schema_file_not_found(tmp_path: Path, mocker: MockerFixture) -> None:
     test_file = tmp_path / "test.json"
     test_file.write_text('{"schema_version": "1.0"}', encoding="utf-8")
 
-    mocker.patch("builtins.open", side_effect=[open(test_file), FileNotFoundError("schema missing")])
+    original_open = open
+
+    def mock_open_side_effect(path, *args, **kwargs):
+        if "pdf_ready_v1.0.json" in str(path):
+            raise FileNotFoundError("schema missing")
+        return original_open(path, *args, **kwargs)
+
+    mocker.patch("builtins.open", side_effect=mock_open_side_effect)
     with pytest.raises(RuntimeError, match="Internal error: Schema file not found"):
         validate_pdf_ready_json(str(test_file))
