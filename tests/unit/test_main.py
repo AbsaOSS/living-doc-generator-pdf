@@ -66,7 +66,7 @@ def test_run_outputs_all_paths_on_success(monkeypatch, tmp_path) -> None:
 
     monkeypatch.setattr(main, "PdfGenerator", FakePdfGenerator)
     monkeypatch.setattr(main, "set_action_output", lambda name, value: output_calls.append((name, value)))
-    monkeypatch.setattr(main, "set_action_failed", lambda msg: failed_calls.append(msg))
+    monkeypatch.setattr(main, "set_action_failed", lambda msg, exit_code=1: failed_calls.append(msg))
 
     main.run()
 
@@ -113,7 +113,7 @@ def test_run_outputs_html_path_when_debug_enabled(monkeypatch, tmp_path) -> None
 
     monkeypatch.setattr(main, "PdfGenerator", FakePdfGenerator)
     monkeypatch.setattr(main, "set_action_output", lambda name, value: output_calls.append((name, value)))
-    monkeypatch.setattr(main, "set_action_failed", lambda msg: None)
+    monkeypatch.setattr(main, "set_action_failed", lambda msg, exit_code=1: None)
 
     main.run()
 
@@ -134,8 +134,12 @@ def test_run_exits_with_code_1_on_value_error(monkeypatch) -> None:
     def raise_value_error(path):
         raise ValueError("Invalid input")
 
+    def mock_set_action_failed(msg, exit_code=1):
+        import sys
+        sys.exit(exit_code)
+
     monkeypatch.setattr(main, "validate_pdf_ready_json", raise_value_error)
-    monkeypatch.setattr(main, "set_action_failed", lambda msg: None)
+    monkeypatch.setattr(main, "set_action_failed", mock_set_action_failed)
 
     with pytest.raises(SystemExit) as exc_info:
         main.run()
@@ -155,8 +159,12 @@ def test_run_exits_with_code_2_on_schema_validation_error(monkeypatch, tmp_path)
     def raise_schema_error(path):
         raise SchemaValidationError("Schema validation failed")
 
+    def mock_set_action_failed(msg, exit_code=1):
+        import sys
+        sys.exit(exit_code)
+
     monkeypatch.setattr(main, "validate_pdf_ready_json", raise_schema_error)
-    monkeypatch.setattr(main, "set_action_failed", lambda msg: None)
+    monkeypatch.setattr(main, "set_action_failed", mock_set_action_failed)
 
     with pytest.raises(SystemExit) as exc_info:
         main.run()
@@ -190,8 +198,12 @@ def test_run_exits_with_code_3_on_template_error(monkeypatch, tmp_path) -> None:
         def render(self, data):
             raise TemplateError("Template not found")
 
+    def mock_set_action_failed(msg, exit_code=1):
+        import sys
+        sys.exit(exit_code)
+
     monkeypatch.setattr(main, "TemplateRenderer", lambda x: FakeRenderer())
-    monkeypatch.setattr(main, "set_action_failed", lambda msg: None)
+    monkeypatch.setattr(main, "set_action_failed", mock_set_action_failed)
 
     with pytest.raises(SystemExit) as exc_info:
         main.run()
@@ -226,8 +238,12 @@ def test_run_exits_with_code_4_on_rendering_error(monkeypatch, tmp_path) -> None
         def generate_pdf(self, html, output_path, template_dir):
             raise RenderingError("Rendering failed")
 
+    def mock_set_action_failed(msg, exit_code=1):
+        import sys
+        sys.exit(exit_code)
+
     monkeypatch.setattr(main, "PdfGenerator", FakePdfGenerator)
-    monkeypatch.setattr(main, "set_action_failed", lambda msg: None)
+    monkeypatch.setattr(main, "set_action_failed", mock_set_action_failed)
 
     with pytest.raises(SystemExit) as exc_info:
         main.run()
@@ -262,8 +278,12 @@ def test_run_exits_with_code_5_on_file_io_error(monkeypatch, tmp_path) -> None:
         def generate_pdf(self, html, output_path, template_dir):
             raise FileIOError("File I/O error")
 
+    def mock_set_action_failed(msg, exit_code=1):
+        import sys
+        sys.exit(exit_code)
+
     monkeypatch.setattr(main, "PdfGenerator", FakePdfGenerator)
-    monkeypatch.setattr(main, "set_action_failed", lambda msg: None)
+    monkeypatch.setattr(main, "set_action_failed", mock_set_action_failed)
 
     with pytest.raises(SystemExit) as exc_info:
         main.run()

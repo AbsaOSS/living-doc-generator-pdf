@@ -28,3 +28,13 @@ def test_set_action_failed_writes_error_and_exits(capsys) -> None:
 
     captured = capsys.readouterr()
     assert "::error::boom" in captured.err
+
+
+def test_set_action_failed_uses_custom_exit_code(capsys) -> None:
+    with pytest.raises(SystemExit) as exc:
+        set_action_failed("schema error", exit_code=2)
+
+    assert exc.value.code == 2
+
+    captured = capsys.readouterr()
+    assert "::error::schema error" in captured.err
