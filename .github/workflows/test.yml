@@ -20,6 +20,10 @@ on:
     branches:
       - '**'
     types: [ opened, synchronize, reopened ]
+  push:
+    branches:
+      - main
+      - master
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -146,7 +150,15 @@ jobs:
         run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
 
       - name: Check code coverage with Pytest
-        run: python -m pytest --cov=generator --cov=main -v tests/unit --cov-fail-under=80
+        run: python -m pytest --cov=generator --cov=main -v tests/unit --cov-fail-under=80 --cov-report=html --cov-report=term
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: htmlcov/
+          retention-days: 30
 
   mypy-check:
     runs-on: ubuntu-latest
@@ -170,6 +182,74 @@ jobs:
         id: check-types
         run: |
           mypy .
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [unit-test]
+
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v5
+        with:
+          python-version: '3.14'
+          cache: 'pip'
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Set PYTHONPATH environment variable
+        run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
+
+      - name: Run integration tests
+        run: python -m pytest tests/integration/ -v
+
+      - name: Generate example PDFs from integration tests
+        if: always()
+        run: |
+          mkdir -p test-outputs
+          # Generate PDFs from example files
+          python -c "
+          from pathlib import Path
+          from generator.schema_validator import validate_pdf_ready_json
+          from generator.template_renderer import TemplateRenderer
+          from generator.pdf_generator import PdfGenerator
+
+          examples_dir = Path('examples')
+          output_dir = Path('test-outputs')
+          output_dir.mkdir(exist_ok=True)
+          template_dir = str(Path('generator/templates'))
+
+          for json_file in ['minimal_valid.json', 'full_example.json', 'multiple_stories.json']:
+              try:
+                  json_path = examples_dir / json_file
+                  pdf_data = validate_pdf_ready_json(str(json_path))
+                  renderer = TemplateRenderer(None)
+                  html = renderer.render(pdf_data)
+                  output_pdf = output_dir / json_file.replace('.json', '.pdf')
+                  generator = PdfGenerator()
+                  generator.generate_pdf(html, str(output_pdf), template_dir)
+                  print(f'Generated: {output_pdf}')
+              except Exception as e:
+                  print(f'Failed to generate {json_file}: {e}')
+          "
+
+      - name: Upload example PDFs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: example-pdfs
+          path: test-outputs/*.pdf
+          retention-days: 30
 
   verification-scripts:
     runs-on: ubuntu-latest

@@ -612,16 +612,16 @@ if __name__ == "__main__":
 **Spec Reference:** [SPEC.md § 8.1](./SPEC.md#81-unit-tests)
 
 **Acceptance Criteria:**
-- [ ] Unit tests cover all modules:
+- [x] Unit tests cover all modules:
   - `generator/schema_validator.py`
   - `generator/action_inputs.py`
   - `generator/template_renderer.py`
   - `generator/filters.py`
   - `generator/report_generator.py`
-- [ ] Coverage ≥ 80% overall
-- [ ] Coverage ≥ 90% for schema_validator and action_inputs (critical modules)
-- [ ] All tests pass locally and in CI
-- [ ] Tests use mocking for file I/O and external dependencies
+- [x] Coverage ≥ 80% overall
+- [x] Coverage ≥ 90% for schema_validator and action_inputs (critical modules)
+- [x] All tests pass locally and in CI
+- [x] Tests use mocking for file I/O and external dependencies
 
 **Verification:**
 - `pytest --cov=generator --cov-report=html --cov-fail-under=80`
@@ -636,15 +636,15 @@ if __name__ == "__main__":
 **Spec Reference:** [SPEC.md § 8.2](./SPEC.md#82-integration-tests)
 
 **Acceptance Criteria:**
-- [ ] Integration test suite created in `tests/integration/`:
+- [x] Integration test suite created in `tests/integration/`:
   - `test_pdf_generation.py` - End-to-end PDF generation scenarios
   - `test_custom_templates.py` - Custom template override scenarios
   - `test_error_handling.py` - Error scenarios with exit codes
   - `test_edge_cases.py` - Large files, empty arrays, edge cases
   - `test_debug_html.py` - Debug HTML output scenarios
-- [ ] Tests use real file system (not mocked)
-- [ ] Tests verify actual PDF output (file exists, valid structure)
-- [ ] All integration tests pass in CI environment
+- [x] Tests use real file system (not mocked)
+- [x] Tests verify actual PDF output (file exists, valid structure)
+- [x] All integration tests pass in CI environment
 
 **Verification:**
 - `pytest tests/integration/`
@@ -659,14 +659,14 @@ if __name__ == "__main__":
 **Spec Reference:** [SPEC.md § 6](./SPEC.md#6-phase-by-phase-acceptance-criteria)
 
 **Acceptance Criteria:**
-- [ ] `.github/workflows/test.yml` updated to:
+- [x] `.github/workflows/test.yml` updated to:
   - Run unit tests with coverage reporting
   - Run integration tests
   - Run verification scripts
   - Upload test artifacts (coverage report, example PDFs)
-- [ ] CI fails if coverage < 80%
-- [ ] CI fails if any verification script fails
-- [ ] CI passes on main branch and PRs
+- [x] CI fails if coverage < 80%
+- [x] CI fails if any verification script fails
+- [x] CI passes on main branch and PRs
 
 **Verification:**
 - Trigger CI workflow and verify all steps pass

@@ -6,7 +6,10 @@
 - [Run Black Tool Locally](#run-black-tool-locally)
 - [Run mypy Tool Locally](#run-mypy-tool-locally)
 - [Running Unit Test](#running-unit-test)
+- [Running Integration Tests](#running-integration-tests)
 - [Code Coverage](#code-coverage)
+- [Running Verification Scripts](#running-verification-scripts)
+- [Interpreting Test Failures](#interpreting-test-failures)
 - [Run Action Locally](#run-action-locally)
 - [Branch Naming Convention](#branch-naming-convention)
 
@@ -197,6 +200,56 @@ pytest tests/unit
 
 This will execute all tests located in the tests/unit directory.
 
+## Running Integration Tests
+
+Integration tests verify end-to-end functionality of the PDF generator using real file I/O and actual PDF generation. These tests are located in `tests/integration/` and cover:
+
+- **PDF Generation**: End-to-end scenarios (minimal, full, multiple stories)
+- **Custom Templates**: Template override and fallback behavior
+- **Error Handling**: Error scenarios with proper exit codes
+- **Edge Cases**: Large files, empty arrays, special characters, boundary conditions
+- **Debug HTML**: HTML output generation scenarios
+
+### Run All Integration Tests
+
+```shell
+export PYTHONPATH=$(pwd)
+pytest tests/integration/ -v
+```
+
+### Run Specific Integration Test Files
+
+```shell
+# Test PDF generation scenarios
+pytest tests/integration/test_pdf_generation.py -v
+
+# Test custom template behavior
+pytest tests/integration/test_custom_templates.py -v
+
+# Test error handling and exit codes
+pytest tests/integration/test_error_handling.py -v
+
+# Test edge cases
+pytest tests/integration/test_edge_cases.py -v
+
+# Test debug HTML output
+pytest tests/integration/test_debug_html.py -v
+```
+
+### Run Specific Test
+
+```shell
+pytest tests/integration/test_pdf_generation.py::test_generate_pdf_minimal -v
+```
+
+### Integration Test Artifacts
+
+Integration tests generate PDFs in temporary directories (cleaned up automatically). To inspect generated PDFs during development:
+
+1. Run tests with `--tb=short` to see detailed output
+2. Check temporary directories printed in test output
+3. Use `pytest -s` to see print statements
+
 ## Code Coverage
 
 Code coverage is collected using the pytest-cov coverage tool. To run the tests and collect coverage information, use the following command:
@@ -213,6 +266,141 @@ See the coverage report on the path:
 ```shell
 open htmlcov/index.html
 ```
+
+### Understanding Coverage Reports
+
+The HTML coverage report shows:
+
+- **Green lines**: Covered by tests
+- **Red lines**: Not covered by tests
+- **Yellow lines**: Partially covered (e.g., branches)
+- **Overall percentage**: Total code coverage
+
+**Coverage targets:**
+- Overall: ≥ 80%
+- Critical modules (schema_validator, action_inputs): ≥ 90%
+
+### Coverage for Specific Modules
+
+```shell
+# Check coverage for a specific module
+pytest --cov=generator.schema_validator tests/unit/generator/test_schema_validator.py --cov-report=term-missing
+
+# Check coverage for all generator modules
+pytest --cov=generator --cov=main tests/unit/ --cov-report=term-missing
+```
+
+## Running Verification Scripts
+
+Verification scripts are automated quality gates that validate the project's examples, templates, and error messages. These scripts are located in `verifications/` and are run in CI after tests pass.
+
+### Available Verification Scripts
+
+1. **Schema Examples Verification** - Validates all example JSON files against the schema:
+   ```shell
+   python verifications/verify_schema_examples.py
+   ```
+
+2. **Templates Verification** - Checks template syntax and completeness:
+   ```shell
+   python verifications/verify_templates.py
+   ```
+
+3. **Error Messages Verification** - Ensures error messages follow the required format:
+   ```shell
+   python verifications/verify_error_messages.py
+   ```
+
+4. **PDF Output Verification** - Validates PDF quality (fonts, metadata, structure):
+   ```shell
+   python verifications/verify_pdf_output.py
+   ```
+
+### Run All Verification Scripts
+
+```shell
+export PYTHONPATH=$(pwd)
+python verifications/verify_schema_examples.py && \
+python verifications/verify_templates.py && \
+python verifications/verify_error_messages.py && \
+python verifications/verify_pdf_output.py
+```
+
+### Expected Output
+
+Each script produces PASS/FAIL output for each check:
+
+```
+✓ minimal_valid.json - PASS
+✓ full_example.json - PASS
+✓ multiple_stories.json - PASS
+
+All 3 validations passed
+```
+
+If a script fails (exit code ≠ 0), it will print detailed error messages about what failed.
+
+## Interpreting Test Failures
+
+### Unit Test Failures
+
+Unit tests typically fail due to:
+
+1. **Logic errors**: Fix the implementation in `generator/` modules
+2. **API changes**: Update tests to match new interfaces
+3. **Mock/fixture issues**: Update test fixtures in `tests/unit/conftest.py`
+
+Example failure:
+```
+FAILED tests/unit/generator/test_schema_validator.py::test_validate_missing_schema_version
+AssertionError: Expected SchemaValidationError with message matching 'schema_version'
+```
+
+**Action**: Check the error message format in `generator/schema_validator.py` and update the test assertion or fix the code.
+
+### Integration Test Failures
+
+Integration tests typically fail due to:
+
+1. **File I/O errors**: Check file permissions, disk space
+2. **PDF generation errors**: Check WeasyPrint dependencies (fonts, etc.)
+3. **Schema validation errors**: Update test JSON to match schema requirements
+4. **Template errors**: Fix template syntax or update templates
+
+Example failure:
+```
+FAILED tests/integration/test_pdf_generation.py::test_generate_pdf_minimal
+generator.schema_validator.SchemaValidationError: Missing required field 'tags'
+```
+
+**Action**: Update the test JSON data to include all required schema fields.
+
+### Verification Script Failures
+
+Verification scripts fail when:
+
+1. **Example JSON is invalid**: Fix the JSON file in `examples/`
+2. **Template syntax errors**: Fix templates in `generator/templates/`
+3. **Error message format issues**: Update error messages to follow format `{prefix} {detail}. {guidance}`
+4. **PDF quality issues**: Check font files, CSS, or rendering logic
+
+Example failure:
+```
+✗ invalid_missing_schema.json - FAIL: Should fail validation but passed
+```
+
+**Action**: Review the example file and ensure it matches test expectations.
+
+### CI/CD Failures
+
+When tests fail in CI but pass locally:
+
+1. **Environment differences**: Check Python version (CI uses 3.14)
+2. **Missing dependencies**: Verify `requirements.txt` includes all dependencies
+3. **Path issues**: Ensure `PYTHONPATH` is set correctly in CI workflow
+4. **Artifact generation**: Check if CI has permission to write files
+
+View CI logs in GitHub Actions for detailed stack traces and error messages.
 
 ## Run Action Locally
 Create run_locally.sh file and place it in the project root.
