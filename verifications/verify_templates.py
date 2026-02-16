@@ -22,19 +22,20 @@ from pathlib import Path
 
 try:
     from jinja2 import Environment, FileSystemLoader, TemplateSyntaxError
+    from generator.filters import markdown_filter, format_datetime_filter
 except ImportError as e:
-    print(f"✗ FAIL: Could not import Jinja2: {e}")
+    print(f"✗ FAIL: Could not import dependencies: {e}")
     sys.exit(1)
 
 
 def main() -> None:
     """Verify all required template files in generator/templates/."""
     templates_dir = Path(__file__).parent.parent / "generator" / "templates"
-    
+
     if not templates_dir.exists():
         print(f"✗ FAIL: Templates directory not found: {templates_dir}")
         sys.exit(1)
-    
+
     # Required template files
     required_files = [
         "main.html.jinja",
@@ -42,9 +43,9 @@ def main() -> None:
         "user_story.html.jinja",
         "styles.css",
     ]
-    
+
     all_passed = True
-    
+
     print("Verifying required template files exist:")
     for filename in required_files:
         file_path = templates_dir / filename
@@ -53,22 +54,24 @@ def main() -> None:
         else:
             print(f"  ✗ FAIL: {filename} not found")
             all_passed = False
-    
+
     print("\nVerifying template syntax:")
     for filename in required_files:
         if not filename.endswith(".jinja"):
             continue
-        
+
         file_path = templates_dir / filename
         if not file_path.exists():
             # Already reported above
             continue
-        
+
         try:
             env = Environment(loader=FileSystemLoader(str(templates_dir)))
-            template = env.get_template(filename)
-            # Try to parse the template
-            template.module
+            # Register custom filters to avoid "No filter named X" errors
+            env.filters["markdown"] = markdown_filter
+            env.filters["format_datetime"] = format_datetime_filter
+            # Just load the template - this checks syntax without rendering
+            env.get_template(filename)
             print(f"  ✓ PASS: {filename} - Valid Jinja2 syntax")
         except TemplateSyntaxError as e:
             print(f"  ✗ FAIL: {filename} - Syntax error: {e}")
@@ -76,21 +79,21 @@ def main() -> None:
         except Exception as e:  # pylint: disable=broad-except
             print(f"  ✗ FAIL: {filename} - Unexpected error: {e}")
             all_passed = False
-    
+
     print("\nVerifying templates reference expected variables:")
     # Check that main template references key schema variables
     main_template_path = templates_dir / "main.html.jinja"
     if main_template_path.exists():
         content = main_template_path.read_text(encoding="utf-8")
         expected_vars = ["meta", "content"]
-        
+
         for var in expected_vars:
             if var in content:
                 print(f"  ✓ PASS: main.html.jinja references '{var}'")
             else:
                 print(f"  ✗ FAIL: main.html.jinja does not reference '{var}'")
                 all_passed = False
-    
+
     if all_passed:
         print("\n✓ All template checks passed")
         sys.exit(0)

@@ -31,7 +31,7 @@ except ImportError as e:
 def main() -> None:
     """Verify error classes exist and follow expected patterns."""
     all_passed = True
-    
+
     # Expected error classes and their prefixes from SPEC.md § 3.1.3
     error_classes = [
         (SchemaValidationError, "SchemaValidationError", "Schema validation failed:"),
@@ -39,7 +39,7 @@ def main() -> None:
         (RenderingError, "RenderingError", "Rendering failed:"),
         (FileIOError, "FileIOError", "File I/O error:"),
     ]
-    
+
     print("Verifying error classes exist and can be instantiated:")
     for error_class, name, expected_prefix in error_classes:
         try:
@@ -48,11 +48,11 @@ def main() -> None:
                 print(f"  ✗ FAIL: {name} is not an Exception subclass")
                 all_passed = False
                 continue
-            
+
             # Verify it can be instantiated with a message
             test_message = f"{expected_prefix} test detail. Test guidance."
             instance = error_class(test_message)
-            
+
             if str(instance) == test_message:
                 print(f"  ✓ PASS: {name} exists and can be instantiated")
             else:
@@ -61,7 +61,7 @@ def main() -> None:
         except Exception as e:  # pylint: disable=broad-except
             print(f"  ✗ FAIL: {name} - Error during instantiation: {e}")
             all_passed = False
-    
+
     print("\nVerifying error message prefix format (from SPEC.md § 3.1.3):")
     # Check that the expected prefixes match specification
     spec_prefixes = {
@@ -70,7 +70,7 @@ def main() -> None:
         "RenderingError": "Rendering failed:",
         "FileIOError": "File I/O error:",
     }
-    
+
     for error_class, name, expected_prefix in error_classes:
         spec_prefix = spec_prefixes.get(name)
         if expected_prefix == spec_prefix:
@@ -78,7 +78,7 @@ def main() -> None:
         else:
             print(f"  ✗ FAIL: {name} prefix mismatch - expected '{spec_prefix}', got '{expected_prefix}'")
             all_passed = False
-    
+
     print("\nVerifying error message format pattern:")
     # Verify the format follows: {prefix} {detail}. {guidance}
     for error_class, name, expected_prefix in error_classes:
@@ -87,10 +87,10 @@ def main() -> None:
             detail = "specific detail"
             guidance = "actionable guidance"
             test_message = f"{expected_prefix} {detail}. {guidance}"
-            
+
             instance = error_class(test_message)
             message_str = str(instance)
-            
+
             # Check that message contains the prefix
             if expected_prefix in message_str:
                 print(f"  ✓ PASS: {name} message contains prefix '{expected_prefix}'")
@@ -100,7 +100,7 @@ def main() -> None:
         except Exception as e:  # pylint: disable=broad-except
             print(f"  ✗ FAIL: {name} - Error creating formatted message: {e}")
             all_passed = False
-    
+
     if all_passed:
         print("\n✓ All error message checks passed")
         sys.exit(0)
