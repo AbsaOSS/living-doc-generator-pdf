@@ -17,6 +17,7 @@
 """Unit tests for main entrypoint."""
 
 import json
+import sys
 
 import pytest
 
@@ -135,7 +136,6 @@ def test_run_exits_with_code_1_on_value_error(monkeypatch) -> None:
         raise ValueError("Invalid input")
 
     def mock_set_action_failed(msg, exit_code=1):
-        import sys
         sys.exit(exit_code)
 
     monkeypatch.setattr(main, "validate_pdf_ready_json", raise_value_error)
@@ -160,7 +160,6 @@ def test_run_exits_with_code_2_on_schema_validation_error(monkeypatch, tmp_path)
         raise SchemaValidationError("Schema validation failed")
 
     def mock_set_action_failed(msg, exit_code=1):
-        import sys
         sys.exit(exit_code)
 
     monkeypatch.setattr(main, "validate_pdf_ready_json", raise_schema_error)
@@ -199,7 +198,6 @@ def test_run_exits_with_code_3_on_template_error(monkeypatch, tmp_path) -> None:
             raise TemplateError("Template not found")
 
     def mock_set_action_failed(msg, exit_code=1):
-        import sys
         sys.exit(exit_code)
 
     monkeypatch.setattr(main, "TemplateRenderer", lambda x: FakeRenderer())
@@ -239,7 +237,6 @@ def test_run_exits_with_code_4_on_rendering_error(monkeypatch, tmp_path) -> None
             raise RenderingError("Rendering failed")
 
     def mock_set_action_failed(msg, exit_code=1):
-        import sys
         sys.exit(exit_code)
 
     monkeypatch.setattr(main, "PdfGenerator", FakePdfGenerator)
@@ -279,7 +276,6 @@ def test_run_exits_with_code_5_on_file_io_error(monkeypatch, tmp_path) -> None:
             raise FileIOError("File I/O error")
 
     def mock_set_action_failed(msg, exit_code=1):
-        import sys
         sys.exit(exit_code)
 
     monkeypatch.setattr(main, "PdfGenerator", FakePdfGenerator)
