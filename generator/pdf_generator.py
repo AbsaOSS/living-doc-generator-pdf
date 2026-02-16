@@ -19,7 +19,7 @@
 import logging
 from pathlib import Path
 
-from weasyprint import HTML
+from weasyprint import HTML  # type: ignore[import-untyped]
 
 logger = logging.getLogger(__name__)
 

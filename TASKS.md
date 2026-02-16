@@ -249,15 +249,15 @@ Template error: Syntax error in 'user_story.html.jinja' at line 42. Fix template
 **Spec Reference:** [SPEC.md § 3.5](./SPEC.md#35-asset-resolution)
 
 **Acceptance Criteria:**
-- [ ] Module `generator/pdf_generator.py` created
-- [ ] Class `PdfGenerator` refactored with new methods:
+- [x] Module `generator/pdf_generator.py` created
+- [x] Class `PdfGenerator` refactored with new methods:
   - `generate_pdf(html: str, output_path: str, template_dir: str) -> None`
-- [ ] WeasyPrint integration configured:
+- [x] WeasyPrint integration configured:
   - Base URL set to template directory for asset resolution
   - Font loading from `assets/fonts/` directory
   - PDF metadata embedded (title, version, creation date)
-- [ ] PDF output valid and openable in standard viewers (Adobe, Chrome, Firefox)
-- [ ] Rendering errors raise clear exceptions (exit code 4)
+- [x] PDF output valid and openable in standard viewers (Adobe, Chrome, Firefox)
+- [x] Rendering errors raise clear exceptions (exit code 4)
 
 **Verification:**
 - `tests/integration/test_pdf_generation.py::test_generate_pdf_minimal` - Minimal PDF
@@ -280,11 +280,11 @@ Rendering failed: CSS parsing error in 'styles.css' at line 15. Fix CSS syntax.
 **Spec Reference:** [SPEC.md § 3.1.1](./SPEC.md#311-action-inputs)
 
 **Acceptance Criteria:**
-- [ ] When `debug_html=true`, rendered HTML saved to file
-- [ ] HTML filename is `{pdf_basename}_rendered.html` (e.g., `output_rendered.html`)
-- [ ] HTML file includes all CSS and assets inline or with working relative paths
-- [ ] HTML viewable in browser with correct rendering
-- [ ] Action output `html_path` set when debug HTML generated
+- [x] When `debug_html=true`, rendered HTML saved to file
+- [x] HTML filename is `{pdf_basename}_rendered.html` (e.g., `output_rendered.html`)
+- [x] HTML file includes all CSS and assets inline or with working relative paths
+- [x] HTML viewable in browser with correct rendering
+- [x] Action output `html_path` set when debug HTML generated
 
 **Verification:**
 - `tests/integration/test_debug_html.py::test_debug_html_saved` - HTML file created
@@ -308,12 +308,12 @@ Rendering failed: CSS parsing error in 'styles.css' at line 15. Fix CSS syntax.
 **Spec Reference:** [SPEC.md § 3.3](./SPEC.md#33-pdf-report-json-schema)
 
 **Acceptance Criteria:**
-- [ ] Module `generator/report_generator.py` created
-- [ ] Function `generate_pdf_report(...)` creates `pdf_report.json`
-- [ ] Report includes all required fields from SPEC.md § 3.3
-- [ ] Report includes warnings for missing user story sections
-- [ ] Report includes file size and user story count statistics
-- [ ] Action output `report_path` set to `pdf_report.json` path
+- [x] Module `generator/report_generator.py` created
+- [x] Function `generate_pdf_report(...)` creates `pdf_report.json`
+- [x] Report includes all required fields from SPEC.md § 3.3
+- [x] Report includes warnings for missing user story sections
+- [x] Report includes file size and user story count statistics
+- [x] Action output `report_path` set to `pdf_report.json` path
 
 **Verification:**
 - `tests/unit/test_report_generator.py::test_generate_report_success` - Successful report
@@ -355,15 +355,15 @@ Rendering failed: CSS parsing error in 'styles.css' at line 15. Fix CSS syntax.
 **Spec Reference:** [SPEC.md § 3.1.3](./SPEC.md#313-exit-codes), [SPEC.md § 5.2](./SPEC.md#52-error-handling-strategy)
 
 **Acceptance Criteria:**
-- [ ] All error types from SPEC.md § 3.1.3 implemented with correct exit codes:
+- [x] All error types from SPEC.md § 3.1.3 implemented with correct exit codes:
   - Exit code 1: Invalid input (missing file, invalid JSON)
   - Exit code 2: Schema validation failure
   - Exit code 3: Template error
   - Exit code 4: Rendering error
   - Exit code 5: File I/O error
-- [ ] Error messages follow format: `{prefix} {detail}. {guidance}`
-- [ ] All exceptions caught and converted to appropriate exit codes in `main.py`
-- [ ] Logging includes stack traces for debugging (when verbose=true)
+- [x] Error messages follow format: `{prefix} {detail}. {guidance}`
+- [x] All exceptions caught and converted to appropriate exit codes in `main.py`
+- [x] Logging includes stack traces for debugging (when verbose=true)
 
 **Verification:**
 - `tests/integration/test_error_handling.py::test_invalid_json_exit_code` - Exit code 1
@@ -382,7 +382,7 @@ Rendering failed: CSS parsing error in 'styles.css' at line 15. Fix CSS syntax.
 **Spec Reference:** [SPEC.md § 5.1](./SPEC.md#51-processing-pipeline)
 
 **Acceptance Criteria:**
-- [ ] `main.py` refactored to implement processing pipeline from SPEC.md § 5.1:
+- [x] `main.py` refactored to implement processing pipeline from SPEC.md § 5.1:
   1. Load and parse pdf_ready.json
   2. Validate against schema v1.0
   3. Load template pack
@@ -391,10 +391,10 @@ Rendering failed: CSS parsing error in 'styles.css' at line 15. Fix CSS syntax.
   6. Render PDF using WeasyPrint
   7. Generate pdf_report.json
   8. Set action outputs
-- [ ] All error types handled with correct exit codes
-- [ ] Action outputs set correctly (`pdf_path`, `html_path`, `report_path`)
-- [ ] Logging at INFO level for normal operation
-- [ ] Verbose logging when `verbose=true`
+- [x] All error types handled with correct exit codes
+- [x] Action outputs set correctly (`pdf_path`, `html_path`, `report_path`)
+- [x] Logging at INFO level for normal operation
+- [x] Verbose logging when `verbose=true`
 
 **Verification:**
 - `tests/integration/test_main_entrypoint.py::test_end_to_end_success` - Full pipeline success
@@ -416,8 +416,8 @@ Rendering failed: CSS parsing error in 'styles.css' at line 15. Fix CSS syntax.
   - `examples/multiple_stories.json` - 10+ user stories for realistic testing
   - `examples/invalid_missing_schema.json` - Invalid example (missing schema_version)
   - `examples/invalid_bad_timestamp.json` - Invalid example (bad timestamp)
-- [ ] All valid examples pass schema validation
-- [ ] All invalid examples fail with expected error messages
+- [x] All valid examples pass schema validation
+- [x] All invalid examples fail with expected error messages
 
 **Verification:**
 - `verifications/verify_schema_examples.py` - Validate all example files
