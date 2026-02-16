@@ -14,16 +14,16 @@
             {% endif %}
         </div>
     </div>
-    
+
     <div class="story-link">
         <a href="{{ story.url }}" target="_blank">{{ story.url }}</a>
     </div>
-    
+
     <div class="story-timestamps">
         <span>Created: {{ story.timestamps.created | format_datetime }}</span>
         <span>Updated: {{ story.timestamps.updated | format_datetime }}</span>
     </div>
-    
+
     <div class="story-content">
         {% if story.sections.description %}
         <div class="section">
@@ -33,7 +33,7 @@
             </div>
         </div>
         {% endif %}
-        
+
         {% if story.sections.business_value %}
         <div class="section">
             <h3 class="section-title">Business Value</h3>
@@ -42,7 +42,7 @@
             </div>
         </div>
         {% endif %}
-        
+
         {% if story.sections.preconditions %}
         <div class="section">
             <h3 class="section-title">Preconditions</h3>
@@ -51,7 +51,7 @@
             </div>
         </div>
         {% endif %}
-        
+
         {% if story.sections.acceptance_criteria %}
         <div class="section">
             <h3 class="section-title">Acceptance Criteria</h3>
@@ -60,7 +60,7 @@
             </div>
         </div>
         {% endif %}
-        
+
         {% if story.sections.user_guide %}
         <div class="section">
             <h3 class="section-title">User Guide</h3>
@@ -69,7 +69,7 @@
             </div>
         </div>
         {% endif %}
-        
+
         {% if story.sections.connections %}
         <div class="section">
             <h3 class="section-title">Connections</h3>
@@ -78,7 +78,7 @@
             </div>
         </div>
         {% endif %}
-        
+
         {% if story.sections.last_edited %}
         <div class="section">
             <h3 class="section-title">Last Edited</h3>

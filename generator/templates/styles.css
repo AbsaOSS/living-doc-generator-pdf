@@ -289,15 +289,15 @@ body {
         size: A4;
         margin: 2cm;
     }
-    
+
     .user-story {
         page-break-inside: avoid;
     }
-    
+
     .cover-page {
         page-break-after: always;
     }
-    
+
     a {
         color: #0066cc;
         text-decoration: none;
