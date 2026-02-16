@@ -434,12 +434,12 @@ Rendering failed: CSS parsing error in 'styles.css' at line 15. Fix CSS syntax.
 **Spec Reference:** [SPEC.md § 3.1](./SPEC.md#31-github-action-interface)
 
 **Acceptance Criteria:**
-- [ ] File `action.yml` created at repository root
-- [ ] Action metadata defined (name, description, branding)
-- [ ] All inputs defined with descriptions and defaults (from SPEC.md § 3.1.1)
-- [ ] All outputs defined with descriptions (from SPEC.md § 3.1.2)
-- [ ] Action runs using `composite` or `docker` strategy
-- [ ] Dependencies installed correctly (Jinja2, WeasyPrint, etc.)
+- [x] File `action.yml` created at repository root
+- [x] Action metadata defined (name, description, branding)
+- [x] All inputs defined with descriptions and defaults (from SPEC.md § 3.1.1)
+- [x] All outputs defined with descriptions (from SPEC.md § 3.1.2)
+- [x] Action runs using `composite` or `docker` strategy
+- [x] Dependencies installed correctly (Jinja2, WeasyPrint, etc.)
 
 **Verification:**
 - `.github/workflows/test.yml` - CI workflow using action
@@ -498,17 +498,17 @@ runs:
 **Spec Reference:** [SPEC.md § 3.1](./SPEC.md#31-github-action-interface)
 
 **Acceptance Criteria:**
-- [ ] README.md updated with sections:
+- [x] README.md updated with sections:
   - Overview (purpose, use cases)
   - Quick Start (minimal example)
   - Requirements (Python, dependencies)
   - Configuration (inputs table, outputs table)
   - Example Workflows (basic, custom templates, debug mode)
   - Troubleshooting (common errors)
-- [ ] Example workflow demonstrates basic usage
-- [ ] Example workflow demonstrates custom template usage
-- [ ] Links to SPEC.md for detailed contracts
-- [ ] Mirrors structure of `AbsaOSS/generate-release-notes` README
+- [x] Example workflow demonstrates basic usage
+- [x] Example workflow demonstrates custom template usage
+- [x] Links to SPEC.md for detailed contracts
+- [x] Mirrors structure of `AbsaOSS/generate-release-notes` README
 
 **Verification:**
 - Manual review for clarity and completeness
@@ -551,14 +551,14 @@ jobs:
 **Spec Reference:** [SPEC.md § 8.3](./SPEC.md#83-verification-scripts)
 
 **Acceptance Criteria:**
-- [ ] Directory `verifications/` created with scripts:
+- [x] Directory `verifications/` created with scripts:
   - `verify_schema_examples.py` - Validate all example JSON files
   - `verify_pdf_output.py` - PDF quality checks (fonts, metadata, structure)
   - `verify_error_messages.py` - Error message format consistency
   - `verify_templates.py` - Template syntax and completeness
-- [ ] All scripts exit with code 0 on success, non-zero on failure
-- [ ] All scripts produce clear output (PASS/FAIL per check)
-- [ ] Scripts can run in CI as quality gates
+- [x] All scripts exit with code 0 on success, non-zero on failure
+- [x] All scripts produce clear output (PASS/FAIL per check)
+- [x] Scripts can run in CI as quality gates
 
 **Verification:**
 - Run scripts manually and verify output

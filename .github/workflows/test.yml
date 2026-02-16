@@ -170,3 +170,38 @@ jobs:
         id: check-types
         run: |
           mypy .
+
+  verification-scripts:
+    runs-on: ubuntu-latest
+    name: Verification Scripts
+    needs: [unit-test]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v5
+        with:
+          python-version: '3.14'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Set PYTHONPATH environment variable
+        run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
+
+      - name: Run schema examples verification
+        run: python verifications/verify_schema_examples.py
+
+      - name: Run templates verification
+        run: python verifications/verify_templates.py
+
+      - name: Run error messages verification
+        run: python verifications/verify_error_messages.py
+
+      - name: Run PDF output verification
+        run: python verifications/verify_pdf_output.py
