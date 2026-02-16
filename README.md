@@ -123,7 +123,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Generate PDF
         uses: AbsaOSS/living-doc-generator-pdf@v1
         with:
@@ -145,7 +145,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Generate PDF with custom templates
         uses: AbsaOSS/living-doc-generator-pdf@v1
         with:
@@ -168,7 +168,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Generate PDF with debug HTML
         id: generate
         uses: AbsaOSS/living-doc-generator-pdf@v1
@@ -177,7 +177,7 @@ jobs:
           output_path: 'docs/output.pdf'
           debug_html: 'true'
           verbose: 'true'
-      
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:

@@ -24,7 +24,7 @@ from typing import Any
 import pytest
 from pytest_mock import MockerFixture
 
-from generator.schema_validator import SchemaValidationError, validate_pdf_ready_json
+from generator.schema_validator import SchemaValidationError, validate_pdf_ready_json, _format_validation_errors
 
 
 # Sentinel for key deletion in mutation
@@ -242,4 +242,30 @@ def test_schema_file_not_found(tmp_path: Path, mocker: MockerFixture) -> None:
 
     mocker.patch("builtins.open", side_effect=mock_open_side_effect)
     with pytest.raises(RuntimeError, match="Internal error: Schema file not found"):
+        validate_pdf_ready_json(str(test_file))
+
+
+def test_format_validation_errors_empty_list() -> None:
+    """Test _format_validation_errors returns fallback for empty error list."""
+    result = _format_validation_errors([])
+    assert result == "Unknown validation error"
+
+
+def test_invalid_timestamp_format(tmp_path: Path) -> None:
+    """Test that invalid ISO 8601 timestamps are rejected."""
+    data = _mutate(_base_valid_data(), "meta.generated_at", "not-a-timestamp")
+    test_file = tmp_path / "test.json"
+    test_file.write_text(json.dumps(data), encoding="utf-8")
+
+    with pytest.raises(SchemaValidationError, match="is not a valid ISO 8601 timestamp"):
+        validate_pdf_ready_json(str(test_file))
+
+
+def test_invalid_user_story_timestamp(tmp_path: Path) -> None:
+    """Test that invalid user story timestamps are rejected."""
+    data = _mutate(_base_valid_data(), "content.user_stories.0.timestamps.created", "bad")
+    test_file = tmp_path / "test.json"
+    test_file.write_text(json.dumps(data), encoding="utf-8")
+
+    with pytest.raises(SchemaValidationError, match="is not a valid ISO 8601 timestamp"):
         validate_pdf_ready_json(str(test_file))

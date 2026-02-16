@@ -224,3 +224,13 @@ def test_custom_template_fallback_to_builtin(tmp_path: Path, minimal_pdf_data: d
 
     assert "CUSTOM COVER" in html
     assert "<!DOCTYPE html>" in html  # From built-in main.html.jinja
+
+
+def test_nonexistent_custom_template_dir_falls_back(minimal_pdf_data: dict) -> None:
+    """Test that a non-existent custom template dir logs warning and uses built-in."""
+    renderer = TemplateRenderer("/nonexistent/template/dir")
+    html = renderer.render(minimal_pdf_data)
+
+    # Should fall back to built-in templates and render successfully
+    assert "<!DOCTYPE html>" in html
+    assert "Test Document" in html
