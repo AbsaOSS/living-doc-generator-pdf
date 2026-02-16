@@ -1,0 +1,54 @@
+#
+# Copyright 2023 ABSA Group Limited
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+name: Example PDF Generation
+
+on:
+  workflow_dispatch:
+
+jobs:
+  generate-pdf:
+    runs-on: ubuntu-latest
+    name: Generate Example PDF
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
+        with:
+          persist-credentials: false
+
+      - name: Generate PDF from minimal example
+        id: generate
+        uses: ./
+        with:
+          pdf_ready_json: examples/minimal_valid.json
+          debug_html: 'true'
+
+      - name: Print action outputs
+        run: |
+          echo "PDF path: ${{ steps.generate.outputs.pdf_path }}"
+          echo "HTML path: ${{ steps.generate.outputs.html_path }}"
+          echo "Report path: ${{ steps.generate.outputs.report_path }}"
+
+      - name: Upload generated PDF
+        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4
+        with:
+          name: example-pdf
+          path: |
+            ${{ steps.generate.outputs.pdf_path }}
+            ${{ steps.generate.outputs.html_path }}
+            ${{ steps.generate.outputs.report_path }}
