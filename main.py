@@ -25,7 +25,6 @@ This module implements the full processing pipeline:
 """
 
 import logging
-import sys
 from pathlib import Path
 
 from generator.action_inputs import ActionInputs
