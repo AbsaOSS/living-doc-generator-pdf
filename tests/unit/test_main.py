@@ -1,61 +1,271 @@
+#
+# Copyright 2023 ABSA Group Limited
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+"""Unit tests for main entrypoint."""
+
+import json
+
+import pytest
+
 import main
+from generator.pdf_generator import FileIOError, RenderingError
+from generator.schema_validator import SchemaValidationError
+from generator.template_renderer import TemplateError
 
 
-def test_run_outputs_pdf_path_on_success(monkeypatch, tmp_path) -> None:
+def test_run_outputs_all_paths_on_success(monkeypatch, tmp_path) -> None:
+    """Test that run() outputs all paths on successful generation."""
     output_calls: list[tuple[str, str]] = []
     failed_calls: list[str] = []
 
+    # Create test files
+    pdf_ready_file = tmp_path / "input.json"
+    pdf_ready_data = {
+        "schema_version": "1.0",
+        "meta": {
+            "document_title": "Test",
+            "document_version": "1.0.0",
+            "generated_at": "2026-01-21T12:00:00Z",
+            "source_set": ["test"],
+            "selection_summary": {"total_items": 0, "included_items": 0, "excluded_items": 0},
+        },
+        "content": {"user_stories": []},
+    }
+    pdf_ready_file.write_text(json.dumps(pdf_ready_data))
+
+    output_path = tmp_path / "output.pdf"
+
+    # Mock dependencies
     monkeypatch.setattr(main, "setup_logging", lambda: None)
+    monkeypatch.setattr(main.ActionInputs, "get_pdf_ready_json", staticmethod(lambda: str(pdf_ready_file)))
+    monkeypatch.setattr(main.ActionInputs, "get_output_path", staticmethod(lambda: str(output_path)))
+    monkeypatch.setattr(main.ActionInputs, "get_template_dir", staticmethod(lambda: None))
+    monkeypatch.setattr(main.ActionInputs, "get_debug_html", staticmethod(lambda: False))
+    monkeypatch.setattr(main.ActionInputs, "get_verbose", staticmethod(lambda: False))
     monkeypatch.setattr(main.ActionInputs, "validate_inputs", staticmethod(lambda: None))
 
-    class FakeGenerator:
-        def generate(self):
-            return str(tmp_path / "out.pdf")
+    # Mock PDF generator
+    class FakePdfGenerator:
+        def generate_pdf(self, html, output_path_arg, template_dir):
+            # Create fake PDF
+            with open(output_path_arg, "w") as f:
+                f.write("fake pdf")
 
-    monkeypatch.setattr(main, "PdfGenerator", FakeGenerator)
+    monkeypatch.setattr(main, "PdfGenerator", FakePdfGenerator)
     monkeypatch.setattr(main, "set_action_output", lambda name, value: output_calls.append((name, value)))
     monkeypatch.setattr(main, "set_action_failed", lambda msg: failed_calls.append(msg))
 
     main.run()
 
     assert failed_calls == []
-    assert output_calls == [("pdf-path", str(tmp_path / "out.pdf"))]
+    assert len(output_calls) == 2  # pdf-path and report-path
+    assert any(name == "pdf-path" for name, _ in output_calls)
+    assert any(name == "report-path" for name, _ in output_calls)
 
 
-def test_run_fails_when_generator_returns_none(monkeypatch) -> None:
-    failed_calls: list[str] = []
+def test_run_outputs_html_path_when_debug_enabled(monkeypatch, tmp_path) -> None:
+    """Test that run() outputs html-path when debug_html is enabled."""
+    output_calls: list[tuple[str, str]] = []
 
+    # Create test files
+    pdf_ready_file = tmp_path / "input.json"
+    pdf_ready_data = {
+        "schema_version": "1.0",
+        "meta": {
+            "document_title": "Test",
+            "document_version": "1.0.0",
+            "generated_at": "2026-01-21T12:00:00Z",
+            "source_set": ["test"],
+            "selection_summary": {"total_items": 0, "included_items": 0, "excluded_items": 0},
+        },
+        "content": {"user_stories": []},
+    }
+    pdf_ready_file.write_text(json.dumps(pdf_ready_data))
+
+    output_path = tmp_path / "output.pdf"
+
+    # Mock dependencies
     monkeypatch.setattr(main, "setup_logging", lambda: None)
+    monkeypatch.setattr(main.ActionInputs, "get_pdf_ready_json", staticmethod(lambda: str(pdf_ready_file)))
+    monkeypatch.setattr(main.ActionInputs, "get_output_path", staticmethod(lambda: str(output_path)))
+    monkeypatch.setattr(main.ActionInputs, "get_template_dir", staticmethod(lambda: None))
+    monkeypatch.setattr(main.ActionInputs, "get_debug_html", staticmethod(lambda: True))
+    monkeypatch.setattr(main.ActionInputs, "get_verbose", staticmethod(lambda: False))
     monkeypatch.setattr(main.ActionInputs, "validate_inputs", staticmethod(lambda: None))
 
-    class FakeGenerator:
-        def generate(self):
-            return None
+    class FakePdfGenerator:
+        def generate_pdf(self, html, output_path_arg, template_dir):
+            with open(output_path_arg, "w") as f:
+                f.write("fake pdf")
 
-    monkeypatch.setattr(main, "PdfGenerator", FakeGenerator)
-    monkeypatch.setattr(main, "set_action_output", lambda name, value: None)
-    monkeypatch.setattr(main, "set_action_failed", lambda msg: failed_calls.append(msg))
+    monkeypatch.setattr(main, "PdfGenerator", FakePdfGenerator)
+    monkeypatch.setattr(main, "set_action_output", lambda name, value: output_calls.append((name, value)))
+    monkeypatch.setattr(main, "set_action_failed", lambda msg: None)
 
     main.run()
 
-    assert failed_calls == ["Failed to generate PDF. See logs for details."]
+    output_names = [name for name, _ in output_calls]
+    assert "html-path" in output_names
+    assert "pdf-path" in output_names
+    assert "report-path" in output_names
 
 
-def test_run_fails_when_generator_raises(monkeypatch) -> None:
-    failed_calls: list[str] = []
+def test_run_exits_with_code_1_on_value_error(monkeypatch) -> None:
+    """Test that run() exits with code 1 on ValueError."""
+    monkeypatch.setattr(main, "setup_logging", lambda: None)
+    monkeypatch.setattr(main.ActionInputs, "validate_inputs", staticmethod(lambda: None))
+    monkeypatch.setattr(main.ActionInputs, "get_verbose", staticmethod(lambda: False))
+    monkeypatch.setattr(main.ActionInputs, "get_pdf_ready_json", staticmethod(lambda: None))
+
+    # Mock validate_pdf_ready_json to raise ValueError
+    def raise_value_error(path):
+        raise ValueError("Invalid input")
+
+    monkeypatch.setattr(main, "validate_pdf_ready_json", raise_value_error)
+    monkeypatch.setattr(main, "set_action_failed", lambda msg: None)
+
+    with pytest.raises(SystemExit) as exc_info:
+        main.run()
+
+    assert exc_info.value.code == 1
+
+
+def test_run_exits_with_code_2_on_schema_validation_error(monkeypatch, tmp_path) -> None:
+    """Test that run() exits with code 2 on SchemaValidationError."""
+    pdf_ready_file = tmp_path / "input.json"
 
     monkeypatch.setattr(main, "setup_logging", lambda: None)
     monkeypatch.setattr(main.ActionInputs, "validate_inputs", staticmethod(lambda: None))
+    monkeypatch.setattr(main.ActionInputs, "get_verbose", staticmethod(lambda: False))
+    monkeypatch.setattr(main.ActionInputs, "get_pdf_ready_json", staticmethod(lambda: str(pdf_ready_file)))
 
-    class FakeGenerator:
-        def generate(self):
-            raise RuntimeError("boom")
+    def raise_schema_error(path):
+        raise SchemaValidationError("Schema validation failed")
 
-    monkeypatch.setattr(main, "PdfGenerator", FakeGenerator)
-    monkeypatch.setattr(main, "set_action_output", lambda name, value: None)
-    monkeypatch.setattr(main, "set_action_failed", lambda msg: failed_calls.append(msg))
+    monkeypatch.setattr(main, "validate_pdf_ready_json", raise_schema_error)
+    monkeypatch.setattr(main, "set_action_failed", lambda msg: None)
 
-    main.run()
+    with pytest.raises(SystemExit) as exc_info:
+        main.run()
 
-    assert len(failed_calls) == 1
-    assert failed_calls[0].startswith("Failed to generate PDF. Error: ")
+    assert exc_info.value.code == 2
+
+
+def test_run_exits_with_code_3_on_template_error(monkeypatch, tmp_path) -> None:
+    """Test that run() exits with code 3 on TemplateError."""
+    pdf_ready_file = tmp_path / "input.json"
+    pdf_ready_data = {
+        "schema_version": "1.0",
+        "meta": {
+            "document_title": "Test",
+            "document_version": "1.0.0",
+            "generated_at": "2026-01-21T12:00:00Z",
+            "source_set": ["test"],
+            "selection_summary": {"total_items": 0, "included_items": 0, "excluded_items": 0},
+        },
+        "content": {"user_stories": []},
+    }
+    pdf_ready_file.write_text(json.dumps(pdf_ready_data))
+
+    monkeypatch.setattr(main, "setup_logging", lambda: None)
+    monkeypatch.setattr(main.ActionInputs, "validate_inputs", staticmethod(lambda: None))
+    monkeypatch.setattr(main.ActionInputs, "get_verbose", staticmethod(lambda: False))
+    monkeypatch.setattr(main.ActionInputs, "get_pdf_ready_json", staticmethod(lambda: str(pdf_ready_file)))
+    monkeypatch.setattr(main.ActionInputs, "get_template_dir", staticmethod(lambda: None))
+
+    class FakeRenderer:
+        def render(self, data):
+            raise TemplateError("Template not found")
+
+    monkeypatch.setattr(main, "TemplateRenderer", lambda x: FakeRenderer())
+    monkeypatch.setattr(main, "set_action_failed", lambda msg: None)
+
+    with pytest.raises(SystemExit) as exc_info:
+        main.run()
+
+    assert exc_info.value.code == 3
+
+
+def test_run_exits_with_code_4_on_rendering_error(monkeypatch, tmp_path) -> None:
+    """Test that run() exits with code 4 on RenderingError."""
+    pdf_ready_file = tmp_path / "input.json"
+    pdf_ready_data = {
+        "schema_version": "1.0",
+        "meta": {
+            "document_title": "Test",
+            "document_version": "1.0.0",
+            "generated_at": "2026-01-21T12:00:00Z",
+            "source_set": ["test"],
+            "selection_summary": {"total_items": 0, "included_items": 0, "excluded_items": 0},
+        },
+        "content": {"user_stories": []},
+    }
+    pdf_ready_file.write_text(json.dumps(pdf_ready_data))
+
+    monkeypatch.setattr(main, "setup_logging", lambda: None)
+    monkeypatch.setattr(main.ActionInputs, "validate_inputs", staticmethod(lambda: None))
+    monkeypatch.setattr(main.ActionInputs, "get_verbose", staticmethod(lambda: False))
+    monkeypatch.setattr(main.ActionInputs, "get_pdf_ready_json", staticmethod(lambda: str(pdf_ready_file)))
+    monkeypatch.setattr(main.ActionInputs, "get_template_dir", staticmethod(lambda: None))
+    monkeypatch.setattr(main.ActionInputs, "get_debug_html", staticmethod(lambda: False))
+
+    class FakePdfGenerator:
+        def generate_pdf(self, html, output_path, template_dir):
+            raise RenderingError("Rendering failed")
+
+    monkeypatch.setattr(main, "PdfGenerator", FakePdfGenerator)
+    monkeypatch.setattr(main, "set_action_failed", lambda msg: None)
+
+    with pytest.raises(SystemExit) as exc_info:
+        main.run()
+
+    assert exc_info.value.code == 4
+
+
+def test_run_exits_with_code_5_on_file_io_error(monkeypatch, tmp_path) -> None:
+    """Test that run() exits with code 5 on FileIOError."""
+    pdf_ready_file = tmp_path / "input.json"
+    pdf_ready_data = {
+        "schema_version": "1.0",
+        "meta": {
+            "document_title": "Test",
+            "document_version": "1.0.0",
+            "generated_at": "2026-01-21T12:00:00Z",
+            "source_set": ["test"],
+            "selection_summary": {"total_items": 0, "included_items": 0, "excluded_items": 0},
+        },
+        "content": {"user_stories": []},
+    }
+    pdf_ready_file.write_text(json.dumps(pdf_ready_data))
+
+    monkeypatch.setattr(main, "setup_logging", lambda: None)
+    monkeypatch.setattr(main.ActionInputs, "validate_inputs", staticmethod(lambda: None))
+    monkeypatch.setattr(main.ActionInputs, "get_verbose", staticmethod(lambda: False))
+    monkeypatch.setattr(main.ActionInputs, "get_pdf_ready_json", staticmethod(lambda: str(pdf_ready_file)))
+    monkeypatch.setattr(main.ActionInputs, "get_template_dir", staticmethod(lambda: None))
+    monkeypatch.setattr(main.ActionInputs, "get_debug_html", staticmethod(lambda: False))
+
+    class FakePdfGenerator:
+        def generate_pdf(self, html, output_path, template_dir):
+            raise FileIOError("File I/O error")
+
+    monkeypatch.setattr(main, "PdfGenerator", FakePdfGenerator)
+    monkeypatch.setattr(main, "set_action_failed", lambda msg: None)
+
+    with pytest.raises(SystemExit) as exc_info:
+        main.run()
+
+    assert exc_info.value.code == 5
