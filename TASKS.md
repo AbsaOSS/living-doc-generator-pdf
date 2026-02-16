@@ -23,11 +23,11 @@ This document breaks down the implementation of the Living Documentation PDF Gen
 **Spec Reference:** [SPEC.md § 3.2](./SPEC.md#32-pdf-ready-json-schema-v10)
 
 **Acceptance Criteria:**
-- [ ] JSON Schema file created at `generator/schemas/pdf_ready_v1.0.json`
-- [ ] Schema enforces all required fields from SPEC.md § 3.2.2 and § 3.2.3
-- [ ] Schema validates data types (strings, integers, arrays, objects)
-- [ ] Schema validates value constraints (non-empty strings, valid URLs, ISO timestamps)
-- [ ] Schema rejects unknown `schema_version` values (only "1.0" allowed)
+- [x] JSON Schema file created at `generator/schemas/pdf_ready_v1.0.json`
+- [x] Schema enforces all required fields from SPEC.md § 3.2.2 and § 3.2.3
+- [x] Schema validates data types (strings, integers, arrays, objects)
+- [x] Schema validates value constraints (non-empty strings, valid URLs, ISO timestamps)
+- [x] Schema rejects unknown `schema_version` values (only "1.0" allowed)
 
 **Verification:**
 - `tests/unit/test_schema_validation.py::test_valid_schema_examples` - Valid examples pass
@@ -65,12 +65,12 @@ with pytest.raises(ValidationError, match="Missing required field 'schema_versio
 **Spec Reference:** [SPEC.md § 3.2](./SPEC.md#32-pdf-ready-json-schema-v10), [SPEC.md § 3.1.3](./SPEC.md#313-exit-codes)
 
 **Acceptance Criteria:**
-- [ ] Module `generator/schema_validator.py` created
-- [ ] Function `validate_pdf_ready_json(file_path: str) -> dict` implemented
-- [ ] Validation uses `jsonschema` library with JSON Schema from Task 1.1
-- [ ] Clear error messages for validation failures (exit code 2)
-- [ ] Error messages follow format: `Schema validation failed: {detail}. {guidance}`
-- [ ] Returns parsed JSON dict on success
+- [x] Module `generator/schema_validator.py` created
+- [x] Function `validate_pdf_ready_json(file_path: str) -> dict` implemented
+- [x] Validation uses `jsonschema` library with JSON Schema from Task 1.1
+- [x] Clear error messages for validation failures (exit code 2)
+- [x] Error messages follow format: `Schema validation failed: {detail}. {guidance}`
+- [x] Returns parsed JSON dict on success
 
 **Verification:**
 - `tests/unit/test_schema_validator.py::test_validate_valid_json` - Valid JSON passes
@@ -94,15 +94,15 @@ Schema validation failed: 'document_title' must be a non-empty string. Provide a
 **Spec Reference:** [SPEC.md § 3.1.1](./SPEC.md#311-action-inputs)
 
 **Acceptance Criteria:**
-- [ ] `generator/action_inputs.py` updated with new input methods:
+- [x] `generator/action_inputs.py` updated with new input methods:
   - `get_pdf_ready_json() -> str` - path to pdf_ready.json
   - `get_output_path() -> str` - path for output PDF (default: "output.pdf")
   - `get_template_dir() -> Optional[str]` - custom template directory
   - `get_debug_html() -> bool` - save debug HTML flag
   - `get_verbose() -> bool` - verbose logging flag
 - [ ] Old inputs (source_path, document_title) deprecated or removed
-- [ ] Input validation raises ValueError with clear messages for invalid inputs
-- [ ] Constants updated in `generator/utils/constants.py`
+- [x] Input validation raises ValueError with clear messages for invalid inputs
+- [x] Constants updated in `generator/utils/constants.py`
 
 **Verification:**
 - `tests/unit/test_action_inputs.py::test_get_pdf_ready_json` - Input reading
@@ -130,7 +130,7 @@ debug = ActionInputs.get_debug_html()          # False
 **Spec Reference:** [SPEC.md § 3.4.1](./SPEC.md#341-built-in-template-pack)
 
 **Acceptance Criteria:**
-- [ ] Directory `generator/templates/` created with structure:
+- [x] Directory `generator/templates/` created with structure:
   ```
   generator/templates/
   ├── main.html.jinja
@@ -143,12 +143,12 @@ debug = ActionInputs.get_debug_html()          # False
       └── images/
           └── logo.png
   ```
-- [ ] `main.html.jinja` renders complete HTML5 document
-- [ ] `cover.html.jinja` renders cover page with metadata from `meta` section
-- [ ] `user_story.html.jinja` renders individual user story with all sections
-- [ ] `styles.css` provides professional styling (headers, spacing, page breaks)
+- [x] `main.html.jinja` renders complete HTML5 document
+- [x] `cover.html.jinja` renders cover page with metadata from `meta` section
+- [x] `user_story.html.jinja` renders individual user story with all sections
+- [x] `styles.css` provides professional styling (headers, spacing, page breaks)
 - [ ] Font files included (DejaVu Sans family) and referenced in CSS
-- [ ] Templates use only variables from canonical schema (SPEC.md § 3.2)
+- [x] Templates use only variables from canonical schema (SPEC.md § 3.2)
 
 **Verification:**
 - `verifications/verify_built_in_templates.py` - Template syntax check
@@ -182,17 +182,17 @@ debug = ActionInputs.get_debug_html()          # False
 **Spec Reference:** [SPEC.md § 3.4](./SPEC.md#34-template-pack-structure)
 
 **Acceptance Criteria:**
-- [ ] Module `generator/template_renderer.py` created
-- [ ] Class `TemplateRenderer` with methods:
+- [x] Module `generator/template_renderer.py` created
+- [x] Class `TemplateRenderer` with methods:
   - `__init__(template_dir: Optional[str])` - initialize with built-in or custom templates
   - `render(pdf_ready_data: dict) -> str` - render HTML from JSON data
-- [ ] Jinja2 environment configured with:
+- [x] Jinja2 environment configured with:
   - Autoescape enabled
   - Custom filters: `markdown`, `format_datetime`
   - Template loader from built-in or custom directory
-- [ ] Custom template overrides work (custom templates override built-in)
-- [ ] Missing custom templates fall back to built-in defaults
-- [ ] Template errors raise clear exceptions (exit code 3)
+- [x] Custom template overrides work (custom templates override built-in)
+- [x] Missing custom templates fall back to built-in defaults
+- [x] Template errors raise clear exceptions (exit code 3)
 
 **Verification:**
 - `tests/unit/test_template_renderer.py::test_render_with_built_in_templates` - Built-in rendering
@@ -215,11 +215,11 @@ Template error: Syntax error in 'user_story.html.jinja' at line 42. Fix template
 **Spec Reference:** [SPEC.md § 3.4.2](./SPEC.md#342-custom-template-pack)
 
 **Acceptance Criteria:**
-- [ ] Jinja2 filter `markdown` implemented in `generator/filters.py`
-- [ ] Filter converts Markdown to HTML using `markdown` library
-- [ ] Filter handles `None` and empty string gracefully (returns empty string)
+- [x] Jinja2 filter `markdown` implemented in `generator/filters.py`
+- [x] Filter converts Markdown to HTML using `markdown` library
+- [x] Filter handles `None` and empty string gracefully (returns empty string)
 - [ ] Filter escapes HTML in Markdown output to prevent injection
-- [ ] Filter registered in `TemplateRenderer` Jinja2 environment
+- [x] Filter registered in `TemplateRenderer` Jinja2 environment
 
 **Verification:**
 - `tests/unit/test_filters.py::test_markdown_filter_basic` - Basic Markdown conversion
@@ -410,7 +410,7 @@ Rendering failed: CSS parsing error in 'styles.css' at line 15. Fix CSS syntax.
 **Spec Reference:** [SPEC.md § 3.2.4](./SPEC.md#324-complete-example)
 
 **Acceptance Criteria:**
-- [ ] Directory `examples/` created with example JSON files:
+- [x] Directory `examples/` created with example JSON files:
   - `examples/minimal_valid.json` - Minimal valid pdf_ready.json
   - `examples/full_example.json` - Complete example with all fields
   - `examples/multiple_stories.json` - 10+ user stories for realistic testing
