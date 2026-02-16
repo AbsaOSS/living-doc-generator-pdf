@@ -55,14 +55,15 @@ def set_action_output(name: str, value: str, default_output_path: str = "default
         f.write("EOF\n")
 
 
-def set_action_failed(message: str) -> None:
+def set_action_failed(message: str, exit_code: int = 1) -> None:
     """
     Mark the GitHub Action as failed and exit with an error message.
 
     @param message: The error message to be displayed.
+    @param exit_code: The exit code to use (default: 1).
     @return: None
     """
     logger.error(message)
     sys.stderr.write(f"::error::{message}\n")
     sys.stderr.flush()
-    sys.exit(1)
+    sys.exit(exit_code)

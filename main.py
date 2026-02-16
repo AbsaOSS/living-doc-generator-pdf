@@ -25,7 +25,6 @@ This module implements the full processing pipeline:
 """
 
 import logging
-import sys
 from pathlib import Path
 
 from generator.action_inputs import ActionInputs
@@ -113,48 +112,42 @@ def run() -> None:
         logger.error("Invalid input: %s", str(exc))
         if verbose:
             logger.exception("Stack trace:")
-        set_action_failed(str(exc))
-        sys.exit(1)
+        set_action_failed(str(exc), exit_code=1)
 
     except SchemaValidationError as exc:
         # Exit code 2: Schema validation failure
         logger.error("Schema validation failed: %s", str(exc))
         if verbose:
             logger.exception("Stack trace:")
-        set_action_failed(str(exc))
-        sys.exit(2)
+        set_action_failed(str(exc), exit_code=2)
 
     except TemplateError as exc:
         # Exit code 3: Template error
         logger.error("Template error: %s", str(exc))
         if verbose:
             logger.exception("Stack trace:")
-        set_action_failed(str(exc))
-        sys.exit(3)
+        set_action_failed(str(exc), exit_code=3)
 
     except RenderingError as exc:
         # Exit code 4: Rendering error
         logger.error("Rendering failed: %s", str(exc))
         if verbose:
             logger.exception("Stack trace:")
-        set_action_failed(str(exc))
-        sys.exit(4)
+        set_action_failed(str(exc), exit_code=4)
 
     except FileIOError as exc:
         # Exit code 5: File I/O error
         logger.error("File I/O error: %s", str(exc))
         if verbose:
             logger.exception("Stack trace:")
-        set_action_failed(str(exc))
-        sys.exit(5)
+        set_action_failed(str(exc), exit_code=5)
 
     except Exception as exc:  # pylint: disable=broad-except
         # Exit code 1: Unexpected error
         logger.error("Unexpected error: %s", str(exc))
         if verbose:
             logger.exception("Stack trace:")
-        set_action_failed(f"Unexpected error: {str(exc)}")
-        sys.exit(1)
+        set_action_failed(f"Unexpected error: {str(exc)}", exit_code=1)
 
 
 if __name__ == "__main__":
