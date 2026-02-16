@@ -266,7 +266,7 @@ Templates receive a context object with these variables:
 ```jinja
 <h1>{{ meta.document_title }}</h1>
 <p>Version: {{ meta.document_version }}</p>
-<p>Generated: {{ meta.generated_at|format_timestamp }}</p>
+<p>Generated: {{ meta.generated_at|format_datetime }}</p>
 
 {% for story in content.user_stories %}
   <div class="story">
@@ -280,9 +280,8 @@ Templates receive a context object with these variables:
 
 The action provides custom Jinja filters for formatting:
 
-- `format_timestamp(value)`: Format ISO 8601 timestamp as human-readable
-- `truncate_text(text, length)`: Truncate text with ellipsis
-- `escape_html(text)`: HTML-escape text for safety
+- `format_datetime(value)`: Format ISO 8601 timestamp as human-readable
+- `markdown(text)`: Convert Markdown text to HTML
 
 For complete template documentation, see [SPEC.md § 6](./SPEC.md#6-template-pack-specification).
 
