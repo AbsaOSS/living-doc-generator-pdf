@@ -234,3 +234,24 @@ def test_nonexistent_custom_template_dir_falls_back(minimal_pdf_data: dict) -> N
     # Should fall back to built-in templates and render successfully
     assert "<!DOCTYPE html>" in html
     assert "Test Document" in html
+
+
+def test_template_error_is_exception_subclass() -> None:
+    """Test that TemplateError is a proper Exception subclass."""
+    assert issubclass(TemplateError, Exception)
+
+
+def test_builtin_template_files_exist() -> None:
+    """Test that all required built-in template files are present."""
+    templates_dir = Path(__file__).parent.parent.parent.parent / "generator" / "templates"
+
+    required_files = [
+        "main.html.jinja",
+        "cover.html.jinja",
+        "user_story.html.jinja",
+        "styles.css",
+    ]
+
+    for filename in required_files:
+        file_path = templates_dir / filename
+        assert file_path.exists(), f"Required built-in template missing: {filename}"

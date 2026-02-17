@@ -32,7 +32,6 @@ This document breaks down the implementation of the Living Documentation PDF Gen
 **Verification:**
 - `tests/unit/test_schema_validation.py::test_valid_schema_examples` - Valid examples pass
 - `tests/unit/test_schema_validation.py::test_invalid_schema_examples` - Invalid examples rejected with specific errors
-- `verifications/verify_schema_examples.py` - Validate example JSON files against schema
 
 **Example Test Scenario:**
 ```python
@@ -151,9 +150,9 @@ debug = ActionInputs.get_debug_html()          # False
 - [x] Templates use only variables from canonical schema (SPEC.md § 3.2)
 
 **Verification:**
-- `verifications/verify_built_in_templates.py` - Template syntax check
 - `tests/unit/test_template_rendering.py::test_render_cover_page` - Cover page rendering
 - `tests/unit/test_template_rendering.py::test_render_user_story` - User story rendering
+- `tests/unit/test_template_rendering.py::test_builtin_template_files_exist` - Template file existence
 - Manual visual inspection of rendered HTML
 
 **Template Variables Contract:**
@@ -263,7 +262,6 @@ Template error: Syntax error in 'user_story.html.jinja' at line 42. Fix template
 - `tests/integration/test_pdf_generation.py::test_generate_pdf_minimal` - Minimal PDF
 - `tests/integration/test_pdf_generation.py::test_generate_pdf_with_stories` - Full PDF with user stories
 - `tests/integration/test_pdf_generation.py::test_pdf_metadata` - Metadata embedded
-- `verifications/verify_pdf_output.py` - PDF quality checks (fonts, metadata, structure)
 
 **Error Message Examples:**
 ```
@@ -371,7 +369,6 @@ Rendering failed: CSS parsing error in 'styles.css' at line 15. Fix CSS syntax.
 - `tests/integration/test_error_handling.py::test_template_error_exit_code` - Exit code 3
 - `tests/integration/test_error_handling.py::test_rendering_error_exit_code` - Exit code 4
 - `tests/integration/test_error_handling.py::test_file_io_error_exit_code` - Exit code 5
-- `verifications/verify_error_messages.py` - Error message format consistency
 
 ---
 
@@ -420,7 +417,6 @@ Rendering failed: CSS parsing error in 'styles.css' at line 15. Fix CSS syntax.
 - [x] All invalid examples fail with expected error messages
 
 **Verification:**
-- `verifications/verify_schema_examples.py` - Validate all example files
 - `tests/integration/test_example_files.py::test_valid_examples_render` - Valid examples render to PDF
 
 ---
@@ -544,62 +540,12 @@ jobs:
 
 ---
 
-#### Task 5.3: Create Verification Scripts
+#### Task 5.3: ~~Create Verification Scripts~~ (Removed)
 
-**Owner:** SDET
-**Priority:** High
-**Spec Reference:** [SPEC.md § 8.3](./SPEC.md#83-verification-scripts)
-
-**Acceptance Criteria:**
-- [x] Directory `verifications/` created with scripts:
-  - `verify_schema_examples.py` - Validate all example JSON files
-  - `verify_pdf_output.py` - PDF quality checks (fonts, metadata, structure)
-  - `verify_error_messages.py` - Error message format consistency
-  - `verify_templates.py` - Template syntax and completeness
-- [x] All scripts exit with code 0 on success, non-zero on failure
-- [x] All scripts produce clear output (PASS/FAIL per check)
-- [x] Scripts can run in CI as quality gates
-
-**Verification:**
-- Run scripts manually and verify output
-- Add scripts to CI workflow as quality gate step
-
-**Example Script:**
-```python
-#!/usr/bin/env python3
-"""Verify all example JSON files against schema."""
-
-import sys
-from pathlib import Path
-from generator.schema_validator import validate_pdf_ready_json
-
-def main():
-    examples_dir = Path("examples")
-    valid_examples = [
-        "minimal_valid.json",
-        "full_example.json",
-        "multiple_stories.json"
-    ]
-
-    failures = []
-    for example in valid_examples:
-        try:
-            validate_pdf_ready_json(examples_dir / example)
-            print(f"✓ {example} - PASS")
-        except Exception as e:
-            print(f"✗ {example} - FAIL: {e}")
-            failures.append(example)
-
-    if failures:
-        print(f"\n{len(failures)} validation(s) failed")
-        sys.exit(1)
-    else:
-        print(f"\nAll {len(valid_examples)} validations passed")
-        sys.exit(0)
-
-if __name__ == "__main__":
-    main()
-```
+Verification scripts were removed because their checks were redundant with existing
+unit and integration tests. The few unique checks (template file existence, error
+class hierarchy) were migrated into unit tests. See `test_template_renderer.py` and
+`test_pdf_generator.py`.
 
 ---
 
@@ -612,16 +558,16 @@ if __name__ == "__main__":
 **Spec Reference:** [SPEC.md § 8.1](./SPEC.md#81-unit-tests)
 
 **Acceptance Criteria:**
-- [ ] Unit tests cover all modules:
+- [x] Unit tests cover all modules:
   - `generator/schema_validator.py`
   - `generator/action_inputs.py`
   - `generator/template_renderer.py`
   - `generator/filters.py`
   - `generator/report_generator.py`
-- [ ] Coverage ≥ 80% overall
-- [ ] Coverage ≥ 90% for schema_validator and action_inputs (critical modules)
-- [ ] All tests pass locally and in CI
-- [ ] Tests use mocking for file I/O and external dependencies
+- [x] Coverage ≥ 80% overall
+- [x] Coverage ≥ 90% for schema_validator and action_inputs (critical modules)
+- [x] All tests pass locally and in CI
+- [x] Tests use mocking for file I/O and external dependencies
 
 **Verification:**
 - `pytest --cov=generator --cov-report=html --cov-fail-under=80`
@@ -636,15 +582,15 @@ if __name__ == "__main__":
 **Spec Reference:** [SPEC.md § 8.2](./SPEC.md#82-integration-tests)
 
 **Acceptance Criteria:**
-- [ ] Integration test suite created in `tests/integration/`:
+- [x] Integration test suite created in `tests/integration/`:
   - `test_pdf_generation.py` - End-to-end PDF generation scenarios
   - `test_custom_templates.py` - Custom template override scenarios
   - `test_error_handling.py` - Error scenarios with exit codes
   - `test_edge_cases.py` - Large files, empty arrays, edge cases
   - `test_debug_html.py` - Debug HTML output scenarios
-- [ ] Tests use real file system (not mocked)
-- [ ] Tests verify actual PDF output (file exists, valid structure)
-- [ ] All integration tests pass in CI environment
+- [x] Tests use real file system (not mocked)
+- [x] Tests verify actual PDF output (file exists, valid structure)
+- [x] All integration tests pass in CI environment
 
 **Verification:**
 - `pytest tests/integration/`
@@ -659,14 +605,12 @@ if __name__ == "__main__":
 **Spec Reference:** [SPEC.md § 6](./SPEC.md#6-phase-by-phase-acceptance-criteria)
 
 **Acceptance Criteria:**
-- [ ] `.github/workflows/test.yml` updated to:
+- [x] `.github/workflows/test.yml` updated to:
   - Run unit tests with coverage reporting
   - Run integration tests
-  - Run verification scripts
   - Upload test artifacts (coverage report, example PDFs)
-- [ ] CI fails if coverage < 80%
-- [ ] CI fails if any verification script fails
-- [ ] CI passes on main branch and PRs
+- [x] CI fails if coverage < 80%
+- [x] CI passes on main branch and PRs
 
 **Verification:**
 - Trigger CI workflow and verify all steps pass
@@ -676,26 +620,25 @@ if __name__ == "__main__":
 
 ## Verification Matrix
 
-| Task | Unit Tests | Integration Tests | Verification Script | Manual Testing |
-|------|------------|-------------------|---------------------|----------------|
-| 1.1 Schema Definition | ✓ | - | ✓ | - |
-| 1.2 Schema Validator | ✓ | ✓ | - | - |
-| 1.3 Action Inputs | ✓ | - | - | - |
-| 2.1 Template Pack | ✓ | - | ✓ | ✓ |
-| 2.2 Template Renderer | ✓ | ✓ | - | - |
-| 2.3 Markdown Filter | ✓ | - | - | - |
-| 3.1 PDF Generator | - | ✓ | ✓ | ✓ |
-| 3.2 Debug HTML | - | ✓ | - | ✓ |
-| 3.3 PDF Report | ✓ | ✓ | - | - |
-| 4.1 Error Handling | - | ✓ | ✓ | - |
-| 4.2 Main Entrypoint | - | ✓ | - | ✓ |
-| 4.3 Example Files | - | ✓ | ✓ | - |
-| 5.1 Action Definition | - | - | - | ✓ |
-| 5.2 README Update | - | - | - | ✓ |
-| 5.3 Verification Scripts | - | - | ✓ | ✓ |
-| 6.1 Unit Coverage | ✓ | - | - | - |
-| 6.2 Integration Tests | - | ✓ | - | - |
-| 6.3 CI/CD Integration | - | - | - | ✓ |
+| Task | Unit Tests | Integration Tests | Manual Testing |
+|------|------------|-------------------|----------------|
+| 1.1 Schema Definition | ✓ | - | - |
+| 1.2 Schema Validator | ✓ | ✓ | - |
+| 1.3 Action Inputs | ✓ | - | - |
+| 2.1 Template Pack | ✓ | - | ✓ |
+| 2.2 Template Renderer | ✓ | ✓ | - |
+| 2.3 Markdown Filter | ✓ | - | - |
+| 3.1 PDF Generator | ✓ | ✓ | ✓ |
+| 3.2 Debug HTML | - | ✓ | ✓ |
+| 3.3 PDF Report | ✓ | ✓ | - |
+| 4.1 Error Handling | ✓ | ✓ | - |
+| 4.2 Main Entrypoint | - | ✓ | ✓ |
+| 4.3 Example Files | - | ✓ | - |
+| 5.1 Action Definition | - | - | ✓ |
+| 5.2 README Update | - | - | ✓ |
+| 6.1 Unit Coverage | ✓ | - | - |
+| 6.2 Integration Tests | - | ✓ | - |
+| 6.3 CI/CD Integration | - | - | ✓ |
 
 ---
 
@@ -707,7 +650,6 @@ A task is considered complete when:
 - [ ] All specified tests written and passing
 - [ ] Code reviewed and approved (if applicable)
 - [ ] Documentation updated (if applicable)
-- [ ] Verification scripts pass (if applicable)
 - [ ] CI/CD pipeline passes
 - [ ] Changes committed and pushed to feature branch
 
@@ -754,8 +696,7 @@ Phase 4 (Integration)
 
 Phase 5 (Documentation)
 ├── 5.1 Action Definition
-├── 5.2 README Update
-└── 5.3 Verification Scripts
+└── 5.2 README Update
     └── Phase 6 (Testing)
 
 Phase 6 (Testing)

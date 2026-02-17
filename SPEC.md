@@ -507,7 +507,6 @@ All templates receive the entire `pdf_ready.json` structure:
 **Verification:**
 - `tests/unit/test_template_rendering.py` - Template engine tests
 - `tests/integration/test_custom_templates.py` - Template override tests
-- `verifications/verify_built_in_templates.py` - Template pack verification
 
 ### Phase 3: PDF Generation
 
@@ -520,7 +519,6 @@ All templates receive the entire `pdf_ready.json` structure:
 
 **Verification:**
 - `tests/integration/test_pdf_generation.py` - End-to-end PDF tests
-- `verifications/verify_pdf_output.py` - PDF validation script
 - `tests/integration/test_debug_html.py` - Debug HTML tests
 
 ### Phase 4: Error Handling & Edge Cases
@@ -535,7 +533,6 @@ All templates receive the entire `pdf_ready.json` structure:
 **Verification:**
 - `tests/integration/test_error_handling.py` - Error scenario tests
 - `tests/integration/test_edge_cases.py` - Edge case coverage
-- `verifications/verify_error_messages.py` - Error message consistency check
 
 ### Phase 5: GitHub Action Integration
 
@@ -608,16 +605,6 @@ All templates receive the entire `pdf_ready.json` structure:
 - Asset resolution in CI
 - Error handling scenarios
 - Large input files
-
-### 8.3 Verification Scripts
-
-**Purpose:** Manual validation and CI quality gates
-
-**Scripts:**
-- `verifications/verify_schema_examples.py` - Validate example JSON files
-- `verifications/verify_pdf_output.py` - PDF quality checks (metadata, fonts)
-- `verifications/verify_error_messages.py` - Error message consistency
-- `verifications/verify_templates.py` - Template syntax and completeness
 
 ---
 

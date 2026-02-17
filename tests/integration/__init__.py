@@ -14,4 +14,4 @@
 # limitations under the License.
 #
 
-"""Verification scripts for Living Doc Generator PDF."""
+"""Integration tests for Living Doc Generator PDF."""
