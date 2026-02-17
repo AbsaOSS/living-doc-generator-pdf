@@ -327,7 +327,7 @@ For complete template documentation, see [SPEC.md § 6](./SPEC.md#6-template-pac
    The report file contains generation statistics and warnings that may help diagnose issues.
 
 4. **Validate JSON locally:**
-   Use a JSON validator or the verification scripts in `verifications/verify_schema_examples.py`.
+   Use a JSON validator or run schema validation tests with `pytest tests/unit/generator/test_schema_validator.py`.
 
 ## Contributing
 
@@ -345,11 +345,6 @@ pip install -r requirements.txt
 
 # Run tests
 pytest tests/
-
-# Run verification scripts
-python verifications/verify_schema_examples.py
-python verifications/verify_templates.py
-python verifications/verify_error_messages.py
 ```
 
 For detailed development guidelines, see [DEVELOPER.md](./DEVELOPER.md).

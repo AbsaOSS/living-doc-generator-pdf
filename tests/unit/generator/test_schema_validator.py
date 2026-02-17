@@ -269,3 +269,8 @@ def test_invalid_user_story_timestamp(tmp_path: Path) -> None:
 
     with pytest.raises(SchemaValidationError, match="is not a valid ISO 8601 timestamp"):
         validate_pdf_ready_json(str(test_file))
+
+
+def test_schema_validation_error_is_exception_subclass() -> None:
+    """Test that SchemaValidationError is a proper Exception subclass."""
+    assert issubclass(SchemaValidationError, Exception)

@@ -110,3 +110,9 @@ def test_generate_pdf_with_valid_html_and_css(tmp_path):
 
     assert output_path.exists()
     assert output_path.stat().st_size > 0
+
+
+def test_error_classes_are_exception_subclasses():
+    """Test that custom error classes are proper Exception subclasses."""
+    assert issubclass(RenderingError, Exception)
+    assert issubclass(FileIOError, Exception)

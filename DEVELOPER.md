@@ -8,7 +8,6 @@
 - [Running Unit Test](#running-unit-test)
 - [Running Integration Tests](#running-integration-tests)
 - [Code Coverage](#code-coverage)
-- [Running Verification Scripts](#running-verification-scripts)
 - [Interpreting Test Failures](#interpreting-test-failures)
 - [Run Action Locally](#run-action-locally)
 - [Branch Naming Convention](#branch-naming-convention)
@@ -290,56 +289,6 @@ pytest --cov=generator.schema_validator tests/unit/generator/test_schema_validat
 pytest --cov=generator --cov=main tests/unit/ --cov-report=term-missing
 ```
 
-## Running Verification Scripts
-
-Verification scripts are automated quality gates that validate the project's examples, templates, and error messages. These scripts are located in `verifications/` and are run in CI after tests pass.
-
-### Available Verification Scripts
-
-1. **Schema Examples Verification** - Validates all example JSON files against the schema:
-   ```shell
-   python verifications/verify_schema_examples.py
-   ```
-
-2. **Templates Verification** - Checks template syntax and completeness:
-   ```shell
-   python verifications/verify_templates.py
-   ```
-
-3. **Error Messages Verification** - Ensures error messages follow the required format:
-   ```shell
-   python verifications/verify_error_messages.py
-   ```
-
-4. **PDF Output Verification** - Validates PDF quality (fonts, metadata, structure):
-   ```shell
-   python verifications/verify_pdf_output.py
-   ```
-
-### Run All Verification Scripts
-
-```shell
-export PYTHONPATH=$(pwd)
-python verifications/verify_schema_examples.py && \
-python verifications/verify_templates.py && \
-python verifications/verify_error_messages.py && \
-python verifications/verify_pdf_output.py
-```
-
-### Expected Output
-
-Each script produces PASS/FAIL output for each check:
-
-```
-✓ minimal_valid.json - PASS
-✓ full_example.json - PASS
-✓ multiple_stories.json - PASS
-
-All 3 validations passed
-```
-
-If a script fails (exit code ≠ 0), it will print detailed error messages about what failed.
-
 ## Interpreting Test Failures
 
 ### Unit Test Failures
@@ -374,22 +323,6 @@ generator.schema_validator.SchemaValidationError: Missing required field 'tags'
 ```
 
 **Action**: Update the test JSON data to include all required schema fields.
-
-### Verification Script Failures
-
-Verification scripts fail when:
-
-1. **Example JSON is invalid**: Fix the JSON file in `examples/`
-2. **Template syntax errors**: Fix templates in `generator/templates/`
-3. **Error message format issues**: Update error messages to follow format `{prefix} {detail}. {guidance}`
-4. **PDF quality issues**: Check font files, CSS, or rendering logic
-
-Example failure:
-```
-✗ invalid_missing_schema.json - FAIL: Should fail validation but passed
-```
-
-**Action**: Review the example file and ensure it matches test expectations.
 
 ### CI/CD Failures
 
