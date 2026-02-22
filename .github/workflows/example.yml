@@ -45,7 +45,7 @@ jobs:
           echo "Report path: ${{ steps.generate.outputs.report_path }}"
 
       - name: Upload generated PDF
-        uses: actions/upload-artifact@50769540e7f4bd5e21e526ee35c689e35e0d6874 # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v4
         with:
           name: example-pdf
           path: |
