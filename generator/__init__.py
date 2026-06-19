@@ -13,3 +13,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
+"""Living Doc Generator PDF - Schema and models."""
+
+from generator.models import (
+    CoverageMatrix,
+    Overview,
+    PdfReadyContent,
+    PdfReadyJson,
+    PdfReadyMetadata,
+    RunContext,
+    SelectionSummary,
+    UserStory,
+    UserStorySections,
+    UserStoryTimestamps,
+)
+from generator.schema_export import export_schema, get_default_schema_path, get_schema_version
+
+__all__ = [
+    "PdfReadyJson",
+    "PdfReadyMetadata",
+    "PdfReadyContent",
+    "UserStory",
+    "UserStoryTimestamps",
+    "UserStorySections",
+    "SelectionSummary",
+    "RunContext",
+    "Overview",
+    "CoverageMatrix",
+    "export_schema",
+    "get_schema_version",
+    "get_default_schema_path",
+]

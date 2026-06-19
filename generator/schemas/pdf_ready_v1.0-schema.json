@@ -1,0 +1,489 @@
+{
+  "$defs": {
+    "CoverageMatrix": {
+      "description": "Optional coverage matrix section.",
+      "properties": {
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Coverage matrix version",
+          "title": "Version"
+        },
+        "matrix_data": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Coverage matrix data",
+          "title": "Matrix Data"
+        }
+      },
+      "title": "CoverageMatrix",
+      "type": "object"
+    },
+    "Overview": {
+      "description": "Optional overview section of the document.",
+      "properties": {
+        "summary_stats": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Summary statistics",
+          "title": "Summary Stats"
+        },
+        "index_tables": {
+          "anyOf": [
+            {
+              "items": {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Index tables",
+          "title": "Index Tables"
+        }
+      },
+      "title": "Overview",
+      "type": "object"
+    },
+    "PdfReadyContent": {
+      "description": "Content section of the PDF-ready document.",
+      "properties": {
+        "user_stories": {
+          "description": "Array of user stories (can be empty)",
+          "items": {
+            "$ref": "#/$defs/UserStory"
+          },
+          "title": "User Stories",
+          "type": "array"
+        },
+        "overview": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Overview"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional overview section"
+        },
+        "coverage_matrix": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CoverageMatrix"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional coverage matrix"
+        }
+      },
+      "required": [
+        "user_stories"
+      ],
+      "title": "PdfReadyContent",
+      "type": "object"
+    },
+    "PdfReadyMetadata": {
+      "description": "Metadata for the PDF-ready document.",
+      "properties": {
+        "document_title": {
+          "description": "Document title (1-200 characters, non-empty after trimming)",
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Document Title",
+          "type": "string"
+        },
+        "document_version": {
+          "description": "Document version (1-50 characters, semver recommended)",
+          "maxLength": 50,
+          "minLength": 1,
+          "title": "Document Version",
+          "type": "string"
+        },
+        "generated_at": {
+          "description": "ISO 8601 UTC timestamp",
+          "format": "date-time",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "source_set": {
+          "description": "Non-empty array of source identifiers",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Source Set",
+          "type": "array"
+        },
+        "selection_summary": {
+          "$ref": "#/$defs/SelectionSummary",
+          "description": "Summary of item selection"
+        },
+        "run_context": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/RunContext"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Optional CI/CD run context"
+        }
+      },
+      "required": [
+        "document_title",
+        "document_version",
+        "generated_at",
+        "source_set",
+        "selection_summary"
+      ],
+      "title": "PdfReadyMetadata",
+      "type": "object"
+    },
+    "RunContext": {
+      "description": "Optional CI/CD run context information.",
+      "properties": {
+        "ci_run_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Ci Run Id"
+        },
+        "triggered_by": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Triggered By"
+        },
+        "branch": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Branch"
+        },
+        "commit_sha": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Commit Sha"
+        }
+      },
+      "title": "RunContext",
+      "type": "object"
+    },
+    "SelectionSummary": {
+      "description": "Summary of item selection statistics.",
+      "properties": {
+        "total_items": {
+          "description": "Total number of items",
+          "minimum": 0,
+          "title": "Total Items",
+          "type": "integer"
+        },
+        "included_items": {
+          "description": "Number of included items",
+          "minimum": 0,
+          "title": "Included Items",
+          "type": "integer"
+        },
+        "excluded_items": {
+          "description": "Number of excluded items",
+          "minimum": 0,
+          "title": "Excluded Items",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total_items",
+        "included_items",
+        "excluded_items"
+      ],
+      "title": "SelectionSummary",
+      "type": "object"
+    },
+    "UserStory": {
+      "description": "Represents a single user story in the documentation.",
+      "properties": {
+        "id": {
+          "description": "Unique canonical stable ID",
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "title": {
+          "description": "Non-empty title",
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        },
+        "state": {
+          "description": "State (e.g., 'open', 'closed')",
+          "minLength": 1,
+          "title": "State",
+          "type": "string"
+        },
+        "tags": {
+          "description": "Array of tags",
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "url": {
+          "description": "Valid URL (http/https)",
+          "title": "Url",
+          "type": "string"
+        },
+        "timestamps": {
+          "$ref": "#/$defs/UserStoryTimestamps",
+          "description": "User story timestamps"
+        },
+        "sections": {
+          "$ref": "#/$defs/UserStorySections",
+          "description": "User story content sections"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "state",
+        "tags",
+        "url",
+        "timestamps",
+        "sections"
+      ],
+      "title": "UserStory",
+      "type": "object"
+    },
+    "UserStorySections": {
+      "description": "Content sections for a user story.",
+      "properties": {
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Markdown content",
+          "title": "Description"
+        },
+        "business_value": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Markdown content",
+          "title": "Business Value"
+        },
+        "preconditions": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Markdown content",
+          "title": "Preconditions"
+        },
+        "acceptance_criteria": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Markdown content",
+          "title": "Acceptance Criteria"
+        },
+        "user_guide": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Markdown content",
+          "title": "User Guide"
+        },
+        "connections": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Markdown content",
+          "title": "Connections"
+        },
+        "last_edited": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Markdown content",
+          "title": "Last Edited"
+        }
+      },
+      "title": "UserStorySections",
+      "type": "object"
+    },
+    "UserStoryTimestamps": {
+      "description": "Timestamps for a user story.",
+      "properties": {
+        "created": {
+          "description": "ISO 8601 timestamp",
+          "format": "date-time",
+          "title": "Created",
+          "type": "string"
+        },
+        "updated": {
+          "description": "ISO 8601 timestamp",
+          "format": "date-time",
+          "title": "Updated",
+          "type": "string"
+        }
+      },
+      "required": [
+        "created",
+        "updated"
+      ],
+      "title": "UserStoryTimestamps",
+      "type": "object"
+    }
+  },
+  "description": "Root model for the PDF-ready JSON format.\n\nThis is the canonical input format for the Living Documentation PDF Generator.\nIt represents all necessary documentation data in a source-agnostic structure.",
+  "examples": [
+    {
+      "content": {
+        "user_stories": []
+      },
+      "meta": {
+        "document_title": "Living Documentation",
+        "document_version": "1.0.0",
+        "generated_at": "2023-01-15T10:30:00Z",
+        "selection_summary": {
+          "excluded_items": 2,
+          "included_items": 8,
+          "total_items": 10
+        },
+        "source_set": [
+          "jira",
+          "github"
+        ]
+      },
+      "schema_version": "1.0"
+    }
+  ],
+  "properties": {
+    "schema_version": {
+      "default": "1.0",
+      "description": "Schema version, must be exactly '1.0'",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "meta": {
+      "$ref": "#/$defs/PdfReadyMetadata",
+      "description": "Document metadata"
+    },
+    "content": {
+      "$ref": "#/$defs/PdfReadyContent",
+      "description": "Document content"
+    }
+  },
+  "required": [
+    "meta",
+    "content"
+  ],
+  "title": "PdfReadyJson",
+  "type": "object",
+  "$schema_version": "1.0"
+}
