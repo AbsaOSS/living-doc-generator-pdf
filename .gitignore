@@ -173,3 +173,9 @@ cython_debug/
 # PyPI configuration file
 .pypirc
 .DS_Store
+run_locally.sh
+default_output.txt
+output_rendered.html
+output.pdf
+pdf_ready.json
+pdf_report.json

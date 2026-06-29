@@ -350,6 +350,10 @@ export INPUT_GITHUB_TOKEN=$(printenv <your-env-token-var>)
 PROJECT_ROOT="$(pwd)"
 export PYTHONPATH="${PYTHONPATH}:${PROJECT_ROOT}"
 
+# WeasyPrint requires GLib/Pango shared libraries (installed via Homebrew on macOS).
+# Add Homebrew lib dir so the dynamic linker can find libgobject, libpango, etc.
+export DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:/opt/homebrew/lib"
+
 # Debugging statements
 echo "PYTHONPATH: ${PYTHONPATH}"
 echo "Current working directory: ${PROJECT_ROOT}"
@@ -357,6 +361,22 @@ echo "Current working directory: ${PROJECT_ROOT}"
 # Run the Python script
 python3 ./living-doc-generator-pdf/main.py
 ```
+
+### macOS Prerequisites
+
+WeasyPrint depends on system-level libraries (`pango`, `glib`) that are not bundled with the Python package.
+Install them via [Homebrew](https://brew.sh/) before running the script:
+
+```shell
+brew install pango
+```
+
+Without these libraries, the script will fail with:
+```
+OSError: cannot load library 'libgobject-2.0-0'
+```
+
+The `DYLD_LIBRARY_PATH` export in the script above tells the dynamic linker where Homebrew installs these libraries (`/opt/homebrew/lib`).
 
 ## Branch Naming Convention
 All work branches MUST use an allowed prefix followed by a concise kebab-case descriptor (optional numeric ID):
