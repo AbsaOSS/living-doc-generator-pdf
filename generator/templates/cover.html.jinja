@@ -21,5 +21,40 @@
                 </div>
             </div>
         </div>
+
+        {% if meta.audit and meta.audit.source %}
+        <div class="source-info">
+            <h2>Sources</h2>
+            {% if meta.audit.source.systems %}
+            <div class="source-item">
+                <span class="source-label">Systems:</span>
+                <span class="source-value">{{ meta.audit.source.systems | join(', ') }}</span>
+            </div>
+            {% endif %}
+            {% if meta.audit.source.organization %}
+            <div class="source-item">
+                <span class="source-label">Organization:</span>
+                <span class="source-value">{{ meta.audit.source.organization }}</span>
+            </div>
+            {% endif %}
+            {% if meta.audit.source.repositories %}
+            <div class="source-item">
+                <span class="source-label">Repositories:</span>
+                <div class="source-repos">
+                    {% for repo in meta.audit.source.repositories %}
+                    <span class="source-repo">{{ repo }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        {% if meta.audit and meta.audit.producer %}
+        <div class="producer-info">
+            <span class="producer-label">Produced by</span>
+            <span class="producer-value">{{ meta.audit.producer.name }} v{{ meta.audit.producer.version }}</span>
+        </div>
+        {% endif %}
     </div>
 </div>

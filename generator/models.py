@@ -39,18 +39,97 @@ To export schema for upstream systems:
 See SCHEMA_SYNC.md for the full synchronization workflow.
 """
 
-from datetime import datetime
 from typing import Optional
 
 from pydantic import BaseModel, Field
 
 
-class SelectionSummary(BaseModel):
-    """Summary of item selection statistics."""
+# ---------------------------------------------------------------------------
+# Audit envelope
+# ---------------------------------------------------------------------------
 
-    total_items: int = Field(ge=0, description="Total number of items")
-    included_items: int = Field(ge=0, description="Number of included items")
-    excluded_items: int = Field(ge=0, description="Number of excluded items")
+class Producer(BaseModel):
+    """Producer metadata."""
+
+    name: str = Field(description="Producer name")
+    version: str = Field(description="Producer version")
+    build: Optional[str] = Field(default=None)
+
+    model_config = {"extra": "forbid"}
+
+
+class Run(BaseModel):
+    """Run metadata."""
+
+    run_id: Optional[str] = Field(default=None)
+    run_attempt: Optional[str] = Field(default=None)
+    actor: Optional[str] = Field(default=None)
+    workflow: Optional[str] = Field(default=None)
+    ref: Optional[str] = Field(default=None)
+    sha: Optional[str] = Field(default=None)
+
+    model_config = {"extra": "forbid"}
+
+
+class Source(BaseModel):
+    """Source metadata."""
+
+    systems: list[str] = Field(description="Source systems")
+    organization: Optional[str] = Field(default=None)
+    enterprise: Optional[str] = Field(default=None)
+    repositories: list[str] = Field(default_factory=list)
+
+    model_config = {"extra": "forbid"}
+
+
+class Warning(BaseModel):
+    """Warning in trace step."""
+
+    code: str = Field(description="Warning code")
+    message: str = Field(description="Human-readable message")
+    context: Optional[str] = Field(default=None)
+
+    model_config = {"extra": "forbid"}
+
+
+class TraceStep(BaseModel):
+    """Trace step in audit trail."""
+
+    step: str = Field(description="Step name")
+    tool: str = Field(description="Tool name")
+    tool_version: str = Field(description="Tool version")
+    started_at: Optional[str] = Field(default=None)
+    finished_at: Optional[str] = Field(default=None)
+    warnings: list[Warning] = Field(default_factory=list)
+
+    model_config = {"extra": "forbid"}
+
+
+class AuditEnvelopeV1(BaseModel):
+    """Audit envelope v1.0."""
+
+    schema_version: str = Field(description="Schema version")
+    producer: Producer
+    run: Run
+    source: Source
+    trace: list[TraceStep] = Field(default_factory=list)
+    extensions: dict = Field(default_factory=dict)
+
+    model_config = {"extra": "forbid"}
+
+
+# ---------------------------------------------------------------------------
+# Metadata
+# ---------------------------------------------------------------------------
+
+class SelectionSummary(BaseModel):
+    """Selection summary."""
+
+    total_items: int = Field(ge=0, description="Total items")
+    included_items: int = Field(ge=0, description="Included items")
+    excluded_items: int = Field(ge=0, description="Excluded items")
+
+    model_config = {"extra": "forbid"}
 
 
 class RunContext(BaseModel):
@@ -61,116 +140,96 @@ class RunContext(BaseModel):
     branch: Optional[str] = Field(default=None)
     commit_sha: Optional[str] = Field(default=None)
 
+    model_config = {"extra": "forbid"}
 
-class PdfReadyMetadata(BaseModel):
-    """Metadata for the PDF-ready document."""
 
-    document_title: str = Field(
-        min_length=1, max_length=200, description="Document title (1-200 characters, non-empty after trimming)"
-    )
-    document_version: str = Field(
-        min_length=1, max_length=50, description="Document version (1-50 characters, semver recommended)"
-    )
-    generated_at: datetime = Field(description="ISO 8601 UTC timestamp")
+class Meta(BaseModel):
+    """Metadata section."""
+
+    document_title: str = Field(min_length=1, max_length=200, description="Document title")
+    document_version: str = Field(min_length=1, max_length=50, description="Document version")
+    generated_at: str = Field(description="ISO 8601 UTC timestamp")
     source_set: list[str] = Field(min_length=1, description="Non-empty array of source identifiers")
-    selection_summary: SelectionSummary = Field(description="Summary of item selection")
-    run_context: Optional[RunContext] = Field(default=None, description="Optional CI/CD run context")
+    selection_summary: SelectionSummary
+    run_context: Optional[RunContext] = Field(default=None)
+    audit: Optional[AuditEnvelopeV1] = Field(default=None)
+
+    model_config = {"extra": "forbid"}
 
 
-class UserStoryTimestamps(BaseModel):
+# ---------------------------------------------------------------------------
+# User story
+# ---------------------------------------------------------------------------
+
+class Timestamps(BaseModel):
     """Timestamps for a user story."""
 
-    created: datetime = Field(description="ISO 8601 timestamp")
-    updated: datetime = Field(description="ISO 8601 timestamp")
+    created: str = Field(description="ISO 8601 timestamp")
+    updated: str = Field(description="ISO 8601 timestamp")
+
+    model_config = {"extra": "forbid"}
 
 
-class UserStorySections(BaseModel):
+class AcceptanceCriterion(BaseModel):
+    """A single acceptance criterion entry."""
+
+    description: str = Field(description="Criterion text")
+    id: Optional[str] = Field(default=None, description="Criterion identifier")
+    state: Optional[str] = Field(default=None, description="State (e.g. 'Active')")
+    version: Optional[str] = Field(default=None, description="Version when introduced")
+
+    model_config = {"extra": "forbid"}
+
+
+class Sections(BaseModel):
     """Content sections for a user story."""
 
     description: Optional[str] = Field(default=None, description="Markdown content")
-    business_value: Optional[str] = Field(default=None, description="Markdown content")
-    preconditions: Optional[str] = Field(default=None, description="Markdown content")
-    acceptance_criteria: Optional[str] = Field(default=None, description="Markdown content")
+    business_value: Optional[list[str]] = Field(default=None, description="Business value items")
+    preconditions: Optional[list[str]] = Field(default=None, description="Precondition items")
+    acceptance_criteria: Optional[list[AcceptanceCriterion]] = Field(default=None, description="Acceptance criteria")
     user_guide: Optional[str] = Field(default=None, description="Markdown content")
     connections: Optional[str] = Field(default=None, description="Markdown content")
     last_edited: Optional[str] = Field(default=None, description="Markdown content")
+
+    model_config = {"extra": "forbid"}
 
 
 class UserStory(BaseModel):
     """Represents a single user story in the documentation."""
 
-    id: str = Field(min_length=1, max_length=200, description="Unique canonical stable ID")
+    id: str = Field(description="Canonical stable ID")
     title: str = Field(min_length=1, max_length=500, description="Non-empty title")
-    state: str = Field(min_length=1, description="State (e.g., 'open', 'closed')")
+    state: str = Field(description="State (e.g., 'open', 'closed')")
     tags: list[str] = Field(description="Array of tags")
-    url: str = Field(description="Valid URL (http/https)")
-    timestamps: UserStoryTimestamps = Field(description="User story timestamps")
-    sections: UserStorySections = Field(description="User story content sections")
+    url: str = Field(description="Valid URL")
+    timestamps: Timestamps
+    sections: Sections
+
+    model_config = {"extra": "forbid"}
 
 
-class OverviewSummaryStats(BaseModel):
-    """Summary statistics for overview section."""
+# ---------------------------------------------------------------------------
+# Content & root
+# ---------------------------------------------------------------------------
 
-    pass  # Flexible: additional properties allowed
+class Content(BaseModel):
+    """Content section."""
 
+    user_stories: list[UserStory] = Field(description="List of user stories")
 
-class IndexTable(BaseModel):
-    """Index table for overview section."""
-
-    pass  # Flexible: additional properties allowed
-
-
-class Overview(BaseModel):
-    """Optional overview section of the document."""
-
-    summary_stats: Optional[dict] = Field(default=None, description="Summary statistics")
-    index_tables: Optional[list[dict]] = Field(default=None, description="Index tables")
+    model_config = {"extra": "forbid"}
 
 
-class CoverageMatrix(BaseModel):
-    """Optional coverage matrix section."""
+class PdfReadyV1(BaseModel):
+    """Root model for the PDF-ready JSON format (v1.0)."""
 
-    version: Optional[str] = Field(default=None, description="Coverage matrix version")
-    matrix_data: Optional[list[dict]] = Field(default=None, description="Coverage matrix data")
+    schema_version: str = Field(description="Schema version, must be '1.0'")
+    meta: Meta
+    content: Content
 
-
-class PdfReadyContent(BaseModel):
-    """Content section of the PDF-ready document."""
-
-    user_stories: list[UserStory] = Field(description="Array of user stories (can be empty)")
-    overview: Optional[Overview] = Field(default=None, description="Optional overview section")
-    coverage_matrix: Optional[CoverageMatrix] = Field(default=None, description="Optional coverage matrix")
+    model_config = {"extra": "forbid"}
 
 
-class PdfReadyJson(BaseModel):
-    """
-    Root model for the PDF-ready JSON format.
-
-    This is the canonical input format for the Living Documentation PDF Generator.
-    It represents all necessary documentation data in a source-agnostic structure.
-    """
-
-    schema_version: str = Field(
-        default="1.0", description="Schema version, must be exactly '1.0'"
-    )
-    meta: PdfReadyMetadata = Field(description="Document metadata")
-    content: PdfReadyContent = Field(description="Document content")
-
-    class Config:
-        """Pydantic model configuration."""
-
-        json_schema_extra = {
-            "examples": [
-                {
-                    "schema_version": "1.0",
-                    "meta": {
-                        "document_title": "Living Documentation",
-                        "document_version": "1.0.0",
-                        "generated_at": "2023-01-15T10:30:00Z",
-                        "source_set": ["jira", "github"],
-                        "selection_summary": {"total_items": 10, "included_items": 8, "excluded_items": 2},
-                    },
-                    "content": {"user_stories": []},
-                }
-            ]
-        }
+# Backwards-compatible alias
+PdfReadyJson = PdfReadyV1

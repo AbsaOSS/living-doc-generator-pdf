@@ -30,7 +30,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from generator.models import PdfReadyJson
+from generator.models import PdfReadyV1
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ def get_default_schema_path() -> Path:
 
 def export_schema(output_path: Optional[str | Path] = None) -> dict:
     """
-    Export the PdfReadyJson model schema to JSON Schema format.
+    Export the PdfReadyV1 model schema to JSON Schema format.
 
     This schema represents the authoritative input contract for the data format.
 
@@ -80,7 +80,7 @@ def export_schema(output_path: Optional[str | Path] = None) -> dict:
 
         >>> export_schema('custom-location.json')
     """
-    schema = PdfReadyJson.model_json_schema()
+    schema = PdfReadyV1.model_json_schema()
 
     # Pin schema version independently of package version
     schema["$schema_version"] = get_schema_version()
