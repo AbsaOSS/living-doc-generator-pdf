@@ -4,7 +4,9 @@
     "document_title": "E-Commerce Platform - Release 3.0",
     "document_version": "3.0.0",
     "generated_at": "2026-02-16T18:50:00Z",
-    "source_set": ["github:AbsaOSS/ecommerce-platform"],
+    "source_set": [
+      "github:AbsaOSS/ecommerce-platform"
+    ],
     "selection_summary": {
       "total_items": 12,
       "included_items": 12,
@@ -23,7 +25,11 @@
         "id": "github:AbsaOSS/ecommerce#101",
         "title": "User Registration with Email Verification",
         "state": "open",
-        "tags": ["authentication", "priority:high", "security"],
+        "tags": [
+          "authentication",
+          "priority:high",
+          "security"
+        ],
         "url": "https://github.com/AbsaOSS/ecommerce/issues/101",
         "timestamps": {
           "created": "2026-01-15T09:00:00Z",
@@ -31,9 +37,29 @@
         },
         "sections": {
           "description": "As a new user, I want to register an account with email verification so that I can access the platform securely.",
-          "business_value": "Ensures valid user accounts and reduces spam registrations",
-          "preconditions": "Email service configured and operational",
-          "acceptance_criteria": "- User can fill registration form\n- Verification email sent immediately\n- User can click verification link\n- Account activated upon verification\n- Unverified accounts expire after 24 hours",
+          "business_value": [
+            "Ensures valid user accounts and reduces spam registrations"
+          ],
+          "preconditions": [
+            "Email service configured and operational"
+          ],
+          "acceptance_criteria": [
+            {
+              "description": "User can fill registration form"
+            },
+            {
+              "description": "Verification email sent immediately"
+            },
+            {
+              "description": "User can click verification link"
+            },
+            {
+              "description": "Account activated upon verification"
+            },
+            {
+              "description": "Unverified accounts expire after 24 hours"
+            }
+          ],
           "user_guide": "Navigate to /register, complete the form, and check your email for the verification link.",
           "connections": "Depends on #102, blocks #103",
           "last_edited": "Updated by alice@example.com on 2026-02-10"
@@ -43,7 +69,11 @@
         "id": "github:AbsaOSS/ecommerce#102",
         "title": "Shopping Cart Management",
         "state": "open",
-        "tags": ["cart", "priority:high", "core-feature"],
+        "tags": [
+          "cart",
+          "priority:high",
+          "core-feature"
+        ],
         "url": "https://github.com/AbsaOSS/ecommerce/issues/102",
         "timestamps": {
           "created": "2026-01-16T10:30:00Z",
@@ -51,9 +81,29 @@
         },
         "sections": {
           "description": "As a customer, I want to add items to my shopping cart and manage quantities so that I can review my purchases before checkout.",
-          "business_value": "Core e-commerce functionality that enables purchasing",
-          "preconditions": "User is logged in, products are available in inventory",
-          "acceptance_criteria": "- Add items to cart\n- Update item quantities\n- Remove items from cart\n- View cart total price\n- Cart persists across sessions",
+          "business_value": [
+            "Core e-commerce functionality that enables purchasing"
+          ],
+          "preconditions": [
+            "User is logged in, products are available in inventory"
+          ],
+          "acceptance_criteria": [
+            {
+              "description": "Add items to cart"
+            },
+            {
+              "description": "Update item quantities"
+            },
+            {
+              "description": "Remove items from cart"
+            },
+            {
+              "description": "View cart total price"
+            },
+            {
+              "description": "Cart persists across sessions"
+            }
+          ],
           "user_guide": null,
           "connections": "Related to #103, #104",
           "last_edited": "Updated by bob@example.com on 2026-02-12"
@@ -63,7 +113,12 @@
         "id": "github:AbsaOSS/ecommerce#103",
         "title": "Secure Checkout Process",
         "state": "open",
-        "tags": ["checkout", "priority:critical", "security", "payment"],
+        "tags": [
+          "checkout",
+          "priority:critical",
+          "security",
+          "payment"
+        ],
         "url": "https://github.com/AbsaOSS/ecommerce/issues/103",
         "timestamps": {
           "created": "2026-01-17T14:00:00Z",
@@ -71,9 +126,29 @@
         },
         "sections": {
           "description": "As a customer, I want to securely complete my purchase with payment processing so that I can receive my ordered items.",
-          "business_value": "Enables revenue generation through secure transactions",
-          "preconditions": "Payment gateway integrated, SSL certificates configured",
-          "acceptance_criteria": "- Select payment method\n- Enter payment details securely\n- Process payment via gateway\n- Display order confirmation\n- Send confirmation email",
+          "business_value": [
+            "Enables revenue generation through secure transactions"
+          ],
+          "preconditions": [
+            "Payment gateway integrated, SSL certificates configured"
+          ],
+          "acceptance_criteria": [
+            {
+              "description": "Select payment method"
+            },
+            {
+              "description": "Enter payment details securely"
+            },
+            {
+              "description": "Process payment via gateway"
+            },
+            {
+              "description": "Display order confirmation"
+            },
+            {
+              "description": "Send confirmation email"
+            }
+          ],
           "user_guide": "After reviewing your cart, click 'Checkout', enter shipping and payment information, then confirm your order.",
           "connections": "Depends on #102, related to #105",
           "last_edited": "Updated by charlie@example.com on 2026-02-14"
@@ -83,7 +158,11 @@
         "id": "github:AbsaOSS/ecommerce#104",
         "title": "Product Search and Filtering",
         "state": "open",
-        "tags": ["search", "priority:medium", "ux"],
+        "tags": [
+          "search",
+          "priority:medium",
+          "ux"
+        ],
         "url": "https://github.com/AbsaOSS/ecommerce/issues/104",
         "timestamps": {
           "created": "2026-01-18T11:15:00Z",
@@ -91,9 +170,29 @@
         },
         "sections": {
           "description": "As a customer, I want to search for products and apply filters so that I can quickly find items I'm interested in purchasing.",
-          "business_value": "Improves user experience and reduces time to purchase",
-          "preconditions": "Product catalog populated, search index configured",
-          "acceptance_criteria": "- Search by product name or description\n- Filter by category, price range, brand\n- Sort results by relevance, price, rating\n- Display search results count\n- Paginate results for large sets",
+          "business_value": [
+            "Improves user experience and reduces time to purchase"
+          ],
+          "preconditions": [
+            "Product catalog populated, search index configured"
+          ],
+          "acceptance_criteria": [
+            {
+              "description": "Search by product name or description"
+            },
+            {
+              "description": "Filter by category, price range, brand"
+            },
+            {
+              "description": "Sort results by relevance, price, rating"
+            },
+            {
+              "description": "Display search results count"
+            },
+            {
+              "description": "Paginate results for large sets"
+            }
+          ],
           "user_guide": "Use the search bar to find products, then apply filters from the sidebar to narrow your results.",
           "connections": "Related to #106",
           "last_edited": "Updated by diana@example.com on 2026-02-13"
@@ -103,7 +202,11 @@
         "id": "github:AbsaOSS/ecommerce#105",
         "title": "Order History and Tracking",
         "state": "open",
-        "tags": ["orders", "priority:medium", "customer-service"],
+        "tags": [
+          "orders",
+          "priority:medium",
+          "customer-service"
+        ],
         "url": "https://github.com/AbsaOSS/ecommerce/issues/105",
         "timestamps": {
           "created": "2026-01-19T13:45:00Z",
@@ -111,9 +214,29 @@
         },
         "sections": {
           "description": "As a customer, I want to view my order history and track shipments so that I can monitor my purchases.",
-          "business_value": "Reduces customer service inquiries and improves satisfaction",
-          "preconditions": "User has placed at least one order",
-          "acceptance_criteria": "- Display list of past orders\n- Show order details (items, total, date)\n- Display shipment tracking number\n- Show current shipment status\n- Allow order cancellation before shipping",
+          "business_value": [
+            "Reduces customer service inquiries and improves satisfaction"
+          ],
+          "preconditions": [
+            "User has placed at least one order"
+          ],
+          "acceptance_criteria": [
+            {
+              "description": "Display list of past orders"
+            },
+            {
+              "description": "Show order details (items, total, date)"
+            },
+            {
+              "description": "Display shipment tracking number"
+            },
+            {
+              "description": "Show current shipment status"
+            },
+            {
+              "description": "Allow order cancellation before shipping"
+            }
+          ],
           "user_guide": "Access your order history from your account dashboard to view details and track shipments.",
           "connections": "Depends on #103",
           "last_edited": "Updated by edward@example.com on 2026-02-15"
@@ -123,7 +246,11 @@
         "id": "github:AbsaOSS/ecommerce#106",
         "title": "Product Reviews and Ratings",
         "state": "open",
-        "tags": ["reviews", "priority:low", "social"],
+        "tags": [
+          "reviews",
+          "priority:low",
+          "social"
+        ],
         "url": "https://github.com/AbsaOSS/ecommerce/issues/106",
         "timestamps": {
           "created": "2026-01-20T08:30:00Z",
@@ -131,9 +258,29 @@
         },
         "sections": {
           "description": "As a customer, I want to read and write product reviews so that I can make informed purchasing decisions.",
-          "business_value": "Increases customer trust and engagement",
-          "preconditions": "User has purchased the product",
-          "acceptance_criteria": "- Display average rating and review count\n- Show individual reviews with ratings\n- Allow verified purchasers to write reviews\n- Enable helpful vote on reviews\n- Moderate reviews for inappropriate content",
+          "business_value": [
+            "Increases customer trust and engagement"
+          ],
+          "preconditions": [
+            "User has purchased the product"
+          ],
+          "acceptance_criteria": [
+            {
+              "description": "Display average rating and review count"
+            },
+            {
+              "description": "Show individual reviews with ratings"
+            },
+            {
+              "description": "Allow verified purchasers to write reviews"
+            },
+            {
+              "description": "Enable helpful vote on reviews"
+            },
+            {
+              "description": "Moderate reviews for inappropriate content"
+            }
+          ],
           "user_guide": "View reviews on product pages, or write your own after purchasing by visiting your order history.",
           "connections": "Related to #104",
           "last_edited": "Updated by frank@example.com on 2026-02-11"
@@ -143,7 +290,11 @@
         "id": "github:AbsaOSS/ecommerce#107",
         "title": "Wishlist Management",
         "state": "closed",
-        "tags": ["wishlist", "priority:low", "feature"],
+        "tags": [
+          "wishlist",
+          "priority:low",
+          "feature"
+        ],
         "url": "https://github.com/AbsaOSS/ecommerce/issues/107",
         "timestamps": {
           "created": "2026-01-21T10:00:00Z",
@@ -151,9 +302,29 @@
         },
         "sections": {
           "description": "As a customer, I want to save products to a wishlist so that I can purchase them later.",
-          "business_value": "Increases repeat visits and eventual conversions",
-          "preconditions": "User is logged in",
-          "acceptance_criteria": "- Add products to wishlist\n- Remove items from wishlist\n- View all wishlist items\n- Move items from wishlist to cart\n- Share wishlist with others",
+          "business_value": [
+            "Increases repeat visits and eventual conversions"
+          ],
+          "preconditions": [
+            "User is logged in"
+          ],
+          "acceptance_criteria": [
+            {
+              "description": "Add products to wishlist"
+            },
+            {
+              "description": "Remove items from wishlist"
+            },
+            {
+              "description": "View all wishlist items"
+            },
+            {
+              "description": "Move items from wishlist to cart"
+            },
+            {
+              "description": "Share wishlist with others"
+            }
+          ],
           "user_guide": "Click the heart icon on any product to add it to your wishlist, accessible from your account menu.",
           "connections": "Related to #102",
           "last_edited": "Updated by grace@example.com on 2026-02-09"
@@ -163,7 +334,11 @@
         "id": "github:AbsaOSS/ecommerce#108",
         "title": "Email Notifications for Order Updates",
         "state": "open",
-        "tags": ["notifications", "priority:medium", "communication"],
+        "tags": [
+          "notifications",
+          "priority:medium",
+          "communication"
+        ],
         "url": "https://github.com/AbsaOSS/ecommerce/issues/108",
         "timestamps": {
           "created": "2026-01-22T12:30:00Z",
@@ -171,9 +346,29 @@
         },
         "sections": {
           "description": "As a customer, I want to receive email notifications for order updates so that I stay informed about my purchases.",
-          "business_value": "Keeps customers informed and reduces support inquiries",
-          "preconditions": "Email service configured, user has valid email",
-          "acceptance_criteria": "- Send order confirmation email\n- Send shipping notification with tracking\n- Send delivery confirmation\n- Allow users to opt-in/opt-out\n- Include order details in emails",
+          "business_value": [
+            "Keeps customers informed and reduces support inquiries"
+          ],
+          "preconditions": [
+            "Email service configured, user has valid email"
+          ],
+          "acceptance_criteria": [
+            {
+              "description": "Send order confirmation email"
+            },
+            {
+              "description": "Send shipping notification with tracking"
+            },
+            {
+              "description": "Send delivery confirmation"
+            },
+            {
+              "description": "Allow users to opt-in/opt-out"
+            },
+            {
+              "description": "Include order details in emails"
+            }
+          ],
           "user_guide": "Manage your email preferences in account settings to control which notifications you receive.",
           "connections": "Related to #105",
           "last_edited": "Updated by henry@example.com on 2026-02-16"
@@ -183,7 +378,11 @@
         "id": "github:AbsaOSS/ecommerce#109",
         "title": "Admin Dashboard for Order Management",
         "state": "open",
-        "tags": ["admin", "priority:high", "operations"],
+        "tags": [
+          "admin",
+          "priority:high",
+          "operations"
+        ],
         "url": "https://github.com/AbsaOSS/ecommerce/issues/109",
         "timestamps": {
           "created": "2026-01-23T09:15:00Z",
@@ -191,9 +390,29 @@
         },
         "sections": {
           "description": "As an admin, I want a dashboard to manage orders so that I can process fulfillment efficiently.",
-          "business_value": "Streamlines operations and reduces fulfillment errors",
-          "preconditions": "Admin role configured, authentication in place",
-          "acceptance_criteria": "- View all orders in dashboard\n- Filter by status, date, customer\n- Update order status\n- Print packing slips\n- Export order data",
+          "business_value": [
+            "Streamlines operations and reduces fulfillment errors"
+          ],
+          "preconditions": [
+            "Admin role configured, authentication in place"
+          ],
+          "acceptance_criteria": [
+            {
+              "description": "View all orders in dashboard"
+            },
+            {
+              "description": "Filter by status, date, customer"
+            },
+            {
+              "description": "Update order status"
+            },
+            {
+              "description": "Print packing slips"
+            },
+            {
+              "description": "Export order data"
+            }
+          ],
           "user_guide": "Access the admin dashboard at /admin to view and manage all customer orders.",
           "connections": "Related to #105, #110",
           "last_edited": "Updated by iris@example.com on 2026-02-14"
@@ -203,7 +422,11 @@
         "id": "github:AbsaOSS/ecommerce#110",
         "title": "Inventory Management System",
         "state": "open",
-        "tags": ["inventory", "priority:high", "operations"],
+        "tags": [
+          "inventory",
+          "priority:high",
+          "operations"
+        ],
         "url": "https://github.com/AbsaOSS/ecommerce/issues/110",
         "timestamps": {
           "created": "2026-01-24T11:45:00Z",
@@ -211,9 +434,29 @@
         },
         "sections": {
           "description": "As an admin, I want to manage product inventory so that stock levels are accurate and customers can't order unavailable items.",
-          "business_value": "Prevents overselling and improves operational efficiency",
-          "preconditions": "Admin access, product catalog exists",
-          "acceptance_criteria": "- Update stock quantities\n- Set low-stock alerts\n- Track inventory changes\n- Display out-of-stock on product pages\n- Reserve inventory during checkout",
+          "business_value": [
+            "Prevents overselling and improves operational efficiency"
+          ],
+          "preconditions": [
+            "Admin access, product catalog exists"
+          ],
+          "acceptance_criteria": [
+            {
+              "description": "Update stock quantities"
+            },
+            {
+              "description": "Set low-stock alerts"
+            },
+            {
+              "description": "Track inventory changes"
+            },
+            {
+              "description": "Display out-of-stock on product pages"
+            },
+            {
+              "description": "Reserve inventory during checkout"
+            }
+          ],
           "user_guide": "Manage inventory from the admin dashboard under the Inventory section.",
           "connections": "Related to #109, blocks #102",
           "last_edited": "Updated by jack@example.com on 2026-02-15"
@@ -223,7 +466,11 @@
         "id": "github:AbsaOSS/ecommerce#111",
         "title": "Multi-Currency Support",
         "state": "open",
-        "tags": ["i18n", "priority:medium", "feature"],
+        "tags": [
+          "i18n",
+          "priority:medium",
+          "feature"
+        ],
         "url": "https://github.com/AbsaOSS/ecommerce/issues/111",
         "timestamps": {
           "created": "2026-01-25T14:20:00Z",
@@ -231,9 +478,29 @@
         },
         "sections": {
           "description": "As an international customer, I want to view prices in my local currency so that I understand the cost in familiar terms.",
-          "business_value": "Expands market reach to international customers",
-          "preconditions": "Currency conversion API configured",
-          "acceptance_criteria": "- Detect user location automatically\n- Allow manual currency selection\n- Display prices in selected currency\n- Convert cart total to selected currency\n- Store currency preference",
+          "business_value": [
+            "Expands market reach to international customers"
+          ],
+          "preconditions": [
+            "Currency conversion API configured"
+          ],
+          "acceptance_criteria": [
+            {
+              "description": "Detect user location automatically"
+            },
+            {
+              "description": "Allow manual currency selection"
+            },
+            {
+              "description": "Display prices in selected currency"
+            },
+            {
+              "description": "Convert cart total to selected currency"
+            },
+            {
+              "description": "Store currency preference"
+            }
+          ],
           "user_guide": "Select your preferred currency from the dropdown in the header.",
           "connections": "Related to #112",
           "last_edited": "Updated by kate@example.com on 2026-02-16"
@@ -243,7 +510,11 @@
         "id": "github:AbsaOSS/ecommerce#112",
         "title": "Promotional Coupon System",
         "state": "open",
-        "tags": ["promotions", "priority:medium", "marketing"],
+        "tags": [
+          "promotions",
+          "priority:medium",
+          "marketing"
+        ],
         "url": "https://github.com/AbsaOSS/ecommerce/issues/112",
         "timestamps": {
           "created": "2026-01-26T16:00:00Z",
@@ -251,9 +522,29 @@
         },
         "sections": {
           "description": "As a customer, I want to apply promotional coupons to my order so that I can receive discounts.",
-          "business_value": "Enables marketing campaigns and increases conversion rates",
-          "preconditions": "Coupon management system configured",
-          "acceptance_criteria": "- Enter coupon code at checkout\n- Validate coupon (active, not expired, usage limits)\n- Apply discount to order total\n- Display applied discount\n- Prevent coupon stacking if configured",
+          "business_value": [
+            "Enables marketing campaigns and increases conversion rates"
+          ],
+          "preconditions": [
+            "Coupon management system configured"
+          ],
+          "acceptance_criteria": [
+            {
+              "description": "Enter coupon code at checkout"
+            },
+            {
+              "description": "Validate coupon (active, not expired, usage limits)"
+            },
+            {
+              "description": "Apply discount to order total"
+            },
+            {
+              "description": "Display applied discount"
+            },
+            {
+              "description": "Prevent coupon stacking if configured"
+            }
+          ],
           "user_guide": "Enter your coupon code in the designated field during checkout to apply your discount.",
           "connections": "Related to #103",
           "last_edited": "Updated by laura@example.com on 2026-02-13"

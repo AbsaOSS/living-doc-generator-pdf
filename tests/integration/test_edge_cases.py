@@ -143,7 +143,7 @@ def test_large_markdown_content(temp_output_dir: Path) -> None:
                         "created": "2026-01-20T10:00:00Z",
                         "updated": "2026-01-20T10:00:00Z",
                     },
-                    "sections": {"description": large_markdown, "acceptance_criteria": large_markdown},
+                    "sections": {"description": large_markdown, "acceptance_criteria": [{"description": large_markdown}]},
                 }
             ]
         },
@@ -201,7 +201,11 @@ def test_special_characters_in_content(temp_output_dir: Path) -> None:
                     },
                     "sections": {
                         "description": "Description with **special** chars: <tag> & 'quotes' \"double\" € £ ¥",
-                        "acceptance_criteria": "- [ ] Test émoji: 🎉\n- [x] Test Chinese: 中文\n- [ ] Test math: ∑∫∂",
+                        "acceptance_criteria": [
+                            {"description": "Test émoji: 🎉"},
+                            {"description": "Test Chinese: 中文"},
+                            {"description": "Test math: ∑∫∂"},
+                        ],
                     },
                 }
             ]

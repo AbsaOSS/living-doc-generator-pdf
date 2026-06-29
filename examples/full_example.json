@@ -31,9 +31,13 @@
         },
         "sections": {
           "description": "As a user, I want to log in using SSO...",
-          "business_value": "Reduces friction for enterprise users",
-          "preconditions": "SSO provider configured",
-          "acceptance_criteria": "- User can click SSO button\n- Redirect to provider\n- Return with session",
+          "business_value": ["Reduces friction for enterprise users"],
+          "preconditions": ["SSO provider configured"],
+          "acceptance_criteria": [
+            {"description": "User can click SSO button"},
+            {"description": "Redirect to provider"},
+            {"description": "Return with session"}
+          ],
           "user_guide": null,
           "connections": "Related to #41, #43",
           "last_edited": "Updated by alice@example.com on 2026-01-20"
