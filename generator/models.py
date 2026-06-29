@@ -43,10 +43,10 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
-
 # ---------------------------------------------------------------------------
 # Audit envelope
 # ---------------------------------------------------------------------------
+
 
 class Producer(BaseModel):
     """Producer metadata."""
@@ -122,6 +122,7 @@ class AuditEnvelopeV1(BaseModel):
 # Metadata
 # ---------------------------------------------------------------------------
 
+
 class SelectionSummary(BaseModel):
     """Selection summary."""
 
@@ -160,6 +161,7 @@ class Meta(BaseModel):
 # ---------------------------------------------------------------------------
 # User story
 # ---------------------------------------------------------------------------
+
 
 class Timestamps(BaseModel):
     """Timestamps for a user story."""
@@ -212,6 +214,7 @@ class UserStory(BaseModel):
 # ---------------------------------------------------------------------------
 # Content & root
 # ---------------------------------------------------------------------------
+
 
 class Content(BaseModel):
     """Content section."""

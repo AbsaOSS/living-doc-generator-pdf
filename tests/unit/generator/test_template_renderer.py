@@ -65,9 +65,12 @@ def full_pdf_data() -> dict:
                     },
                     "sections": {
                         "description": "## Description\n\nThis is a test story.",
-                        "business_value": "High value for testing",
+                        "business_value": ["High value for testing"],
                         "preconditions": None,
-                        "acceptance_criteria": "- [ ] Test passes\n- [x] Code works",
+                        "acceptance_criteria": [
+                            {"id": "AC-01", "description": "Test passes", "state": "Active", "version": "v1.0"},
+                            {"id": "AC-02", "description": "Code works", "state": "Active", "version": "v1.0"},
+                        ],
                         "user_guide": None,
                         "connections": None,
                         "last_edited": None,
