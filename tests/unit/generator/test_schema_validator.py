@@ -251,15 +251,14 @@ def test_format_validation_errors_empty_list() -> None:
     assert result == "Unknown validation error"
 
 
-def test_invalid_timestamp_format_passes(tmp_path: Path) -> None:
-    """The new schema (v1.0) stores timestamps as plain strings without format enforcement."""
+def test_invalid_timestamp_format_raises(tmp_path: Path) -> None:
+    """Invalid timestamp format raises SchemaValidationError (format: date-time is enforced)."""
     data = _mutate(_base_valid_data(), "meta.generated_at", "not-a-timestamp")
     test_file = tmp_path / "test.json"
     test_file.write_text(json.dumps(data), encoding="utf-8")
 
-    # No error expected — timestamp format is not validated by the new schema
-    result = validate_pdf_ready_json(str(test_file))
-    assert result["meta"]["generated_at"] == "not-a-timestamp"
+    with pytest.raises(SchemaValidationError):
+        validate_pdf_ready_json(str(test_file))
 
 
 def test_schema_validation_error_is_exception_subclass() -> None:
