@@ -1,0 +1,30 @@
+<section class="toc">
+    <h2 class="toc-title">Table of Contents</h2>
+    <ul class="toc-list">
+        {% for file, file_items in file_groups %}
+        {% set file_index = loop.index %}
+        <li class="toc-file">
+            <a class="toc-link" href="#feature-{{ file_index }}">
+                <span class="toc-text">{{ file }}</span>
+            </a>
+            <ul class="toc-sublist">
+                {% set us_ids = file_items | map(attribute='us_id') | unique | list | natural_sort %}
+                {% for us in us_ids %}
+                <li class="toc-us">
+                    <a class="toc-link" href="#feature-{{ file_index }}-us-{{ loop.index }}">
+                        <span class="toc-id">{{ us }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </li>
+        {% endfor %}
+        {% if unlinked %}
+        <li class="toc-file">
+            <a class="toc-link" href="#unlinked">
+                <span class="toc-text">Unlinked Scenarios</span>
+            </a>
+        </li>
+        {% endif %}
+    </ul>
+</section>

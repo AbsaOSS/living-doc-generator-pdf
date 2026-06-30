@@ -1,0 +1,96 @@
+{% set short_id = item.id.split('/') | last %}
+{% set repo_context = item.id.rsplit('/', 1)[0] if '/' in item.id else '' %}
+<section class="chapter user-story" id="{{ short_id }}">
+    <header class="story-header">
+        <h2 class="story-title">
+            <span class="story-id">{{ short_id }}</span> &mdash; {{ item.title }}
+            {% if item.state %}
+            <span class="story-state state-{{ item.state | lower }}">{{ item.state }}</span>
+            {% endif %}
+        </h2>
+        {% if repo_context %}
+        <div class="story-repo">{{ repo_context }}</div>
+        {% endif %}
+        {% if item.tags %}
+        <div class="story-tags">
+            {% for tag in item.tags %}
+            <span class="tag">{{ tag }}</span>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </header>
+
+    {% if item.url %}
+    <div class="story-link"><a href="{{ item.url }}">{{ item.url }}</a></div>
+    {% endif %}
+
+    {% if item.timestamps %}
+    <div class="story-timestamps">
+        <span>Created: {{ item.timestamps.created | format_datetime }}</span>
+        <span>Updated: {{ item.timestamps.updated | format_datetime }}</span>
+    </div>
+    {% endif %}
+
+    <div class="story-content">
+        {% if item.description %}
+        <div class="section">
+            <h3 class="section-title">Description</h3>
+            <div class="section-content">{{ item.description | markdown | safe }}</div>
+        </div>
+        {% endif %}
+
+        {% if item.business_value %}
+        <div class="section">
+            <h3 class="section-title">Business Value</h3>
+            <div class="section-content">
+                <ul>
+                    {% for value in item.business_value %}
+                    <li>{{ value | markdown | safe }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if item.preconditions %}
+        <div class="section">
+            <h3 class="section-title">Preconditions</h3>
+            <div class="section-content">
+                <ul>
+                    {% for precondition in item.preconditions %}
+                    <li>{{ precondition | markdown | safe }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if item.acceptance_criteria %}
+        <div class="section">
+            <h3 class="section-title">Acceptance Criteria</h3>
+            <div class="section-content">
+                <table class="ac-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>State</th>
+                            <th>Version</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ac in item.acceptance_criteria %}
+                        <tr class="ac-row ac-state-{{ ac.state | lower if ac.state else 'unknown' }}">
+                            <td class="ac-id">{{ ac.id | default_if_none('') }}</td>
+                            <td class="ac-state">{{ ac.state | default_if_none('') }}</td>
+                            <td class="ac-version">{{ ac.version | default_if_none('') }}</td>
+                            <td class="ac-description">{{ ac.description }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>

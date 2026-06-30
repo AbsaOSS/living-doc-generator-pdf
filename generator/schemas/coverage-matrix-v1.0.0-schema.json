@@ -1,0 +1,87 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/absaoss/living-doc-generator-pdf/schemas/coverage-matrix-v1.0.0-schema.json",
+  "title": "Living Documentation Coverage Matrix v1.0.0",
+  "description": "Canonical JSON mapping acceptance criteria to test coverage.",
+  "type": "object",
+  "required": ["schema_version", "summary", "user_stories"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "coverage-matrix-v1.0.0" },
+    "generated_at": { "type": ["string", "null"] },
+    "summary": { "$ref": "#/definitions/summary" },
+    "user_stories": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/userStory" }
+    },
+    "unlinked_tests": { "type": "array" },
+    "stale_ac_refs": { "type": "array" }
+  },
+  "definitions": {
+    "summary": {
+      "type": "object",
+      "required": ["total_acs", "covered_acs", "coverage_pct"],
+      "properties": {
+        "active_acs": { "type": "number" },
+        "covered_acs": { "type": "number" },
+        "coverage_pct": { "type": "number" },
+        "total_acs": { "type": "number" },
+        "total_user_stories": { "type": "number" }
+      }
+    },
+    "userStory": {
+      "type": "object",
+      "required": ["id", "title", "acceptance_criteria"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "full_id": { "type": ["string", "null"] },
+        "title": { "type": "string" },
+        "state": { "type": ["string", "null"] },
+        "summary": {
+          "type": "object",
+          "properties": {
+            "active_acs": { "type": ["number", "null"] },
+            "covered_acs": { "type": ["number", "null"] },
+            "coverage_pct": { "type": ["number", "null"] },
+            "total_acs": { "type": ["number", "null"] }
+          }
+        },
+        "acceptance_criteria": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/acceptanceCriterion" }
+        }
+      }
+    },
+    "acceptanceCriterion": {
+      "type": "object",
+      "required": ["id", "description", "coverage"],
+      "properties": {
+        "id": { "type": "string" },
+        "description": { "type": "string" },
+        "state": { "type": ["string", "null"] },
+        "version": { "type": ["string", "null"] },
+        "coverage": { "$ref": "#/definitions/coverage" }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "required": ["status"],
+      "properties": {
+        "status": { "type": "string", "enum": ["covered", "not_covered"] },
+        "test_count": { "type": "number" },
+        "tests": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/test" }
+        }
+      }
+    },
+    "test": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "scenario_name": { "type": ["string", "null"] },
+        "source": { "type": "object" },
+        "tags": { "type": "array", "items": { "type": "string" } }
+      }
+    }
+  }
+}

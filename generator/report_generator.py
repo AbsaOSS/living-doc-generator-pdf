@@ -20,8 +20,18 @@ import json
 import logging
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
+
+
+def _count_items(data: dict[str, Any]) -> int:
+    """Count top-level renderable items in a generic source document."""
+    for key in ("items", "user_stories"):
+        value = data.get(key)
+        if isinstance(value, list):
+            return len(value)
+    return 0
 
 
 def generate_pdf_report(
@@ -29,7 +39,7 @@ def generate_pdf_report(
     output_file: str,
     template_pack_type: str,
     template_pack_path: str,
-    pdf_ready_data: dict,
+    data: dict[str, Any],
     pdf_path: str,
     errors: list[dict],
     warnings: list[dict],
@@ -37,42 +47,23 @@ def generate_pdf_report(
     """Generate pdf_report.json with statistics and diagnostics.
 
     Args:
-        input_file: Path to pdf_ready.json
-        output_file: Path to generated PDF
-        template_pack_type: "built-in" or "custom"
-        template_pack_path: Template directory path or "built-in"
-        pdf_ready_data: Parsed pdf_ready.json data
-        pdf_path: Path to generated PDF file
-        errors: List of error dictionaries
-        warnings: List of warning dictionaries
+        input_file: Path to the source JSON file.
+        output_file: Path to the generated PDF.
+        template_pack_type: "built-in" or "custom".
+        template_pack_path: Template directory path or "built-in".
+        data: Parsed source JSON data.
+        pdf_path: Path to the generated PDF file.
+        errors: List of error dictionaries.
+        warnings: List of warning dictionaries.
 
     Returns:
-        Path to the generated pdf_report.json file
+        Path to the generated pdf_report.json file.
     """
-    # Count user stories
-    user_stories = pdf_ready_data.get("content", {}).get("user_stories", [])
-    user_story_count = len(user_stories)
+    item_count = _count_items(data)
 
-    # Get PDF file size
     pdf_file = Path(pdf_path)
     file_size_bytes = pdf_file.stat().st_size if pdf_file.exists() else 0
 
-    # Check for missing sections in user stories
-    report_warnings = list(warnings)
-    for idx, story in enumerate(user_stories):
-        story_id = story.get("id", f"story[{idx}]")
-        sections = story.get("sections", {})
-
-        if not sections.get("acceptance_criteria"):
-            report_warnings.append(
-                {
-                    "level": "warning",
-                    "message": f"User story '{story_id}' has no acceptance_criteria section",
-                    "context": f"user_stories[{idx}]",
-                }
-            )
-
-    # Build report structure
     report = {
         "schema_version": "1.0",
         "generated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -80,15 +71,14 @@ def generate_pdf_report(
         "output_file": output_file,
         "template_pack": {"type": template_pack_type, "path": template_pack_path},
         "statistics": {
-            "user_story_count": user_story_count,
+            "item_count": item_count,
             "total_pages": 0,  # WeasyPrint doesn't easily expose page count
             "file_size_bytes": file_size_bytes,
         },
         "errors": errors,
-        "warnings": report_warnings,
+        "warnings": list(warnings),
     }
 
-    # Save report to same directory as PDF
     report_path = pdf_file.parent / "pdf_report.json"
     logger.info("Generating PDF report at %s", report_path)
 
@@ -96,9 +86,9 @@ def generate_pdf_report(
         json.dump(report, f, indent=2)
 
     logger.info(
-        "Report generated: %d user stories, %d warnings, %d errors",
-        user_story_count,
-        len(report_warnings),
+        "Report generated: %d items, %d warnings, %d errors",
+        item_count,
+        len(warnings),
         len(errors),
     )
 

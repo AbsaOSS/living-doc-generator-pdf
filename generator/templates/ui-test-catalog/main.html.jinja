@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ meta.document_title }}</title>
+    <style>
+        {% include 'styles.css' %}
+    </style>
+</head>
+<body>
+    {% set items = data.get('items', []) %}
+    {% set linked = items | selectattr('us_id') | list %}
+    {% set unlinked = items | rejectattr('us_id') | list %}
+    {% set file_groups = linked | groupby('source.file') %}
+    {% include 'cover.html.jinja' %}
+    {% include 'toc.html.jinja' %}
+    <main class="chapters">
+        {% for file, file_items in file_groups %}
+        {% set file_index = loop.index %}
+        <section class="chapter feature-file" id="feature-{{ file_index }}">
+            <h2 class="feature-title">{{ file }}</h2>
+            {% set us_ids = file_items | map(attribute='us_id') | unique | list | natural_sort %}
+            {% for us in us_ids %}
+            {% set us_index = loop.index %}
+            <section class="us-group" id="feature-{{ file_index }}-us-{{ us_index }}">
+                <h3 class="us-title">{{ us }}</h3>
+                {% for scenario in file_items if scenario.us_id == us %}
+                {% include 'test_item.html.jinja' %}
+                {% endfor %}
+            </section>
+            {% endfor %}
+        </section>
+        {% endfor %}
+        {% if unlinked %}
+        <section class="chapter feature-file" id="unlinked">
+            <h2 class="feature-title">Unlinked Scenarios</h2>
+            {% for scenario in unlinked %}
+            {% include 'test_item.html.jinja' %}
+            {% endfor %}
+        </section>
+        {% endif %}
+    </main>
+</body>
+</html>

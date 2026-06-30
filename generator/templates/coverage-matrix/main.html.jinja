@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ meta.document_title }}</title>
+    <style>
+        {% include 'styles.css' %}
+    </style>
+</head>
+<body>
+    {% set stories = data.get('user_stories', []) | natural_sort(attribute='id') %}
+    {% set summary = data.get('summary', {}) %}
+    {% include 'cover.html.jinja' %}
+    {% include 'toc.html.jinja' %}
+
+    <section class="summary-bar" id="summary">
+        <h2 class="summary-title">Coverage Summary</h2>
+        <div class="summary-stats">
+            <div class="stat-item">
+                <span class="stat-value">{{ summary.get('total_acs', 0) }}</span>
+                <span class="stat-label">Total ACs</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ summary.get('active_acs', 0) }}</span>
+                <span class="stat-label">Active ACs</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ summary.get('covered_acs', 0) }}</span>
+                <span class="stat-label">Covered ACs</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ summary.get('coverage_pct', 0) }}%</span>
+                <span class="stat-label">Coverage</span>
+            </div>
+        </div>
+        {% set bucket = ((summary.get('coverage_pct', 0) / 5) | round | int) * 5 %}
+        <div class="progress">
+            <div class="progress-fill w-{{ bucket }}"></div>
+        </div>
+    </section>
+
+    <main class="chapters">
+        {% for story in stories %}
+        {% include 'story_row.html.jinja' %}
+        {% endfor %}
+    </main>
+
+    {% set unlinked_tests = data.get('unlinked_tests', []) %}
+    {% set stale_ac_refs = data.get('stale_ac_refs', []) %}
+    {% if unlinked_tests or stale_ac_refs %}
+    <section class="chapter appendix" id="appendix">
+        <h2 class="appendix-title">Appendix</h2>
+        {% if unlinked_tests %}
+        <h3 class="appendix-section-title">Unlinked Tests</h3>
+        <ul class="appendix-list">
+            {% for test in unlinked_tests %}
+            <li>{% if test is mapping %}{{ test.get('scenario_name') | default_if_none(test.get('id', '')) }}{% else %}{{ test }}{% endif %}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+        {% if stale_ac_refs %}
+        <h3 class="appendix-section-title">Stale AC References</h3>
+        <ul class="appendix-list">
+            {% for ref in stale_ac_refs %}
+            <li>{% if ref is mapping %}{{ ref.get('id', '') }}{% else %}{{ ref }}{% endif %}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </section>
+    {% endif %}
+</body>
+</html>

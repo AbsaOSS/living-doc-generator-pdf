@@ -1,0 +1,51 @@
+{% set story_summary = story.get('summary', {}) %}
+<section class="chapter us-coverage" id="{{ story.id }}">
+    <header class="story-header">
+        <h2 class="story-title">
+            <span class="story-id">{{ story.id }}</span> &mdash; {{ story.title }}
+            {% if story.state %}
+            <span class="story-state state-{{ story.state | lower }}">{{ story.state }}</span>
+            {% endif %}
+        </h2>
+        <div class="story-summary">
+            {{ story_summary.get('covered_acs', 0) }}/{{ story_summary.get('total_acs', 0) }}
+            acceptance criteria covered ({{ story_summary.get('coverage_pct', 0) }}%)
+        </div>
+    </header>
+
+    {% if story.acceptance_criteria %}
+    <table class="cov-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Description</th>
+                <th>State</th>
+                <th>Coverage</th>
+                <th>Tests</th>
+                <th>Linked Scenarios</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for ac in story.acceptance_criteria %}
+            {% set coverage = ac.get('coverage', {}) %}
+            <tr class="cov-row cov-row-{{ coverage.get('status', 'not_covered') }}">
+                <td class="ac-id">{{ ac.id | default_if_none('') }}</td>
+                <td class="ac-description">{{ ac.description }}</td>
+                <td class="ac-state">{{ ac.state | default_if_none('') }}</td>
+                <td class="ac-coverage">
+                    <span class="cov-badge cov-{{ coverage.get('status', 'not_covered') }}">
+                        {{ coverage.get('status', 'not_covered') | replace('_', ' ') }}
+                    </span>
+                </td>
+                <td class="ac-testcount">{{ coverage.get('test_count', 0) }}</td>
+                <td class="ac-scenarios">
+                    {% for test in coverage.get('tests', []) %}
+                    <div class="scenario-name">{{ test.scenario_name }}</div>
+                    {% endfor %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</section>

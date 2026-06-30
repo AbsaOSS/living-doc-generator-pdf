@@ -1,260 +1,96 @@
-#
-# Copyright 2023 ABSA Group Limited
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-
-"""Unit tests for template renderer."""
-
-from pathlib import Path
-
 import pytest
 
 from generator.template_renderer import TemplateError, TemplateRenderer
 
 
 @pytest.fixture
-def minimal_pdf_data() -> dict:
-    """Return minimal valid pdf_ready data."""
-    return {
-        "schema_version": "1.0",
-        "meta": {
-            "document_title": "Test Document",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": ["github:test/repo"],
-            "selection_summary": {"total_items": 0, "included_items": 0, "excluded_items": 0},
-        },
-        "content": {"user_stories": []},
-    }
+def custom_template_dir(tmp_path):
+    """Create a minimal self-contained custom template directory."""
+    main = tmp_path / "main.html.jinja"
+    main.write_text(
+        "<html><body><h1>{{ meta.document_title }}</h1>"
+        "<p>{{ data.message }}</p></body></html>",
+        encoding="utf-8",
+    )
+    return tmp_path
 
 
 @pytest.fixture
-def full_pdf_data() -> dict:
-    """Return full pdf_ready data with user stories."""
+def meta():
     return {
-        "schema_version": "1.0",
-        "meta": {
-            "document_title": "Test Document",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": ["github:test/repo"],
-            "selection_summary": {"total_items": 1, "included_items": 1, "excluded_items": 0},
-        },
-        "content": {
-            "user_stories": [
-                {
-                    "id": "test-1",
-                    "title": "Test Story",
-                    "state": "open",
-                    "tags": ["test", "priority:high"],
-                    "url": "https://example.com/issue/1",
-                    "timestamps": {
-                        "created": "2026-01-21T12:00:00Z",
-                        "updated": "2026-01-21T12:00:00Z",
-                    },
-                    "sections": {
-                        "description": "## Description\n\nThis is a test story.",
-                        "business_value": ["High value for testing"],
-                        "preconditions": None,
-                        "acceptance_criteria": [
-                            {"id": "AC-01", "description": "Test passes", "state": "Active", "version": "v1.0"},
-                            {"id": "AC-02", "description": "Code works", "state": "Active", "version": "v1.0"},
-                        ],
-                        "user_guide": None,
-                        "connections": None,
-                        "last_edited": None,
-                    },
-                }
-            ]
-        },
+        "document_title": "My Title",
+        "generated_at": "2024-01-01T00:00:00Z",
+        "source_file": "data.json",
     }
 
 
-def test_render_with_built_in_templates(minimal_pdf_data: dict) -> None:
-    """Test rendering with built-in templates works."""
-    renderer = TemplateRenderer()
-    html = renderer.render(minimal_pdf_data)
-
-    # Check basic structure
-    assert "<!DOCTYPE html>" in html
-    assert "<html" in html
-    assert "Test Document" in html
-    assert "1.0.0" in html
+def test_requires_template_path_or_document_type() -> None:
+    """Constructor raises when neither template-path nor document-type is given."""
+    with pytest.raises(TemplateError, match="Either template-path or document-type"):
+        TemplateRenderer()
 
 
-def test_render_with_custom_templates(tmp_path: Path, minimal_pdf_data: dict) -> None:
-    """Test custom template override works."""
-    # Create custom template directory
-    custom_dir = tmp_path / "custom"
-    custom_dir.mkdir()
+def test_missing_template_directory_raises() -> None:
+    """Constructor raises when the custom template directory does not exist."""
+    with pytest.raises(TemplateError, match="not found"):
+        TemplateRenderer(template_path="/nonexistent/templates")
 
-    # Create custom main template
-    custom_main = custom_dir / "main.html.jinja"
-    custom_main.write_text(
-        "<!DOCTYPE html>\n<html><body><h1>CUSTOM: {{ meta.document_title }}</h1></body></html>"
+
+def test_unknown_document_type_raises() -> None:
+    """Constructor raises when the built-in document type does not exist."""
+    with pytest.raises(TemplateError, match="Built-in template set 'nope' not found"):
+        TemplateRenderer(document_type="nope")
+
+
+def test_render_custom_template(custom_template_dir, meta) -> None:
+    """render uses data and meta from a custom template directory."""
+    renderer = TemplateRenderer(template_path=str(custom_template_dir))
+    html = renderer.render({"message": "hello"}, meta)
+
+    assert "<h1>My Title</h1>" in html
+    assert "hello" in html
+
+
+def test_base_dir_points_to_custom_dir(custom_template_dir, meta) -> None:
+    """base_dir returns the custom directory for asset resolution."""
+    renderer = TemplateRenderer(template_path=str(custom_template_dir))
+    assert renderer.base_dir == str(custom_template_dir)
+
+
+def test_render_builtin_user_stories(meta) -> None:
+    """render works with the built-in user-stories document type."""
+    renderer = TemplateRenderer(document_type="user-stories")
+    data = {"items": [{"id": "US-1", "title": "First", "acceptance_criteria": []}]}
+    html = renderer.render(data, meta)
+
+    assert "US-1" in html or "First" in html
+
+
+def test_partial_override_prefers_custom(tmp_path, meta) -> None:
+    """When both are given, a custom main.html.jinja overrides the built-in one."""
+    (tmp_path / "main.html.jinja").write_text(
+        "<html><body>CUSTOM {{ meta.document_title }}</body></html>",
+        encoding="utf-8",
     )
+    renderer = TemplateRenderer(template_path=str(tmp_path), document_type="user-stories")
+    html = renderer.render({"items": []}, meta)
 
-    renderer = TemplateRenderer(str(custom_dir))
-    html = renderer.render(minimal_pdf_data)
-
-    assert "CUSTOM: Test Document" in html
-
-
-def test_missing_template_error(tmp_path: Path) -> None:
-    """Test error handling for missing templates."""
-    # Create custom directory with a template that references a missing include
-    custom_dir = tmp_path / "custom"
-    custom_dir.mkdir()
-
-    # Create template that tries to include a non-existent template
-    custom_main = custom_dir / "main.html.jinja"
-    custom_main.write_text("<!DOCTYPE html>\n{% include 'nonexistent.html.jinja' %}")
-
-    renderer = TemplateRenderer(str(custom_dir))
-
-    data = {
-        "schema_version": "1.0",
-        "meta": {
-            "document_title": "Test",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": ["test"],
-            "selection_summary": {"total_items": 0, "included_items": 0, "excluded_items": 0},
-        },
-        "content": {"user_stories": []},
-    }
-
-    with pytest.raises(TemplateError, match="Template .* not found"):
-        renderer.render(data)
+    assert "CUSTOM My Title" in html
 
 
-def test_template_syntax_error(tmp_path: Path, minimal_pdf_data: dict) -> None:
-    """Test error handling for template syntax errors."""
-    # Create custom template with syntax error
-    custom_dir = tmp_path / "custom"
-    custom_dir.mkdir()
+def test_render_missing_main_template_raises(tmp_path, meta) -> None:
+    """render raises TemplateError when main.html.jinja is missing."""
+    (tmp_path / "other.html.jinja").write_text("nothing", encoding="utf-8")
+    renderer = TemplateRenderer(template_path=str(tmp_path))
 
-    # Create template with invalid Jinja2 syntax
-    custom_main = custom_dir / "main.html.jinja"
-    custom_main.write_text("<!DOCTYPE html>\n<html><body>{{ unclosed_tag </body></html>")
+    with pytest.raises(TemplateError, match="not found"):
+        renderer.render({}, meta)
 
-    renderer = TemplateRenderer(str(custom_dir))
+
+def test_render_syntax_error_raises(tmp_path, meta) -> None:
+    """render raises TemplateError on a template syntax error."""
+    (tmp_path / "main.html.jinja").write_text("{% for x in %}", encoding="utf-8")
+    renderer = TemplateRenderer(template_path=str(tmp_path))
 
     with pytest.raises(TemplateError, match="Syntax error"):
-        renderer.render(minimal_pdf_data)
-
-
-def test_template_receives_all_variables(full_pdf_data: dict) -> None:
-    """Test that all schema variables are available in templates."""
-    renderer = TemplateRenderer()
-    html = renderer.render(full_pdf_data)
-
-    # Check metadata
-    assert "Test Document" in html
-    assert "1.0.0" in html
-
-    # Check user story
-    assert "test-1" in html
-    assert "Test Story" in html
-    assert "open" in html
-    assert "test" in html
-    assert "priority:high" in html
-    assert "https://example.com/issue/1" in html
-
-    # Check sections
-    assert "Description" in html
-    assert "This is a test story" in html
-    assert "Business Value" in html
-    assert "High value for testing" in html
-    assert "Acceptance Criteria" in html
-
-
-def test_render_handles_none_sections(full_pdf_data: dict) -> None:
-    """Test that None sections are handled gracefully."""
-    # Ensure some sections are None
-    full_pdf_data["content"]["user_stories"][0]["sections"]["preconditions"] = None
-    full_pdf_data["content"]["user_stories"][0]["sections"]["user_guide"] = None
-
-    renderer = TemplateRenderer()
-    html = renderer.render(full_pdf_data)
-
-    # Should render without errors
-    assert "Test Story" in html
-
-
-def test_markdown_filter_in_template(full_pdf_data: dict) -> None:
-    """Test that markdown filter works in templates."""
-    renderer = TemplateRenderer()
-    html = renderer.render(full_pdf_data)
-
-    # Markdown heading should be converted to HTML
-    assert "<h2>Description</h2>" in html
-
-
-def test_format_datetime_filter_in_template(full_pdf_data: dict) -> None:
-    """Test that format_datetime filter works in templates."""
-    renderer = TemplateRenderer()
-    html = renderer.render(full_pdf_data)
-
-    # ISO timestamp should be formatted
-    assert "2026-01-21" in html
-
-
-def test_custom_template_fallback_to_builtin(tmp_path: Path, minimal_pdf_data: dict) -> None:
-    """Test that missing custom templates fall back to built-in."""
-    # Create custom directory with only one template
-    custom_dir = tmp_path / "custom"
-    custom_dir.mkdir()
-
-    # Create custom cover template only
-    custom_cover = custom_dir / "cover.html.jinja"
-    custom_cover.write_text("<div class='custom-cover'>CUSTOM COVER: {{ meta.document_title }}</div>")
-
-    # Renderer should use custom cover but built-in main and other templates
-    renderer = TemplateRenderer(str(custom_dir))
-    html = renderer.render(minimal_pdf_data)
-
-    assert "CUSTOM COVER" in html
-    assert "<!DOCTYPE html>" in html  # From built-in main.html.jinja
-
-
-def test_nonexistent_custom_template_dir_falls_back(minimal_pdf_data: dict) -> None:
-    """Test that a non-existent custom template dir logs warning and uses built-in."""
-    renderer = TemplateRenderer("/nonexistent/template/dir")
-    html = renderer.render(minimal_pdf_data)
-
-    # Should fall back to built-in templates and render successfully
-    assert "<!DOCTYPE html>" in html
-    assert "Test Document" in html
-
-
-def test_template_error_is_exception_subclass() -> None:
-    """Test that TemplateError is a proper Exception subclass."""
-    assert issubclass(TemplateError, Exception)
-
-
-def test_builtin_template_files_exist() -> None:
-    """Test that all required built-in template files are present."""
-    templates_dir = Path(__file__).parent.parent.parent.parent / "generator" / "templates"
-
-    required_files = [
-        "main.html.jinja",
-        "cover.html.jinja",
-        "user_story.html.jinja",
-        "styles.css",
-    ]
-
-    for filename in required_files:
-        file_path = templates_dir / filename
-        assert file_path.exists(), f"Required built-in template missing: {filename}"
+        renderer.render({}, meta)

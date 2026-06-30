@@ -14,282 +14,96 @@
 # limitations under the License.
 #
 
-"""Integration tests for edge cases: large files, empty arrays, boundary conditions."""
+"""Integration tests for edge cases: empty data, large content, special characters."""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
+from generator.models import build_meta
 from generator.pdf_generator import PdfGenerator
-from generator.schema_validator import validate_pdf_ready_json
+from generator.schema_validator import load_source
 from generator.template_renderer import TemplateRenderer
 
 
-def test_empty_user_stories_array(temp_output_dir: Path) -> None:
-    """Test generating PDF with empty user_stories array."""
-    # Create JSON with empty user_stories
-    empty_stories_data = {
-        "schema_version": "1.0",
-        "meta": {
-            "document_title": "Empty Document",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": ["github:test/repo"],
-            "selection_summary": {"total_items": 0, "included_items": 0, "excluded_items": 0},
-        },
-        "content": {"user_stories": []},
-    }
+def _write(tmp: Path, name: str, payload: dict) -> Path:
+    path = tmp / name
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return path
 
-    # Write to file
-    json_file = temp_output_dir / "empty_stories.json"
-    with open(json_file, "w", encoding="utf-8") as f:
-        json.dump(empty_stories_data, f, indent=2)
 
-    # Validate and load
-    pdf_ready_data = validate_pdf_ready_json(str(json_file))
+def _render_pdf(source: Path, document_type: str, output_pdf: Path) -> str:
+    data = load_source(str(source))
+    renderer = TemplateRenderer(document_type=document_type)
+    html = renderer.render(data, build_meta("Edge", str(source)).to_dict())
+    PdfGenerator().generate_pdf(html, str(output_pdf), renderer.base_dir)
+    return html
 
-    # Render HTML
-    renderer = TemplateRenderer(None)
-    html = renderer.render(pdf_ready_data)
 
-    # Generate PDF
-    output_pdf = temp_output_dir / "empty_stories.pdf"
-    template_dir = str(Path(__file__).parent.parent.parent / "generator" / "templates")
-    generator = PdfGenerator()
-    generator.generate_pdf(html, str(output_pdf), template_dir)
-
-    # Verify PDF was created
+def test_empty_items_array(temp_output_dir: Path) -> None:
+    """An empty items array still renders a PDF."""
+    source = _write(temp_output_dir, "empty.json", {"items": []})
+    output_pdf = temp_output_dir / "empty.pdf"
+    _render_pdf(source, "user-stories", output_pdf)
     assert output_pdf.exists()
     assert output_pdf.stat().st_size > 0
 
 
-def test_user_story_with_minimal_sections(temp_output_dir: Path) -> None:
-    """Test user story with only required fields (no optional sections)."""
-    minimal_story_data = {
-        "schema_version": "1.0",
-        "meta": {
-            "document_title": "Minimal Story",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": ["github:test/repo"],
-            "selection_summary": {"total_items": 1, "included_items": 1, "excluded_items": 0},
-        },
-        "content": {
-            "user_stories": [
-                {
-                    "id": "github:test/repo#1",
-                    "title": "Minimal User Story",
-                    "state": "open",
-                    "tags": [],
-                    "url": "https://github.com/test/repo/issues/1",
-                    "timestamps": {
-                        "created": "2026-01-20T10:00:00Z",
-                        "updated": "2026-01-20T10:00:00Z",
-                    },
-                    "sections": {},  # No sections at all
-                }
-            ]
-        },
-    }
-
-    # Write to file
-    json_file = temp_output_dir / "minimal_story.json"
-    with open(json_file, "w", encoding="utf-8") as f:
-        json.dump(minimal_story_data, f, indent=2)
-
-    # Validate and load
-    pdf_ready_data = validate_pdf_ready_json(str(json_file))
-
-    # Render HTML
-    renderer = TemplateRenderer(None)
-    html = renderer.render(pdf_ready_data)
-
-    # Generate PDF
-    output_pdf = temp_output_dir / "minimal_story.pdf"
-    template_dir = str(Path(__file__).parent.parent.parent / "generator" / "templates")
-    generator = PdfGenerator()
-    generator.generate_pdf(html, str(output_pdf), template_dir)
-
-    # Verify PDF was created
+def test_item_with_minimal_fields(temp_output_dir: Path) -> None:
+    """An item with only id and title renders without optional fields."""
+    payload = {"items": [{"id": "US-1", "title": "Minimal", "acceptance_criteria": []}]}
+    source = _write(temp_output_dir, "minimal_item.json", payload)
+    output_pdf = temp_output_dir / "minimal_item.pdf"
+    html = _render_pdf(source, "user-stories", output_pdf)
+    assert "Minimal" in html
     assert output_pdf.exists()
 
 
 def test_large_markdown_content(temp_output_dir: Path) -> None:
-    """Test user story with very large markdown content in sections."""
-    # Create a large markdown string (simulating a long description)
+    """Large markdown content renders into a reasonably sized PDF."""
     large_markdown = "# Large Content\n\n" + "\n\n".join(
-        [f"## Section {i}\n\nThis is paragraph {i} with content." for i in range(100)]
+        f"## Section {i}\n\nParagraph {i} with content." for i in range(100)
     )
-
-    large_content_data = {
-        "schema_version": "1.0",
-        "meta": {
-            "document_title": "Large Content Document",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": ["github:test/repo"],
-            "selection_summary": {"total_items": 1, "included_items": 1, "excluded_items": 0},
-        },
-        "content": {
-            "user_stories": [
-                {
-                    "id": "github:test/repo#1",
-                    "title": "Story with Large Content",
-                    "state": "open",
-                    "tags": ["documentation"],
-                    "url": "https://github.com/test/repo/issues/1",
-                    "timestamps": {
-                        "created": "2026-01-20T10:00:00Z",
-                        "updated": "2026-01-20T10:00:00Z",
-                    },
-                    "sections": {"description": large_markdown, "acceptance_criteria": [{"description": large_markdown}]},
-                }
-            ]
-        },
+    payload = {
+        "items": [
+            {
+                "id": "US-1",
+                "title": "Large Content Story",
+                "description": large_markdown,
+                "acceptance_criteria": [{"id": "AC-1", "description": large_markdown}],
+            }
+        ]
     }
+    source = _write(temp_output_dir, "large.json", payload)
+    output_pdf = temp_output_dir / "large.pdf"
+    html = _render_pdf(source, "user-stories", output_pdf)
 
-    # Write to file
-    json_file = temp_output_dir / "large_content.json"
-    with open(json_file, "w", encoding="utf-8") as f:
-        json.dump(large_content_data, f, indent=2)
-
-    # Validate and load
-    pdf_ready_data = validate_pdf_ready_json(str(json_file))
-
-    # Render HTML
-    renderer = TemplateRenderer(None)
-    html = renderer.render(pdf_ready_data)
-
-    # Verify HTML contains the content
     assert "Section 50" in html
     assert "Section 99" in html
-
-    # Generate PDF
-    output_pdf = temp_output_dir / "large_content.pdf"
-    template_dir = str(Path(__file__).parent.parent.parent / "generator" / "templates")
-    generator = PdfGenerator()
-    generator.generate_pdf(html, str(output_pdf), template_dir)
-
-    # Verify PDF was created and is larger due to content
-    assert output_pdf.exists()
-    assert output_pdf.stat().st_size > 10000  # Should be reasonably large
+    assert output_pdf.stat().st_size > 10000
 
 
 def test_special_characters_in_content(temp_output_dir: Path) -> None:
-    """Test handling of special characters and Unicode in content."""
-    special_chars_data = {
-        "schema_version": "1.0",
-        "meta": {
-            "document_title": "Special Characters: <>&\"' éàü 中文 🎉",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": ["github:test/repo"],
-            "selection_summary": {"total_items": 1, "included_items": 1, "excluded_items": 0},
-        },
-        "content": {
-            "user_stories": [
-                {
-                    "id": "github:test/repo#1",
-                    "title": "Story with émojis 🎉 and <special> & \"chars\"",
-                    "state": "open",
-                    "tags": ["bug", "enhancement-中文"],
-                    "url": "https://github.com/test/repo/issues/1",
-                    "timestamps": {
-                        "created": "2026-01-20T10:00:00Z",
-                        "updated": "2026-01-20T10:00:00Z",
-                    },
-                    "sections": {
-                        "description": "Description with **special** chars: <tag> & 'quotes' \"double\" € £ ¥",
-                        "acceptance_criteria": [
-                            {"description": "Test émoji: 🎉"},
-                            {"description": "Test Chinese: 中文"},
-                            {"description": "Test math: ∑∫∂"},
-                        ],
-                    },
-                }
-            ]
-        },
+    """Unicode and special characters render and are HTML-escaped."""
+    payload = {
+        "items": [
+            {
+                "id": "US-1",
+                "title": 'Story with émojis and <special> & "chars"',
+                "description": "Description with special chars: <tag> & 'quotes' € £ ¥ 中文",
+                "acceptance_criteria": [
+                    {"id": "AC-1", "description": "Test émoji content"},
+                    {"id": "AC-2", "description": "Test Chinese: 中文"},
+                ],
+            }
+        ]
     }
+    source = _write(temp_output_dir, "special.json", payload)
+    output_pdf = temp_output_dir / "special.pdf"
+    html = _render_pdf(source, "user-stories", output_pdf)
 
-    # Write to file
-    json_file = temp_output_dir / "special_chars.json"
-    with open(json_file, "w", encoding="utf-8") as f:
-        json.dump(special_chars_data, f, ensure_ascii=False, indent=2)
-
-    # Validate and load
-    pdf_ready_data = validate_pdf_ready_json(str(json_file))
-
-    # Render HTML
-    renderer = TemplateRenderer(None)
-    html = renderer.render(pdf_ready_data)
-
-    # Verify special characters are in HTML (properly escaped)
-    assert "éàü" in html
     assert "中文" in html
-
-    # Generate PDF
-    output_pdf = temp_output_dir / "special_chars.pdf"
-    template_dir = str(Path(__file__).parent.parent.parent / "generator" / "templates")
-    generator = PdfGenerator()
-    generator.generate_pdf(html, str(output_pdf), template_dir)
-
-    # Verify PDF was created
-    assert output_pdf.exists()
-
-
-def test_long_urls_and_ids(temp_output_dir: Path) -> None:
-    """Test handling of very long URLs and IDs."""
-    long_url = "https://github.com/organization/very-long-repository-name-that-goes-on-and-on/" + "issues/123456"
-    long_id = "github:organization/very-long-repository-name-that-goes-on-and-on#123456"
-
-    long_urls_data = {
-        "schema_version": "1.0",
-        "meta": {
-            "document_title": "Long URLs Test",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": [
-                "github:organization/very-long-repository-name-that-goes-on-and-on",
-                "jira:project-with-long-name",
-            ],
-            "selection_summary": {"total_items": 1, "included_items": 1, "excluded_items": 0},
-        },
-        "content": {
-            "user_stories": [
-                {
-                    "id": long_id,
-                    "title": "Story with Long URL",
-                    "state": "open",
-                    "tags": ["label-with-very-long-name-that-should-wrap-properly"],
-                    "url": long_url,
-                    "timestamps": {
-                        "created": "2026-01-20T10:00:00Z",
-                        "updated": "2026-01-20T10:00:00Z",
-                    },
-                    "sections": {"description": "Test story"},
-                }
-            ]
-        },
-    }
-
-    # Write to file
-    json_file = temp_output_dir / "long_urls.json"
-    with open(json_file, "w", encoding="utf-8") as f:
-        json.dump(long_urls_data, f, indent=2)
-
-    # Validate and load
-    pdf_ready_data = validate_pdf_ready_json(str(json_file))
-
-    # Render HTML
-    renderer = TemplateRenderer(None)
-    html = renderer.render(pdf_ready_data)
-
-    # Generate PDF
-    output_pdf = temp_output_dir / "long_urls.pdf"
-    template_dir = str(Path(__file__).parent.parent.parent / "generator" / "templates")
-    generator = PdfGenerator()
-    generator.generate_pdf(html, str(output_pdf), template_dir)
-
-    # Verify PDF was created
+    # Autoescaping renders angle brackets safely.
+    assert "<special>" not in html
     assert output_pdf.exists()

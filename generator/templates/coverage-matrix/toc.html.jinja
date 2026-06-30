@@ -1,0 +1,22 @@
+<section class="toc">
+    <h2 class="toc-title">Table of Contents</h2>
+    <ul class="toc-list">
+        <li class="toc-entry">
+            <a class="toc-link" href="#summary"><span class="toc-text">Coverage Summary</span></a>
+        </li>
+        {% for story in stories %}
+        <li class="toc-entry">
+            <a class="toc-link" href="#{{ story.id }}">
+                <span class="toc-id">{{ story.id }}</span>
+                <span class="toc-text">{{ story.title }}</span>
+                <span class="toc-pct">{{ story.get('summary', {}).get('coverage_pct', 0) }}%</span>
+            </a>
+        </li>
+        {% endfor %}
+        {% if data.get('unlinked_tests') or data.get('stale_ac_refs') %}
+        <li class="toc-entry">
+            <a class="toc-link" href="#appendix"><span class="toc-text">Appendix</span></a>
+        </li>
+        {% endif %}
+    </ul>
+</section>

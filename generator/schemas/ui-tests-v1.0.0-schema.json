@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/absaoss/living-doc-generator-pdf/schemas/ui-tests-v1.0.0-schema.json",
+  "title": "Living Documentation UI Tests v1.0.0",
+  "description": "Canonical JSON produced by the living-doc collector for UI test scenarios.",
+  "type": "object",
+  "required": ["items"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/scenario" }
+    },
+    "metadata": { "type": "object" },
+    "warnings": { "type": "array" }
+  },
+  "definitions": {
+    "scenario": {
+      "type": "object",
+      "required": ["id", "scenario_name", "steps", "source"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "us_id": { "type": ["string", "null"] },
+        "ac_ids": { "type": "array", "items": { "type": "string" } },
+        "scenario_name": { "type": "string", "minLength": 1 },
+        "scenario_type": { "type": ["string", "null"] },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "steps": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/step" }
+        },
+        "source": { "$ref": "#/definitions/source" }
+      }
+    },
+    "step": {
+      "type": "object",
+      "required": ["keyword", "text"],
+      "properties": {
+        "keyword": { "type": "string" },
+        "text": { "type": "string" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["file"],
+      "properties": {
+        "org": { "type": ["string", "null"] },
+        "repo": { "type": ["string", "null"] },
+        "file": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

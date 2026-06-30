@@ -1,0 +1,60 @@
+{
+  "items": [
+    {
+      "id": "test-1",
+      "us_id": "US-1",
+      "ac_ids": ["AC-1"],
+      "scenario_name": "Render a PDF from a valid source",
+      "scenario_type": "Scenario",
+      "tags": ["@smoke", "@pdf"],
+      "steps": [
+        { "keyword": "Given", "text": "a valid source JSON file" },
+        { "keyword": "When", "text": "the action runs" },
+        { "keyword": "Then", "text": "a PDF file is produced" }
+      ],
+      "source": {
+        "org": "AbsaOSS",
+        "repo": "living-doc-example",
+        "file": "features/pdf_generation.feature"
+      }
+    },
+    {
+      "id": "test-2",
+      "us_id": "US-1",
+      "ac_ids": ["AC-2"],
+      "scenario_name": "Render markdown content",
+      "scenario_type": "Scenario",
+      "tags": ["@pdf"],
+      "steps": [
+        { "keyword": "Given", "text": "a source with markdown description" },
+        { "keyword": "When", "text": "the action renders the document" },
+        { "keyword": "Then", "text": "the markdown is rendered as HTML" }
+      ],
+      "source": {
+        "org": "AbsaOSS",
+        "repo": "living-doc-example",
+        "file": "features/pdf_generation.feature"
+      }
+    },
+    {
+      "id": "test-3",
+      "us_id": null,
+      "ac_ids": [],
+      "scenario_name": "Unlinked exploratory scenario",
+      "scenario_type": "Scenario",
+      "tags": ["@exploratory"],
+      "steps": [
+        { "keyword": "Given", "text": "an undocumented edge case" },
+        { "keyword": "When", "text": "the action runs" },
+        { "keyword": "Then", "text": "it does not crash" }
+      ],
+      "source": {
+        "org": "AbsaOSS",
+        "repo": "living-doc-example",
+        "file": "features/exploratory.feature"
+      }
+    }
+  ],
+  "metadata": { "source": "living-doc-collector" },
+  "warnings": []
+}

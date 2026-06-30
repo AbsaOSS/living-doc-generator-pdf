@@ -179,3 +179,7 @@ output_rendered.html
 output.pdf
 pdf_ready.json
 pdf_report.json
+coverage-matrix.json
+doc-source.json
+ui-tests.json
+spec.md

@@ -14,134 +14,84 @@
 # limitations under the License.
 #
 
-"""Integration tests for end-to-end PDF generation scenarios."""
+"""Integration tests for end-to-end PDF generation across document types."""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
 
+import pytest
+
+from generator.models import build_meta
 from generator.pdf_generator import PdfGenerator
 from generator.report_generator import generate_pdf_report
-from generator.schema_validator import validate_pdf_ready_json
+from generator.schema_validator import load_source
 from generator.template_renderer import TemplateRenderer
 
 
-def test_generate_pdf_minimal(minimal_valid_json: Path, temp_output_dir: Path) -> None:
-    """Test generating PDF from minimal valid JSON."""
-    # Validate and load the JSON
-    pdf_ready_data = validate_pdf_ready_json(str(minimal_valid_json))
+def _render_to_pdf(source: Path, document_type: str, output_pdf: Path) -> str:
+    data = load_source(str(source))
+    renderer = TemplateRenderer(document_type=document_type)
+    meta = build_meta("Integration Test", str(source)).to_dict()
+    html = renderer.render(data, meta)
+    PdfGenerator().generate_pdf(html, str(output_pdf), renderer.base_dir)
+    return html
 
-    # Render HTML
-    renderer = TemplateRenderer(None)
-    html = renderer.render(pdf_ready_data)
 
-    # Generate PDF
+@pytest.mark.parametrize(
+    "fixture_name, document_type",
+    [
+        ("user_stories_json", "user-stories"),
+        ("ui_tests_json", "ui-test-catalog"),
+        ("coverage_matrix_json", "coverage-matrix"),
+    ],
+)
+def test_generate_pdf_per_document_type(
+    request, fixture_name: str, document_type: str, temp_output_dir: Path
+) -> None:
+    """Each built-in document type renders a valid PDF end-to-end."""
+    source = request.getfixturevalue(fixture_name)
+    output_pdf = temp_output_dir / f"{document_type}.pdf"
+
+    _render_to_pdf(source, document_type, output_pdf)
+
+    assert output_pdf.exists()
+    assert output_pdf.stat().st_size > 0
+    with open(output_pdf, "rb") as f:
+        assert f.read(5) == b"%PDF-"
+
+
+def test_generate_pdf_minimal(minimal_json: Path, temp_output_dir: Path) -> None:
+    """An empty items list still renders a valid PDF."""
     output_pdf = temp_output_dir / "minimal.pdf"
-    template_dir = str(Path(__file__).parent.parent.parent / "generator" / "templates")
-    generator = PdfGenerator()
-    generator.generate_pdf(html, str(output_pdf), template_dir)
+    _render_to_pdf(minimal_json, "user-stories", output_pdf)
 
-    # Verify PDF exists and has valid structure
     assert output_pdf.exists()
-    assert output_pdf.stat().st_size > 0
-
-    # Verify PDF starts with PDF magic bytes
     with open(output_pdf, "rb") as f:
-        header = f.read(5)
-        assert header == b"%PDF-"
+        assert f.read(5) == b"%PDF-"
 
 
-def test_generate_pdf_with_stories(multiple_stories_json: Path, temp_output_dir: Path) -> None:
-    """Test generating PDF with multiple user stories."""
-    # Validate and load the JSON
-    pdf_ready_data = validate_pdf_ready_json(str(multiple_stories_json))
+def test_pdf_report_created(user_stories_json: Path, temp_output_dir: Path) -> None:
+    """pdf_report.json is created with the expected structure and item count."""
+    output_pdf = temp_output_dir / "report.pdf"
+    _render_to_pdf(user_stories_json, "user-stories", output_pdf)
 
-    # Render HTML
-    renderer = TemplateRenderer(None)
-    html = renderer.render(pdf_ready_data)
-
-    # Generate PDF
-    output_pdf = temp_output_dir / "multiple_stories.pdf"
-    template_dir = str(Path(__file__).parent.parent.parent / "generator" / "templates")
-    generator = PdfGenerator()
-    generator.generate_pdf(html, str(output_pdf), template_dir)
-
-    # Verify PDF exists and has valid structure
-    assert output_pdf.exists()
-    assert output_pdf.stat().st_size > 0
-
-    # Verify PDF is larger than minimal (has more content)
-    minimal_pdf = temp_output_dir / "minimal.pdf"
-    if minimal_pdf.exists():
-        assert output_pdf.stat().st_size > minimal_pdf.stat().st_size
-
-
-def test_generate_pdf_full_example(full_example_json: Path, temp_output_dir: Path) -> None:
-    """Test generating PDF from full example with all fields."""
-    # Validate and load the JSON
-    pdf_ready_data = validate_pdf_ready_json(str(full_example_json))
-
-    # Render HTML
-    renderer = TemplateRenderer(None)
-    html = renderer.render(pdf_ready_data)
-
-    # Generate PDF
-    output_pdf = temp_output_dir / "full_example.pdf"
-    template_dir = str(Path(__file__).parent.parent.parent / "generator" / "templates")
-    generator = PdfGenerator()
-    generator.generate_pdf(html, str(output_pdf), template_dir)
-
-    # Verify PDF exists
-    assert output_pdf.exists()
-    assert output_pdf.stat().st_size > 0
-
-    # Verify PDF magic bytes
-    with open(output_pdf, "rb") as f:
-        header = f.read(5)
-        assert header == b"%PDF-"
-
-
-def test_pdf_report_created(minimal_valid_json: Path, temp_output_dir: Path) -> None:
-    """Test that pdf_report.json is created with correct structure."""
-    # Validate and load the JSON
-    pdf_ready_data = validate_pdf_ready_json(str(minimal_valid_json))
-
-    # Render HTML and generate PDF
-    renderer = TemplateRenderer(None)
-    html = renderer.render(pdf_ready_data)
-    output_pdf = temp_output_dir / "test_report.pdf"
-    template_dir = str(Path(__file__).parent.parent.parent / "generator" / "templates")
-    generator = PdfGenerator()
-    generator.generate_pdf(html, str(output_pdf), template_dir)
-
-    # Generate report (it creates pdf_report.json in same dir as PDF)
-    report_path_str = generate_pdf_report(
-        input_file=str(minimal_valid_json),
+    data = load_source(str(user_stories_json))
+    report_path = generate_pdf_report(
+        input_file=str(user_stories_json),
         output_file=str(output_pdf),
         template_pack_type="built-in",
-        template_pack_path="built-in",
-        pdf_ready_data=pdf_ready_data,
+        template_pack_path="user-stories",
+        data=data,
         pdf_path=str(output_pdf),
         errors=[],
         warnings=[],
     )
 
-    # Verify report exists
-    report_path = Path(report_path_str)
-    assert report_path.exists()
-
-    # Load and verify report structure
-    with open(report_path, encoding="utf-8") as f:
-        report = json.load(f)
-
+    report = json.loads(Path(report_path).read_text(encoding="utf-8"))
     assert report["schema_version"] == "1.0"
-    assert "generated_at" in report
-    assert report["input_file"] == str(minimal_valid_json)
-    assert report["output_file"] == str(output_pdf)
+    assert report["input_file"] == str(user_stories_json)
     assert report["template_pack"]["type"] == "built-in"
-    assert "statistics" in report
-    assert "user_story_count" in report["statistics"]
+    assert report["statistics"]["item_count"] == 3
     assert "file_size_bytes" in report["statistics"]
-    assert "errors" in report
-    assert "warnings" in report

@@ -14,36 +14,11 @@
 # limitations under the License.
 #
 
-"""Living Doc Generator PDF - Schema and models."""
+"""Living Doc Generator PDF package."""
 
-from generator.models import (
-    AcceptanceCriterion,
-    AuditEnvelopeV1,
-    Content,
-    Meta,
-    PdfReadyJson,
-    PdfReadyV1,
-    RunContext,
-    Sections,
-    SelectionSummary,
-    Timestamps,
-    UserStory,
-)
-from generator.schema_export import export_schema, get_default_schema_path, get_schema_version
+from generator.models import Meta, build_meta
 
 __all__ = [
-    "PdfReadyV1",
-    "PdfReadyJson",
     "Meta",
-    "Content",
-    "UserStory",
-    "Timestamps",
-    "Sections",
-    "AcceptanceCriterion",
-    "AuditEnvelopeV1",
-    "SelectionSummary",
-    "RunContext",
-    "export_schema",
-    "get_schema_version",
-    "get_default_schema_path",
+    "build_meta",
 ]

@@ -22,7 +22,12 @@ from typing import Any, Optional
 
 from jinja2 import ChoiceLoader, Environment, FileSystemLoader, TemplateNotFound, TemplateSyntaxError
 
-from generator.filters import format_datetime_filter, markdown_filter
+from generator.filters import (
+    default_if_none_filter,
+    format_datetime_filter,
+    markdown_filter,
+    natural_sort_filter,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,62 +37,92 @@ class TemplateError(Exception):
 
 
 class TemplateRenderer:
-    """Jinja2-based template renderer with custom and built-in template support."""
+    """Render HTML from generic JSON data using built-in or custom Jinja2 templates."""
 
-    def __init__(self, template_dir: Optional[str] = None) -> None:
-        """Initialize renderer with built-in or custom templates.
+    def __init__(self, template_path: Optional[str] = None, document_type: Optional[str] = None) -> None:
+        """Initialize the renderer and resolve the template loader chain.
+
+        Resolution rules (see spec §5.2):
+            - both template_path and document_type: user files first, built-in
+              type set as fallback (partial override).
+            - only template_path: the custom directory must be self-contained.
+            - only document_type: the built-in set for that type.
+            - neither: a TemplateError is raised.
 
         Args:
-            template_dir: Optional path to custom template directory.
-                         If provided, templates override built-in defaults.
-                         Missing templates fall back to built-in.
+            template_path: Optional path to a custom template directory.
+            document_type: Optional built-in document type identifier.
+
+        Raises:
+            TemplateError: When neither input is provided or the resolved
+                directories do not exist.
         """
-        # Get the built-in templates directory
-        built_in_dir = Path(__file__).parent / "templates"
+        loaders: list[FileSystemLoader] = []
+        base_dir: Optional[Path] = None
 
-        # Set up loaders
-        loaders = []
-        if template_dir:
-            custom_path = Path(template_dir)
+        if template_path:
+            custom_path = Path(template_path)
             if not custom_path.exists():
-                logger.warning("Custom template directory '%s' does not exist. Using built-in templates.", template_dir)
-            else:
-                loaders.append(FileSystemLoader(str(custom_path)))
-                logger.info("Using custom templates from '%s' with built-in fallback", template_dir)
+                msg = f"Template error: Template directory '{template_path}' not found. Check template-path."
+                logger.error(msg)
+                raise TemplateError(msg)
+            loaders.append(FileSystemLoader(str(custom_path)))
+            base_dir = custom_path
+            logger.info("Using custom templates from '%s'", template_path)
 
-        loaders.append(FileSystemLoader(str(built_in_dir)))
+        if document_type:
+            built_in_dir = Path(__file__).parent / "templates" / document_type
+            if not built_in_dir.exists():
+                msg = f"Template error: Built-in template set '{document_type}' not found."
+                logger.error(msg)
+                raise TemplateError(msg)
+            loaders.append(FileSystemLoader(str(built_in_dir)))
+            if base_dir is None:
+                base_dir = built_in_dir
+            logger.info("Using built-in template set '%s'", document_type)
 
-        # Create Jinja2 environment
+        if not loaders or base_dir is None:
+            msg = "Template error: Either template-path or document-type must be provided."
+            logger.error(msg)
+            raise TemplateError(msg)
+
+        self._base_dir = base_dir
         self._env = Environment(
             loader=ChoiceLoader(loaders),
             autoescape=True,
         )
-
-        # Register custom filters
         self._env.filters["markdown"] = markdown_filter
         self._env.filters["format_datetime"] = format_datetime_filter
+        self._env.filters["default_if_none"] = default_if_none_filter
+        self._env.filters["natural_sort"] = natural_sort_filter
 
         logger.debug("TemplateRenderer initialized with %d loader(s)", len(loaders))
 
-    def render(self, pdf_ready_data: dict[str, Any]) -> str:
-        """Render HTML from pdf_ready.json data.
+    @property
+    def base_dir(self) -> str:
+        """Return the primary template directory used for asset resolution."""
+        return str(self._base_dir)
+
+    def render(self, data: dict[str, Any], meta: dict[str, Any]) -> str:
+        """Render the document HTML from raw JSON data and injected metadata.
 
         Args:
-            pdf_ready_data: Validated dictionary from pdf_ready.json
+            data: The full parsed JSON source as a plain dict (no transformation).
+            meta: Action-injected metadata (document_title, generated_at, source_file).
 
         Returns:
-            Rendered HTML string
+            Rendered HTML string.
 
         Raises:
-            TemplateError: If template not found or syntax error
+            TemplateError: If a template is missing or has a syntax error.
         """
         try:
             template = self._env.get_template("main.html.jinja")
-            html = template.render(**pdf_ready_data)
+            html = template.render(data=data, meta=meta)
             logger.info("Template rendered successfully (%d characters)", len(html))
             return html
         except TemplateNotFound as e:
-            msg = f"Template error: Template '{e.name}' not found. Check template_dir path or use default templates."
+            msg = f"Template error: Template '{e.name}' not found. Check template-path or document-type."
             logger.error(msg)
             raise TemplateError(msg) from e
         except TemplateSyntaxError as e:

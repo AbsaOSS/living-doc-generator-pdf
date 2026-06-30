@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/absaoss/living-doc-generator-pdf/schemas/doc-issues-v1.0.0-schema.json",
+  "title": "Living Documentation Issues (User Stories) v1.0.0",
+  "description": "Canonical JSON produced by the living-doc collector for User Stories.",
+  "type": "object",
+  "required": ["items"],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/userStory" }
+    },
+    "metadata": { "type": "object" },
+    "warnings": { "type": "array" }
+  },
+  "definitions": {
+    "userStory": {
+      "type": "object",
+      "required": ["id", "title"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "title": { "type": "string", "minLength": 1 },
+        "state": { "type": ["string", "null"] },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "url": { "type": ["string", "null"] },
+        "timestamps": {
+          "type": ["object", "null"],
+          "properties": {
+            "created": { "type": ["string", "null"] },
+            "updated": { "type": ["string", "null"] }
+          }
+        },
+        "description": { "type": ["string", "null"] },
+        "business_value": { "type": ["array", "null"], "items": { "type": "string" } },
+        "preconditions": { "type": ["array", "null"], "items": { "type": "string" } },
+        "acceptance_criteria": {
+          "type": ["array", "null"],
+          "items": { "$ref": "#/definitions/acceptanceCriterion" }
+        }
+      }
+    },
+    "acceptanceCriterion": {
+      "type": "object",
+      "required": ["description"],
+      "properties": {
+        "id": { "type": ["string", "null"] },
+        "state": { "type": ["string", "null"] },
+        "version": { "type": ["string", "null"] },
+        "description": { "type": "string" }
+      }
+    }
+  }
+}

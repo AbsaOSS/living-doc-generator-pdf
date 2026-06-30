@@ -16,31 +16,46 @@
 
 """Main entrypoint for the Living Doc Generator PDF GitHub Action.
 
-This module implements the full processing pipeline:
-1. Load and validate pdf_ready.json
-2. Render HTML using Jinja2 templates
-3. Save debug HTML (if enabled)
-4. Generate PDF using WeasyPrint
-5. Generate pdf_report.json with statistics
+Implements the processing pipeline:
+1. Validate inputs
+2. Load source JSON (optionally validate against a schema)
+3. Resolve the template set (built-in document-type and/or custom template-path)
+4. Render HTML using Jinja2 templates with injected ``meta``
+5. Save debug HTML (if enabled)
+6. Generate the PDF using WeasyPrint
+7. Generate pdf_report.json with statistics
 """
 
 import logging
 from pathlib import Path
 
 from generator.action_inputs import ActionInputs
+from generator.models import build_meta
 from generator.pdf_generator import FileIOError, PdfGenerator, RenderingError
 from generator.report_generator import generate_pdf_report
-from generator.schema_validator import SchemaValidationError, validate_pdf_ready_json
+from generator.schema_validator import SchemaValidationError, load_source
 from generator.template_renderer import TemplateError, TemplateRenderer
+from generator.utils.constants import DEFAULT_DOCUMENT_TITLES
 from generator.utils.gh_action import set_action_failed, set_action_output
 from generator.utils.logging_config import setup_logging
 
 
-def run() -> None:
-    """Run the Living Doc Generator PDF action.
+def _resolve_document_title(document_type: str | None, source_path: str) -> str:
+    """Resolve the cover-page title.
 
-    Implements the full processing pipeline from SPEC.md § 5.1.
+    Resolution order: explicit document-title input, then the built-in default
+    for the document type, then the basename of the source file (no extension).
     """
+    title = ActionInputs.get_document_title()
+    if title:
+        return title
+    if document_type and document_type in DEFAULT_DOCUMENT_TITLES:
+        return DEFAULT_DOCUMENT_TITLES[document_type]
+    return Path(source_path).stem
+
+
+def run() -> None:
+    """Run the Living Doc Generator PDF action."""
     setup_logging()
     logger = logging.getLogger(__name__)
     verbose = ActionInputs.get_verbose()
@@ -50,33 +65,33 @@ def run() -> None:
         # Step 1: Validate inputs
         ActionInputs.validate_inputs()
 
-        # Step 2: Load and validate pdf_ready.json
-        pdf_ready_json_path = ActionInputs.get_pdf_ready_json()
-        logger.info("Loading pdf_ready.json from %s", pdf_ready_json_path)
-        pdf_ready_data = validate_pdf_ready_json(pdf_ready_json_path)
+        # Step 2: Load source JSON (optionally validate against a schema)
+        source_path = ActionInputs.get_source_path()
+        schema_path = ActionInputs.get_schema_path()
+        logger.info("Loading source JSON from %s", source_path)
+        data = load_source(source_path, schema_path)
 
-        # Step 3: Load template pack
-        template_dir = ActionInputs.get_template_dir()
-        if template_dir:
+        # Step 3: Resolve template set
+        template_path = ActionInputs.get_template_path()
+        document_type = ActionInputs.get_document_type()
+        if template_path:
             template_pack_type = "custom"
-            template_pack_path = template_dir
-            logger.info("Using custom template pack from %s", template_dir)
+            template_pack_path = template_path
         else:
             template_pack_type = "built-in"
-            template_pack_path = "built-in"
-            template_dir = str(Path(__file__).parent / "generator" / "templates")
-            logger.info("Using built-in template pack")
+            template_pack_path = document_type or "built-in"
 
-        renderer = TemplateRenderer(ActionInputs.get_template_dir())
+        renderer = TemplateRenderer(template_path=template_path, document_type=document_type)
 
         # Step 4: Render HTML
-        logger.info("Rendering HTML from pdf_ready.json")
-        html = renderer.render(pdf_ready_data)
+        document_title = _resolve_document_title(document_type, source_path)
+        meta = build_meta(document_title, source_path).to_dict()
+        logger.info("Rendering HTML for document '%s'", document_title)
+        html = renderer.render(data, meta)
 
         # Step 5: Save debug HTML (if enabled)
         output_path = ActionInputs.get_output_path()
         debug_html = ActionInputs.get_debug_html()
-        html_path = None
         if debug_html:
             output_file = Path(output_path)
             html_filename = f"{output_file.stem}_rendered.html"
@@ -88,17 +103,17 @@ def run() -> None:
         # Step 6: Generate PDF
         logger.info("Generating PDF from rendered HTML")
         pdf_generator = PdfGenerator()
-        pdf_generator.generate_pdf(html, output_path, template_dir)
+        pdf_generator.generate_pdf(html, output_path, renderer.base_dir)
         set_action_output("pdf-path", str(Path(output_path).absolute()))
 
         # Step 7: Generate pdf_report.json
         logger.info("Generating PDF report")
         report_path = generate_pdf_report(
-            input_file=pdf_ready_json_path,
+            input_file=source_path,
             output_file=output_path,
             template_pack_type=template_pack_type,
             template_pack_path=template_pack_path,
-            pdf_ready_data=pdf_ready_data,
+            data=data,
             pdf_path=output_path,
             errors=[],
             warnings=[],

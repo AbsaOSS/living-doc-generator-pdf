@@ -1,0 +1,75 @@
+{
+  "items": [
+    {
+      "id": "AbsaOSS/living-doc-example/US-1",
+      "title": "Generate PDF from a JSON source",
+      "state": "active",
+      "tags": ["documentation", "pdf"],
+      "url": "https://github.com/AbsaOSS/living-doc-example/issues/1",
+      "timestamps": { "created": null, "updated": null },
+      "description": "As a documentation maintainer\nI can render a PDF from a canonical JSON file\nso that I can publish living documentation.",
+      "business_value": [
+        "Removes manual document assembly using **markdown** formatting.",
+        "Keeps published docs in sync with the source of truth."
+      ],
+      "preconditions": [
+        "A canonical JSON source file exists.",
+        "A document type or custom template set is selected."
+      ],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "state": "active",
+          "version": "1.0",
+          "description": "Given a valid source file, when the action runs, then a PDF is produced."
+        },
+        {
+          "id": "AC-2",
+          "state": "active",
+          "version": "1.0",
+          "description": "Given **markdown** content, then it is rendered as formatted HTML in the PDF."
+        }
+      ]
+    },
+    {
+      "id": "AbsaOSS/living-doc-example/US-10",
+      "title": "Validate the source against a schema",
+      "state": "planned",
+      "tags": ["validation"],
+      "url": "https://github.com/AbsaOSS/living-doc-example/issues/10",
+      "timestamps": { "created": null, "updated": null },
+      "description": "As a producer\nI can validate my JSON against a schema\nso that I catch contract drift early.",
+      "business_value": ["Detects breaking changes before rendering."],
+      "preconditions": ["A JSON Schema file is available."],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "state": "planned",
+          "version": "1.0",
+          "description": "Given a schema path, when validation fails, then the run stops with a clear error."
+        }
+      ]
+    },
+    {
+      "id": "AbsaOSS/living-doc-example/US-2",
+      "title": "Override the built-in template",
+      "state": "closed",
+      "tags": ["templates"],
+      "url": "https://github.com/AbsaOSS/living-doc-example/issues/2",
+      "timestamps": { "created": null, "updated": null },
+      "description": "As a maintainer\nI can provide my own templates\nso that the output matches my brand.",
+      "business_value": ["Enables branded documentation."],
+      "preconditions": ["A custom template directory exists."],
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "state": "closed",
+          "version": "1.0",
+          "description": "Given a template-path, when rendering, then the custom main template is used."
+        }
+      ]
+    }
+  ],
+  "metadata": { "source": "living-doc-collector" },
+  "warnings": []
+}

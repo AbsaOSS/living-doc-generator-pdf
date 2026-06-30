@@ -17,12 +17,15 @@
 """Jinja2 custom filters for template rendering."""
 
 import logging
+import re
 from datetime import datetime
-from typing import Optional
+from typing import Any, Iterable, Optional
 
 import markdown
 
 logger = logging.getLogger(__name__)
+
+_NATURAL_CHUNK_RE = re.compile(r"(\d+)")
 
 
 def markdown_filter(text: Optional[str]) -> str:
@@ -57,3 +60,52 @@ def format_datetime_filter(iso_timestamp: Optional[str], format_str: str = "%Y-%
     except (ValueError, AttributeError) as e:
         logger.warning("Failed to parse timestamp '%s': %s", iso_timestamp, e)
         return ""
+
+
+def default_if_none_filter(value: Any, fallback: Any = "") -> Any:
+    """Return ``fallback`` when ``value`` is None, otherwise ``value``.
+
+    Args:
+        value: The value to inspect.
+        fallback: Value to return when ``value`` is None.
+
+    Returns:
+        ``value`` if it is not None, else ``fallback``.
+    """
+    return fallback if value is None else value
+
+
+def _natural_key(text: str) -> list[Any]:
+    """Build a natural-sort key splitting digit runs into integers."""
+    parts = _NATURAL_CHUNK_RE.split(text)
+    return [int(part) if part.isdigit() else part.lower() for part in parts]
+
+
+def natural_sort_filter(items: Optional[Iterable[Any]], attribute: Optional[str] = None) -> list[Any]:
+    """Sort an iterable using natural (human) ordering of embedded numbers.
+
+    Ensures IDs like ``US-2`` sort before ``US-10`` instead of lexicographically.
+
+    Args:
+        items: Iterable of values or dicts/objects to sort.
+        attribute: Optional attribute/key name to sort by. When omitted, the
+            items themselves are used as the sort key.
+
+    Returns:
+        A new list sorted in natural ascending order.
+    """
+    if not items:
+        return []
+
+    materialized = list(items)
+
+    def key(item: Any) -> list[Any]:
+        if attribute is None:
+            value = item
+        elif isinstance(item, dict):
+            value = item.get(attribute, "")
+        else:
+            value = getattr(item, attribute, "")
+        return _natural_key("" if value is None else str(value))
+
+    return sorted(materialized, key=key)

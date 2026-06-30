@@ -1,0 +1,96 @@
+{
+  "schema_version": "coverage-matrix-v1.0.0",
+  "generated_at": "2024-01-01T00:00:00Z",
+  "summary": {
+    "total_user_stories": 2,
+    "total_acs": 3,
+    "active_acs": 3,
+    "covered_acs": 2,
+    "coverage_pct": 66.7
+  },
+  "user_stories": [
+    {
+      "id": "US-1",
+      "full_id": "AbsaOSS/living-doc-example/US-1",
+      "title": "Generate PDF from a JSON source",
+      "state": "active",
+      "summary": {
+        "total_acs": 2,
+        "active_acs": 2,
+        "covered_acs": 2,
+        "coverage_pct": 100.0
+      },
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "description": "A PDF is produced from a valid source.",
+          "state": "active",
+          "version": "1.0",
+          "coverage": {
+            "status": "covered",
+            "test_count": 1,
+            "tests": [
+              {
+                "id": "test-1",
+                "scenario_name": "Render a PDF from a valid source",
+                "source": { "org": "AbsaOSS", "repo": "living-doc-example", "file": "features/pdf_generation.feature" },
+                "tags": ["@smoke", "@pdf"]
+              }
+            ]
+          }
+        },
+        {
+          "id": "AC-2",
+          "description": "Markdown is rendered as HTML.",
+          "state": "active",
+          "version": "1.0",
+          "coverage": {
+            "status": "covered",
+            "test_count": 1,
+            "tests": [
+              {
+                "id": "test-2",
+                "scenario_name": "Render markdown content",
+                "source": { "org": "AbsaOSS", "repo": "living-doc-example", "file": "features/pdf_generation.feature" },
+                "tags": ["@pdf"]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "US-10",
+      "full_id": "AbsaOSS/living-doc-example/US-10",
+      "title": "Validate the source against a schema",
+      "state": "planned",
+      "summary": {
+        "total_acs": 1,
+        "active_acs": 1,
+        "covered_acs": 0,
+        "coverage_pct": 0.0
+      },
+      "acceptance_criteria": [
+        {
+          "id": "AC-1",
+          "description": "Validation failure stops the run.",
+          "state": "planned",
+          "version": "1.0",
+          "coverage": {
+            "status": "not_covered",
+            "test_count": 0,
+            "tests": []
+          }
+        }
+      ]
+    }
+  ],
+  "unlinked_tests": [
+    {
+      "id": "test-3",
+      "scenario_name": "Unlinked exploratory scenario",
+      "source": { "org": "AbsaOSS", "repo": "living-doc-example", "file": "features/exploratory.feature" }
+    }
+  ],
+  "stale_ac_refs": []
+}
