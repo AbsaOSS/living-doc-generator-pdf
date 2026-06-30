@@ -25,7 +25,6 @@ Install the dependencies:
 
 ```shell
 pip install -r requirements.txt
-export PYTHONPATH=<your path>/living-doc-generator-pdf/src
 ```
 
 ## Pre-commit Hooks
@@ -120,7 +119,7 @@ To run Pylint on a specific file, follow the pattern `pylint <path_to_file>/<nam
 
 Example:
 ```shell
-pylint living-doc-generator-pdf/generator.py
+pylint generator/action_inputs.py
 ```
 
 ## Run Black Tool Locally
@@ -154,7 +153,7 @@ To run Black on a specific file, follow the pattern `black <path_to_file>/<name_
 
 Example:
 ```shell
-black living-doc-generator-pdf/generator.py
+black generator/action_inputs.py
 ```
 
 ### Expected Output
@@ -186,7 +185,7 @@ To run my[py] check on a specific file, follow the pattern `mypy <path_to_file>/
 
 Example:
 ```shell
-   mypy living-doc-generator-pdf/generator.py --check-untyped-defs
+mypy generator/action_inputs.py --check-untyped-defs
 ```
 
 ## Running Unit Test
@@ -203,11 +202,11 @@ This will execute all tests located in the tests/unit directory.
 
 Integration tests verify end-to-end functionality of the PDF generator using real file I/O and actual PDF generation. These tests are located in `tests/integration/` and cover:
 
-- **PDF Generation**: End-to-end scenarios (minimal, full, multiple stories)
-- **Custom Templates**: Template override and fallback behavior
-- **Error Handling**: Error scenarios with proper exit codes
-- **Edge Cases**: Large files, empty arrays, special characters, boundary conditions
-- **Debug HTML**: HTML output generation scenarios
+- **PDF Generation**: End-to-end scenarios for all three built-in document types (`user-stories`, `ui-test-catalog`, `coverage-matrix`) plus a minimal empty-items case
+- **Custom Templates**: Full override, partial override (fallback to built-in), and custom CSS scenarios
+- **Error Handling**: Error scenarios with expected exit codes (missing file, schema violation, template syntax, read-only directory)
+- **Edge Cases**: Empty items, minimal fields, large markdown content, special characters and Unicode
+- **Debug HTML**: HTML rendering and filename-pattern scenarios
 
 ### Run All Integration Tests
 
@@ -336,39 +335,32 @@ When tests fail in CI but pass locally:
 View CI logs in GitHub Actions for detailed stack traces and error messages.
 
 ## Run Action Locally
-Create run_locally.sh file and place it in the project root.
+A ready-made `run_locally.sh` script is included in the project root. Edit the `INPUT_*` variables at the top to match your source file and document type, then run:
 
 ```bash
-#!/bin/bash
+bash run_locally.sh
+```
 
-# Set environment variables based on the action inputs
+The key variables to configure:
 
-# CI in-built variables
-export GITHUB_REPOSITORY="< owner >/< repo-name >"
-export INPUT_GITHUB_TOKEN=$(printenv <your-env-token-var>)
-
-PROJECT_ROOT="$(pwd)"
-export PYTHONPATH="${PYTHONPATH}:${PROJECT_ROOT}"
-
-# WeasyPrint requires GLib/Pango shared libraries (installed via Homebrew on macOS).
-# Add Homebrew lib dir so the dynamic linker can find libgobject, libpango, etc.
-export DYLD_LIBRARY_PATH="${DYLD_LIBRARY_PATH}:/opt/homebrew/lib"
-
-# Debugging statements
-echo "PYTHONPATH: ${PYTHONPATH}"
-echo "Current working directory: ${PROJECT_ROOT}"
-
-# Run the Python script
-python3 ./living-doc-generator-pdf/main.py
+```bash
+export INPUT_SOURCE_PATH="examples/user_stories.json"   # path to your source JSON
+export INPUT_DOCUMENT_TYPE="user-stories"                # user-stories | ui-test-catalog | coverage-matrix
+export INPUT_OUTPUT_PATH="output.pdf"
+export INPUT_DEBUG_HTML="true"
+export INPUT_VERBOSE="true"
+# Optional:
+# export INPUT_TEMPLATE_PATH="./custom_templates"        # custom template directory
+# export INPUT_SCHEMA_PATH="generator/schemas/doc-issues-v1.0.0-schema.json"
 ```
 
 ### macOS Prerequisites
 
-WeasyPrint depends on system-level libraries (`pango`, `glib`) that are not bundled with the Python package.
+WeasyPrint depends on system-level libraries that are not bundled with the Python package.
 Install them via [Homebrew](https://brew.sh/) before running the script:
 
 ```shell
-brew install pango
+brew install pango gdk-pixbuf libffi
 ```
 
 Without these libraries, the script will fail with:
@@ -376,7 +368,11 @@ Without these libraries, the script will fail with:
 OSError: cannot load library 'libgobject-2.0-0'
 ```
 
-The `DYLD_LIBRARY_PATH` export in the script above tells the dynamic linker where Homebrew installs these libraries (`/opt/homebrew/lib`).
+The `run_locally.sh` script sets `DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib` so the dynamic linker can find the Homebrew-installed libraries. If you run tests directly, prepend the variable:
+
+```shell
+DYLD_FALLBACK_LIBRARY_PATH=/opt/homebrew/lib python3 -m pytest tests/
+```
 
 ## Branch Naming Convention
 All work branches MUST use an allowed prefix followed by a concise kebab-case descriptor (optional numeric ID):

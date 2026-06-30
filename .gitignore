@@ -183,3 +183,9 @@ coverage-matrix.json
 doc-source.json
 ui-tests.json
 spec.md
+output_coverage_matrix_rendered.html
+output_coverage_matrix.pdf
+output_ui_test_catalog_rendered.html
+output_ui_test_catalog.pdf
+output_user_stories_rendered.html
+output_user_stories.pdf
