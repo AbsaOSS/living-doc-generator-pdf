@@ -283,6 +283,132 @@ body {
     font-style: italic;
 }
 
+/* Acceptance Criteria table */
+.ac-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9pt;
+    margin-top: 8px;
+}
+
+.ac-table th {
+    background: #f0f0f0;
+    padding: 6px 10px;
+    text-align: left;
+    font-weight: bold;
+    border: 1px solid #ccc;
+}
+
+.ac-table td {
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    vertical-align: top;
+}
+
+.ac-id {
+    white-space: nowrap;
+    font-family: monospace;
+    font-size: 8pt;
+    color: #555;
+    width: 90px;
+}
+
+.ac-state {
+    white-space: nowrap;
+    width: 70px;
+}
+
+.ac-version {
+    white-space: nowrap;
+    width: 70px;
+    color: #666;
+}
+
+.ac-row.ac-state-active {
+    background: #f6fff6;
+}
+
+.ac-row.ac-state-inactive {
+    background: #fff8f8;
+    color: #888;
+}
+
+/* Source info on cover */
+.source-info {
+    margin-top: 40px;
+    padding: 20px 30px;
+    background: #f0f4f8;
+    border-radius: 8px;
+    text-align: left;
+}
+
+.source-info h2 {
+    font-size: 14pt;
+    margin-bottom: 12px;
+    color: #333;
+}
+
+.source-item {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 6px;
+    font-size: 10pt;
+    align-items: baseline;
+}
+
+.source-label {
+    font-weight: bold;
+    color: #555;
+    min-width: 110px;
+}
+
+.source-value {
+    color: #333;
+}
+
+.source-repos {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.source-repo {
+    font-family: monospace;
+    font-size: 9pt;
+    color: #333;
+}
+
+.producer-info {
+    margin-top: 20px;
+    font-size: 9pt;
+    color: #999;
+    text-align: center;
+}
+
+.producer-label {
+    margin-right: 4px;
+}
+
+.producer-value {
+    font-family: monospace;
+}
+
+/* Story repo context */
+.story-repo {
+    font-size: 9pt;
+    color: #888;
+    font-family: monospace;
+    margin-bottom: 6px;
+}
+
+/* No-content placeholder */
+.no-content {
+    font-style: italic;
+    color: #aaa;
+    font-size: 9pt;
+    padding: 10px 0;
+}
+
 /* Print Styles */
 @media print {
     @page {

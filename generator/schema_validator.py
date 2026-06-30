@@ -62,7 +62,7 @@ def validate_pdf_ready_json(file_path: str) -> dict[str, Any]:
         ) from e
 
     # Load the schema
-    schema_path = Path(__file__).parent / "schemas" / "pdf_ready_v1.0.json"
+    schema_path = Path(__file__).parent / "schemas" / "pdf_ready_v1.0-schema.json"
     try:
         with open(schema_path, "r", encoding="utf-8") as f:
             schema = json.load(f)

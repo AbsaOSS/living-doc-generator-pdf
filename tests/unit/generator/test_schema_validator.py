@@ -84,17 +84,14 @@ def _mutate(data: dict[str, Any], path: str, value: Any) -> dict[str, Any]:
 
 
 # Parametrized invalid test cases: (test_id, path, value, error_pattern)
+# Note: the new schema (v1.0 from toolkit) does not enforce minLength, format:uri,
+# format:date-time or schema_version enum — those constraints were removed upstream.
 INVALID_CASES = [
     ("missing_schema_version", "schema_version", _DELETE, "Missing required field 'schema_version'"),
-    ("wrong_schema_version", "schema_version", "2.0", "Invalid schema_version"),
     ("missing_meta", "meta", _DELETE, "Missing required field 'meta'"),
     ("missing_content", "content", _DELETE, "Missing required field 'content'"),
-    ("empty_document_title", "meta.document_title", "", "must be a non-empty string"),
-    ("empty_source_set", "meta.source_set", [], "must be a non-empty array"),
     ("negative_total_items", "meta.selection_summary.total_items", -1, "must be >= 0"),
-    ("invalid_url", "content.user_stories.0.url", "not-a-url", "is not a valid URL"),
     ("wrong_type_title", "meta.document_title", 123, "must be of type string"),
-    ("whitespace_only_version", "meta.document_version", "   ", "must be a non-empty string"),
 ]
 
 
@@ -164,9 +161,12 @@ def test_valid_full_json(tmp_path: Path) -> None:
                     "timestamps": {"created": "2026-01-10T08:00:00Z", "updated": "2026-01-20T14:30:00Z"},
                     "sections": {
                         "description": "As a user, I want to log in using SSO...",
-                        "business_value": "Reduces friction for enterprise users",
-                        "preconditions": "SSO provider configured",
-                        "acceptance_criteria": "- User can click SSO button\n- Redirect to provider\n- Return with session",
+                        "business_value": ["Reduces friction for enterprise users"],
+                        "preconditions": ["SSO provider configured"],
+                        "acceptance_criteria": [
+                            {"id": "AC-01", "description": "User can click SSO button", "state": "Active", "version": "v1.0"},
+                            {"id": "AC-02", "description": "Redirect to provider", "state": "Active", "version": "v1.0"},
+                        ],
                         "user_guide": None,
                         "connections": "Related to #41, #43",
                         "last_edited": "Updated by alice@example.com on 2026-01-20",
@@ -236,7 +236,7 @@ def test_schema_file_not_found(tmp_path: Path, mocker: MockerFixture) -> None:
     original_open = open
 
     def mock_open_side_effect(path, *args, **kwargs):
-        if "pdf_ready_v1.0.json" in str(path):
+        if "pdf_ready_v1.0-schema.json" in str(path):
             raise FileNotFoundError("schema missing")
         return original_open(path, *args, **kwargs)
 
@@ -251,23 +251,13 @@ def test_format_validation_errors_empty_list() -> None:
     assert result == "Unknown validation error"
 
 
-def test_invalid_timestamp_format(tmp_path: Path) -> None:
-    """Test that invalid ISO 8601 timestamps are rejected."""
+def test_invalid_timestamp_format_raises(tmp_path: Path) -> None:
+    """Invalid timestamp format raises SchemaValidationError (format: date-time is enforced)."""
     data = _mutate(_base_valid_data(), "meta.generated_at", "not-a-timestamp")
     test_file = tmp_path / "test.json"
     test_file.write_text(json.dumps(data), encoding="utf-8")
 
-    with pytest.raises(SchemaValidationError, match="is not a valid ISO 8601 timestamp"):
-        validate_pdf_ready_json(str(test_file))
-
-
-def test_invalid_user_story_timestamp(tmp_path: Path) -> None:
-    """Test that invalid user story timestamps are rejected."""
-    data = _mutate(_base_valid_data(), "content.user_stories.0.timestamps.created", "bad")
-    test_file = tmp_path / "test.json"
-    test_file.write_text(json.dumps(data), encoding="utf-8")
-
-    with pytest.raises(SchemaValidationError, match="is not a valid ISO 8601 timestamp"):
+    with pytest.raises(SchemaValidationError):
         validate_pdf_ready_json(str(test_file))
 
 

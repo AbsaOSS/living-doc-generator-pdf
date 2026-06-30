@@ -14,6 +14,7 @@ types-PyYAML==6.0.12.20260408
 types-jsonschema>=4.26.0.20260518
 types-Markdown>=3.10.2.20260508
 pre-commit==4.6.0
+pydantic>=2.0.0
 jsonschema>=4.26.0
 rfc3339-validator>=0.1.4
 Jinja2>=3.1.6

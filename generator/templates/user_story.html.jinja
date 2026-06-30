@@ -1,8 +1,21 @@
+{% set id_parts = story.id.split('/') %}
+{% set issue_ref = '#' ~ id_parts[-1] if id_parts | length >= 2 else story.id %}
+{% set repo_context = id_parts[:-1] | join('/') if id_parts | length >= 2 else '' %}
+{% set has_content = story.sections.description
+    or story.sections.business_value
+    or story.sections.preconditions
+    or story.sections.acceptance_criteria
+    or story.sections.user_guide
+    or story.sections.connections
+    or story.sections.last_edited %}
 <div class="user-story">
     <div class="story-header">
         <h2 class="story-title">
-            <span class="story-id">{{ story.id }}</span> - {{ story.title }}
+            <span class="story-id">{{ issue_ref }}</span> {{ story.title }}
         </h2>
+        {% if repo_context %}
+        <div class="story-repo">{{ repo_context }}</div>
+        {% endif %}
         <div class="story-meta">
             <span class="story-state state-{{ story.state }}">{{ story.state }}</span>
             {% if story.tags %}
@@ -38,7 +51,11 @@
         <div class="section">
             <h3 class="section-title">Business Value</h3>
             <div class="section-content">
-                {{ story.sections.business_value | markdown | safe }}
+                <ul>
+                {% for item in story.sections.business_value %}
+                    <li>{{ item | markdown | safe }}</li>
+                {% endfor %}
+                </ul>
             </div>
         </div>
         {% endif %}
@@ -47,7 +64,11 @@
         <div class="section">
             <h3 class="section-title">Preconditions</h3>
             <div class="section-content">
-                {{ story.sections.preconditions | markdown | safe }}
+                <ul>
+                {% for item in story.sections.preconditions %}
+                    <li>{{ item | markdown | safe }}</li>
+                {% endfor %}
+                </ul>
             </div>
         </div>
         {% endif %}
@@ -56,7 +77,26 @@
         <div class="section">
             <h3 class="section-title">Acceptance Criteria</h3>
             <div class="section-content">
-                {{ story.sections.acceptance_criteria | markdown | safe }}
+                <table class="ac-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Description</th>
+                            <th>State</th>
+                            <th>Version</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for ac in story.sections.acceptance_criteria %}
+                        <tr class="ac-row ac-state-{{ ac.state | lower if ac.state else 'unknown' }}">
+                            <td class="ac-id">{{ ac.id or '' }}</td>
+                            <td class="ac-description">{{ ac.description }}</td>
+                            <td class="ac-state">{{ ac.state or '' }}</td>
+                            <td class="ac-version">{{ ac.version or '' }}</td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
         {% endif %}
@@ -86,6 +126,10 @@
                 {{ story.sections.last_edited | markdown | safe }}
             </div>
         </div>
+        {% endif %}
+
+        {% if not has_content %}
+        <div class="no-content">No documentation content available for this item.</div>
         {% endif %}
     </div>
 </div>
