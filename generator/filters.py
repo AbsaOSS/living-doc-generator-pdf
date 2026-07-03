@@ -31,6 +31,9 @@ _NATURAL_CHUNK_RE = re.compile(r"(\d+)")
 def markdown_filter(text: Optional[str]) -> str:
     """Convert Markdown text to HTML.
 
+    By default, markdown safely handles user input by escaping unsafe HTML
+    in the source while preserving legitimate markdown-generated HTML.
+
     Args:
         text: Markdown string or None
 

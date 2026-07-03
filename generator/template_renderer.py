@@ -79,7 +79,12 @@ class TemplateRenderer:
                 logger.error(msg)
                 raise TemplateError(msg)
             loaders.append(FileSystemLoader(str(built_in_dir)))
+            # Always resolve assets against built-in dir for relative asset paths to work correctly
+            # This allows custom templates to partially override while inheriting assets
             if base_dir is None:
+                base_dir = built_in_dir
+            else:
+                # When both custom and built-in are present, assets resolve via the built-in dir
                 base_dir = built_in_dir
             logger.info("Using built-in template set '%s'", document_type)
 

@@ -40,6 +40,28 @@ from generator.utils.gh_action import set_action_failed, set_action_output
 from generator.utils.logging_config import setup_logging
 
 
+def _save_debug_html(html: str, output_path: str) -> str:
+    """Save rendered HTML to a debug file following the production pattern.
+
+    Args:
+        html: Rendered HTML string to save.
+        output_path: Path to the PDF output file (used to derive HTML path).
+
+    Returns:
+        The path to the saved HTML file.
+
+    Raises:
+        OSError: If the file cannot be written.
+    """
+    logger = logging.getLogger(__name__)
+    output_file = Path(output_path)
+    html_filename = f"{output_file.stem}_rendered.html"
+    html_path = str(output_file.parent / html_filename)
+    logger.info("Saving debug HTML to %s", html_path)
+    Path(html_path).write_text(html, encoding="utf-8")
+    return html_path
+
+
 def _resolve_document_title(document_type: str | None, source_path: str) -> str:
     """Resolve the cover-page title.
 
@@ -93,11 +115,7 @@ def run() -> None:
         output_path = ActionInputs.get_output_path()
         debug_html = ActionInputs.get_debug_html()
         if debug_html:
-            output_file = Path(output_path)
-            html_filename = f"{output_file.stem}_rendered.html"
-            html_path = str(output_file.parent / html_filename)
-            logger.info("Saving debug HTML to %s", html_path)
-            Path(html_path).write_text(html, encoding="utf-8")
+            html_path = _save_debug_html(html, output_path)
             set_action_output("html-path", html_path)
 
         # Step 6: Generate PDF

@@ -62,6 +62,41 @@ def test_generate_pdf_per_document_type(
         assert f.read(5) == b"%PDF-"
 
 
+@pytest.mark.parametrize(
+    "fixture_name, document_type, schema_file",
+    [
+        ("user_stories_json", "user-stories", "generator/schemas/doc-source-v1.0.0-schema.json"),
+        ("ui_tests_json", "ui-test-catalog", "generator/schemas/ui-tests-v1.0.0-schema.json"),
+        ("coverage_matrix_json", "coverage-matrix", "generator/schemas/coverage-matrix-v1.0.0-schema.json"),
+    ],
+)
+def test_generate_pdf_with_schema_validation(
+    request, fixture_name: str, document_type: str, schema_file: str, temp_output_dir: Path
+) -> None:
+    """Each document type renders a valid PDF when schema-path is provided.
+    
+    This test covers the bundled schema/example pairing and validates the
+    schema-path plumbing end-to-end.
+    """
+    from pathlib import Path as PathlibPath
+    
+    source = request.getfixturevalue(fixture_name)
+    schema_path = PathlibPath(__file__).parent.parent.parent / schema_file
+    output_pdf = temp_output_dir / f"{document_type}_validated.pdf"
+    
+    # Load and validate source against bundled schema
+    data = load_source(str(source), str(schema_path))
+    renderer = TemplateRenderer(document_type=document_type)
+    meta = build_meta("Schema-Validated Test", str(source)).to_dict()
+    html = renderer.render(data, meta)
+    PdfGenerator().generate_pdf(html, str(output_pdf), renderer.base_dir)
+    
+    assert output_pdf.exists()
+    assert output_pdf.stat().st_size > 0
+    with open(output_pdf, "rb") as f:
+        assert f.read(5) == b"%PDF-"
+
+
 def test_generate_pdf_minimal(minimal_json: Path, temp_output_dir: Path) -> None:
     """An empty items list still renders a valid PDF."""
     output_pdf = temp_output_dir / "minimal.pdf"

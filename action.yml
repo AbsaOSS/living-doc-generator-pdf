@@ -23,7 +23,7 @@ branding:
 inputs:
   source-path:
     description: 'Path to the canonical source JSON file to render'
-    required: true
+    required: false
   template-path:
     description: 'Directory containing custom Jinja templates (overrides or extends a built-in set)'
     required: false
