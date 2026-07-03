@@ -1,0 +1,55 @@
+{% set short_id = item.id.split('/') | last %}
+{% set anchor_id = item.id | replace('/', '-') %}
+<section class="chapter functionality" id="{{ anchor_id }}">
+    <header class="story-header">
+        <h2 class="story-title">
+            <span class="story-id">{{ short_id }}</span> &mdash; {{ item.title }}
+            {% if item.state %}
+            <span class="story-state state-{{ item.state | lower }}">{{ item.state }}</span>
+            {% endif %}
+        </h2>
+        {% if item.get('func_type') or item.get('parent') %}
+        <div class="func-meta">
+            {% if item.get('func_type') %}
+            <span class="badge-func-type">{{ item.func_type }}</span>
+            {% endif %}
+            {% if item.get('parent') %}
+            <span class="func-parent">Parent: {{ item.parent }}</span>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% if item.get('repository_name') %}
+        <div class="story-repo">{{ item.repository_name }}</div>
+        {% endif %}
+    </header>
+
+    <div class="story-content">
+        {% if item.acceptance_criteria %}
+        <div class="section">
+            <h3 class="section-title">Acceptance Criteria</h3>
+            <div class="section-content">
+                <table class="ac-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>State</th>
+                            <th>Version</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ac in item.acceptance_criteria %}
+                        <tr class="ac-row ac-state-{{ ac.state | lower if ac.state else 'unknown' }}">
+                            <td class="ac-id">{{ ac.id | default_if_none('') }}</td>
+                            <td class="ac-state">{{ ac.state | default_if_none('') }}</td>
+                            <td class="ac-version">{{ ac.version | default_if_none('') }}</td>
+                            <td class="ac-description">{{ ac.description }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>

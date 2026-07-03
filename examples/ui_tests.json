@@ -1,0 +1,87 @@
+{
+  "items": [
+    {
+      "id": "test-1",
+      "us_id": "US-1",
+      "func_id": null,
+      "ac_ids": ["AC-1"],
+      "scenario_name": "Render a PDF from a valid source",
+      "scenario_type": "Scenario",
+      "tags": ["@smoke", "@pdf"],
+      "steps": [
+        { "keyword": "Given", "text": "a valid source JSON file" },
+        { "keyword": "When", "text": "the action runs" },
+        { "keyword": "Then", "text": "a PDF file is produced" }
+      ],
+      "source": {
+        "org": "AbsaOSS",
+        "repo": "living-doc-example",
+        "file": "features/pdf_generation.feature",
+        "line": 1
+      }
+    },
+    {
+      "id": "test-2",
+      "us_id": "US-1",
+      "func_id": null,
+      "ac_ids": ["AC-2"],
+      "scenario_name": "Render markdown content",
+      "scenario_type": "Scenario",
+      "tags": ["@pdf"],
+      "steps": [
+        { "keyword": "Given", "text": "a source with markdown description" },
+        { "keyword": "When", "text": "the action renders the document" },
+        { "keyword": "Then", "text": "the markdown is rendered as HTML" }
+      ],
+      "source": {
+        "org": "AbsaOSS",
+        "repo": "living-doc-example",
+        "file": "features/pdf_generation.feature",
+        "line": 5
+      }
+    },
+    {
+      "id": "test-3",
+      "us_id": null,
+      "func_id": null,
+      "ac_ids": [],
+      "scenario_name": "Unlinked exploratory scenario",
+      "scenario_type": "Scenario",
+      "tags": ["@exploratory"],
+      "steps": [
+        { "keyword": "Given", "text": "an undocumented edge case" },
+        { "keyword": "When", "text": "the action runs" },
+        { "keyword": "Then", "text": "it does not crash" }
+      ],
+      "source": {
+        "org": "AbsaOSS",
+        "repo": "living-doc-example",
+        "file": "features/exploratory.feature",
+        "line": 10
+      }
+    }
+  ],
+  "metadata": {
+    "producer": {
+      "name": "living-doc-collector",
+      "version": "1.0.0",
+      "build": null
+    },
+    "run": {
+      "run_id": null,
+      "run_attempt": null,
+      "actor": null,
+      "workflow": null,
+      "ref": null,
+      "sha": null
+    },
+    "source": {
+      "systems": ["test-system"],
+      "repositories": ["AbsaOSS/living-doc-example"],
+      "organization": "AbsaOSS",
+      "enterprise": null
+    },
+    "original_metadata": {}
+  },
+  "warnings": []
+}

@@ -14,13 +14,12 @@
 # limitations under the License.
 #
 
-"""Schema validation for pdf_ready.json files."""
+"""Source JSON loading and optional schema validation."""
 
 import json
 import logging
 import os
-from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import jsonschema
 from jsonschema import Draft7Validator
@@ -32,28 +31,51 @@ class SchemaValidationError(Exception):
     """Exception raised when schema validation fails (exit code 2)."""
 
 
-def validate_pdf_ready_json(file_path: str) -> dict[str, Any]:
-    """Validate pdf_ready.json against schema v1.0 and return parsed data.
+def load_source(source_path: str, schema_path: Optional[str] = None) -> dict[str, Any]:
+    """Load a JSON source file and optionally validate it against a schema.
+
+    Validation is decoupled from loading: when ``schema_path`` is omitted the
+    file is parsed and returned without structural validation.
 
     Args:
-        file_path: Path to the pdf_ready.json file to validate
+        source_path: Path to the JSON source file to load.
+        schema_path: Optional path to a JSON Schema file used for validation.
 
     Returns:
-        Parsed JSON data as a dictionary
+        Parsed JSON data as a dictionary.
 
     Raises:
-        ValueError: When file is missing or contains invalid JSON (exit code 1)
-        SchemaValidationError: When schema validation fails (exit code 2)
+        ValueError: When the file is missing or contains invalid JSON (exit code 1).
+        SchemaValidationError: When schema validation fails (exit code 2).
     """
-    # Check if file exists
+    data = _load_json(source_path)
+
+    if schema_path:
+        _validate_against_schema(data, schema_path, source_path)
+    else:
+        logger.info("No schema-path provided; skipping validation for '%s'.", source_path)
+
+    return data
+
+
+def _load_json(file_path: str) -> dict[str, Any]:
+    """Load and parse a JSON file, raising ValueError on failure."""
     if not os.path.exists(file_path):
         logger.error("File '%s' not found.", file_path)
-        raise ValueError(f"Invalid input: File '{file_path}' not found. Ensure pdf_ready_json points to a valid file.")
+        raise ValueError(f"Invalid input: File '{file_path}' not found. Ensure source-path points to a valid file.")
 
-    # Load and parse JSON
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
+
+        if not isinstance(data, dict):
+            logger.error("Invalid JSON structure in '%s': expected object, got %s", file_path, type(data).__name__)
+            raise ValueError(
+                f"Invalid input: File '{file_path}' must contain a JSON object (not an array or scalar). "
+                f"Ensure the file is valid JSON with a top-level object."
+            )
+
+        return data
     except json.JSONDecodeError as e:
         logger.error("Invalid JSON in '%s': %s", file_path, str(e))
         raise ValueError(
@@ -61,28 +83,30 @@ def validate_pdf_ready_json(file_path: str) -> dict[str, Any]:
             f"Ensure the file is valid JSON."
         ) from e
 
-    # Load the schema
-    schema_path = Path(__file__).parent / "schemas" / "pdf_ready_v1.0-schema.json"
+
+def _validate_against_schema(data: dict[str, Any], schema_path: str, source_path: str) -> None:
+    """Validate ``data`` against the schema at ``schema_path``."""
+    if not os.path.exists(schema_path):
+        logger.error("Schema file '%s' not found.", schema_path)
+        raise ValueError(f"Invalid input: Schema file '{schema_path}' not found. Ensure schema-path is correct.")
+
     try:
         with open(schema_path, "r", encoding="utf-8") as f:
             schema = json.load(f)
-    except (FileNotFoundError, json.JSONDecodeError) as e:
-        logger.error("Failed to load schema file: %s", str(e))
-        raise RuntimeError(f"Internal error: Schema file not found or invalid. {str(e)}") from e
+    except json.JSONDecodeError as e:
+        logger.error("Invalid JSON in schema '%s': %s", schema_path, str(e))
+        raise ValueError(f"Invalid input: Schema file '{schema_path}' contains invalid JSON.") from e
 
-    # Validate against schema
     validator = Draft7Validator(schema, format_checker=jsonschema.FormatChecker())
     errors = list(validator.iter_errors(data))
 
     if errors:
-        # Format error messages
         error_messages = _format_validation_errors(errors)
-        full_message = f"Schema validation failed: {error_messages}. Ensure JSON follows canonical schema v1.0."
+        full_message = f"Schema validation failed: {error_messages}."
         logger.error(full_message)
         raise SchemaValidationError(full_message)
 
-    logger.info("Schema validation successful for '%s'.", file_path)
-    return data
+    logger.info("Schema validation successful for '%s'.", source_path)
 
 
 def _format_validation_errors(errors: list[jsonschema.ValidationError]) -> str:

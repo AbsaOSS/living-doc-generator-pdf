@@ -1,0 +1,28 @@
+{
+  "user_stories": [],
+  "functionalities": [],
+  "features": [],
+  "metadata": {
+    "producer": {
+      "name": "living-doc-collector",
+      "version": "1.0.0",
+      "build": null
+    },
+    "run": {
+      "run_id": null,
+      "run_attempt": null,
+      "actor": null,
+      "workflow": null,
+      "ref": null,
+      "sha": null
+    },
+    "source": {
+      "systems": ["documentation-system"],
+      "repositories": ["example/repo"],
+      "organization": "example",
+      "enterprise": null
+    },
+    "original_metadata": {}
+  },
+  "warnings": []
+}

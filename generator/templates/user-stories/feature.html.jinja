@@ -1,0 +1,81 @@
+{% set short_id = item.id.split('/') | last %}
+{% set anchor_id = item.id | replace('/', '-') %}
+<section class="chapter feature" id="{{ anchor_id }}">
+    <header class="story-header">
+        <h2 class="story-title">
+            <span class="story-id">{{ short_id }}</span> &mdash; {{ item.title }}
+            {% if item.state %}
+            <span class="story-state state-{{ item.state | lower }}">{{ item.state }}</span>
+            {% endif %}
+        </h2>
+        {% if item.get('surface_type') or item.get('route') %}
+        <div class="feature-meta">
+            {% if item.get('surface_type') %}
+            <span class="badge-surface-type">{{ item.surface_type }}</span>
+            {% endif %}
+            {% if item.get('route') %}
+            <span class="feature-route">{{ item.route }}</span>
+            {% endif %}
+        </div>
+        {% endif %}
+        {% if item.get('repository_name') %}
+        <div class="story-repo">{{ item.repository_name }}</div>
+        {% endif %}
+    </header>
+
+    <div class="story-content">
+        {% if item.get('purpose') %}
+        <div class="section">
+            <h3 class="section-title">Purpose</h3>
+            <div class="section-content">{{ item.purpose | markdown | safe }}</div>
+        </div>
+        {% endif %}
+
+        {% if item.get('owners') %}
+        <div class="section">
+            <h3 class="section-title">Owners</h3>
+            <div class="section-content">{{ item.owners }}</div>
+        </div>
+        {% endif %}
+
+        {% if item.get('user_stories') %}
+        <div class="section">
+            <h3 class="section-title">User Stories</h3>
+            <div class="section-content">
+                <ul class="ref-list">
+                    {% for us_id in item.user_stories %}
+                    <li><a class="ref-link" href="#{{ us_id.split('/') | last }}">{{ us_id }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if item.get('functionalities') %}
+        <div class="section">
+            <h3 class="section-title">Functionalities</h3>
+            <div class="section-content">
+                <ul class="ref-list">
+                    {% for func_id in item.functionalities %}
+                    <li><a class="ref-link" href="#{{ func_id.split('/') | last }}">{{ func_id }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if item.get('page_object') %}
+        <div class="section">
+            <h3 class="section-title">Page Object</h3>
+            <div class="section-content"><code>{{ item.page_object }}</code></div>
+        </div>
+        {% endif %}
+
+        {% if item.get('external_dependencies') %}
+        <div class="section">
+            <h3 class="section-title">External Dependencies</h3>
+            <div class="section-content">{{ item.external_dependencies }}</div>
+        </div>
+        {% endif %}
+    </div>
+</section>

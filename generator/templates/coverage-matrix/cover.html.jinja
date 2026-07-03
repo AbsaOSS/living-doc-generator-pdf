@@ -1,0 +1,8 @@
+<section class="cover-page">
+    <div class="cover-content">
+        <h1 class="document-title">{{ meta.document_title }}</h1>
+        <div class="generated-at">Generated on {{ meta.generated_at | format_datetime }}</div>
+        <div class="source-file">Source: {{ meta.source_file }}</div>
+        <div class="item-count">{{ summary.get('coverage_pct', 0) }}% of {{ summary.get('total_acs', 0) }} acceptance criteria covered</div>
+    </div>
+</section>

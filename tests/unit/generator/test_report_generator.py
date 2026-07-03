@@ -14,7 +14,7 @@
 # limitations under the License.
 #
 
-"""Unit tests for PDF report generator."""
+"""Unit tests for the PDF report generator."""
 
 import json
 from pathlib import Path
@@ -22,190 +22,85 @@ from pathlib import Path
 from generator.report_generator import generate_pdf_report
 
 
-def test_generate_pdf_report_creates_file(tmp_path):
-    """Test that generate_pdf_report creates a valid JSON file."""
-    pdf_path = tmp_path / "output.pdf"
-    pdf_path.write_text("fake pdf")
-
-    pdf_ready_data = {
-        "schema_version": "1.0",
-        "meta": {
-            "document_title": "Test Doc",
-            "document_version": "1.0.0",
-            "generated_at": "2026-01-21T12:00:00Z",
-            "source_set": ["github:test/repo"],
-            "selection_summary": {"total_items": 0, "included_items": 0, "excluded_items": 0},
-        },
-        "content": {"user_stories": []},
-    }
-
-    report_path = generate_pdf_report(
-        input_file="/path/to/input.json",
+def _generate(tmp_path, data, **overrides):
+    pdf_path = overrides.get("pdf_path", tmp_path / "output.pdf")
+    Path(pdf_path).write_text("fake pdf", encoding="utf-8")
+    return generate_pdf_report(
+        input_file=overrides.get("input_file", "/path/to/input.json"),
         output_file=str(pdf_path),
-        template_pack_type="built-in",
-        template_pack_path="built-in",
-        pdf_ready_data=pdf_ready_data,
+        template_pack_type=overrides.get("template_pack_type", "built-in"),
+        template_pack_path=overrides.get("template_pack_path", "built-in"),
+        data=data,
         pdf_path=str(pdf_path),
-        errors=[],
-        warnings=[],
+        errors=overrides.get("errors", []),
+        warnings=overrides.get("warnings", []),
     )
+
+
+def test_generate_pdf_report_creates_file(tmp_path):
+    """generate_pdf_report writes a valid JSON report file."""
+    report_path = _generate(tmp_path, {"items": []})
 
     assert Path(report_path).exists()
-    with open(report_path, "r", encoding="utf-8") as f:
-        report = json.load(f)
-
+    report = json.loads(Path(report_path).read_text(encoding="utf-8"))
     assert report["schema_version"] == "1.0"
-    assert "generated_at" in report
     assert report["input_file"] == "/path/to/input.json"
-    assert report["statistics"]["user_story_count"] == 0
+    assert report["statistics"]["item_count"] == 0
 
 
-def test_generate_pdf_report_includes_statistics(tmp_path):
-    """Test that report includes correct statistics."""
+def test_item_count_uses_items_key(tmp_path):
+    """item_count counts the top-level items array."""
+    data = {"items": [{"id": "US-1"}, {"id": "US-2"}, {"id": "US-3"}]}
+    report_path = _generate(tmp_path, data)
+    report = json.loads(Path(report_path).read_text(encoding="utf-8"))
+    assert report["statistics"]["item_count"] == 3
+
+
+def test_item_count_falls_back_to_user_stories_key(tmp_path):
+    """item_count falls back to user_stories when items is absent."""
+    data = {"user_stories": [{"id": "US-1"}, {"id": "US-2"}]}
+    report_path = _generate(tmp_path, data)
+    report = json.loads(Path(report_path).read_text(encoding="utf-8"))
+    assert report["statistics"]["item_count"] == 2
+
+
+def test_includes_file_size_and_template_pack(tmp_path):
+    """Report records the PDF file size and the template pack metadata."""
     pdf_path = tmp_path / "output.pdf"
-    pdf_path.write_bytes(b"fake pdf content with some bytes")
-
-    pdf_ready_data = {
-        "content": {
-            "user_stories": [
-                {"id": "story-1", "title": "Story 1", "sections": {"description": "Test"}},
-                {"id": "story-2", "title": "Story 2", "sections": {"description": "Test"}},
-                {"id": "story-3", "title": "Story 3", "sections": {"description": "Test"}},
-            ]
-        }
-    }
-
-    report_path = generate_pdf_report(
-        input_file="/path/to/input.json",
-        output_file=str(pdf_path),
+    pdf_path.write_bytes(b"some bytes here")
+    report_path = _generate(
+        tmp_path,
+        {"items": []},
+        pdf_path=pdf_path,
         template_pack_type="custom",
         template_pack_path="/custom/templates",
-        pdf_ready_data=pdf_ready_data,
-        pdf_path=str(pdf_path),
-        errors=[],
-        warnings=[],
     )
-
-    with open(report_path, "r", encoding="utf-8") as f:
-        report = json.load(f)
-
-    assert report["statistics"]["user_story_count"] == 3
+    report = json.loads(Path(report_path).read_text(encoding="utf-8"))
     assert report["statistics"]["file_size_bytes"] == pdf_path.stat().st_size
     assert report["template_pack"]["type"] == "custom"
     assert report["template_pack"]["path"] == "/custom/templates"
 
 
-def test_generate_pdf_report_detects_missing_acceptance_criteria(tmp_path):
-    """Test that report includes warnings for missing user story sections."""
-    pdf_path = tmp_path / "output.pdf"
-    pdf_path.write_text("fake pdf")
-
-    pdf_ready_data = {
-        "content": {
-            "user_stories": [
-                {
-                    "id": "github:test/repo#1",
-                    "title": "Story 1",
-                    "sections": {"description": "Has description", "acceptance_criteria": "Has criteria"},
-                },
-                {
-                    "id": "github:test/repo#2",
-                    "title": "Story 2",
-                    "sections": {"description": "Has description only"},
-                },
-                {
-                    "id": "github:test/repo#3",
-                    "title": "Story 3",
-                    "sections": {},
-                },
-            ]
-        }
-    }
-
-    report_path = generate_pdf_report(
-        input_file="/path/to/input.json",
-        output_file=str(pdf_path),
-        template_pack_type="built-in",
-        template_pack_path="built-in",
-        pdf_ready_data=pdf_ready_data,
-        pdf_path=str(pdf_path),
-        errors=[],
-        warnings=[],
-    )
-
-    with open(report_path, "r", encoding="utf-8") as f:
-        report = json.load(f)
-
-    # Should have warnings for stories 2 and 3
-    assert len(report["warnings"]) == 2
-    assert any("github:test/repo#2" in w["message"] for w in report["warnings"])
-    assert any("github:test/repo#3" in w["message"] for w in report["warnings"])
-    assert all(w["level"] == "warning" for w in report["warnings"])
+def test_preserves_input_warnings(tmp_path):
+    """Report preserves caller-provided warnings."""
+    warnings = [{"level": "warning", "message": "Custom warning"}]
+    report_path = _generate(tmp_path, {"items": []}, warnings=warnings)
+    report = json.loads(Path(report_path).read_text(encoding="utf-8"))
+    assert report["warnings"] == warnings
 
 
-def test_generate_pdf_report_preserves_input_warnings(tmp_path):
-    """Test that report preserves input warnings."""
-    pdf_path = tmp_path / "output.pdf"
-    pdf_path.write_text("fake pdf")
-
-    pdf_ready_data = {"content": {"user_stories": []}}
-
-    input_warnings = [{"level": "warning", "message": "Custom warning", "context": "test"}]
-
-    report_path = generate_pdf_report(
-        input_file="/path/to/input.json",
-        output_file=str(pdf_path),
-        template_pack_type="built-in",
-        template_pack_path="built-in",
-        pdf_ready_data=pdf_ready_data,
-        pdf_path=str(pdf_path),
-        errors=[],
-        warnings=input_warnings,
-    )
-
-    with open(report_path, "r", encoding="utf-8") as f:
-        report = json.load(f)
-
-    assert len(report["warnings"]) == 1
-    assert report["warnings"][0]["message"] == "Custom warning"
-
-
-def test_generate_pdf_report_schema_compliance(tmp_path):
-    """Test that generated report follows the expected schema."""
-    pdf_path = tmp_path / "output.pdf"
-    pdf_path.write_text("fake pdf")
-
-    pdf_ready_data = {"content": {"user_stories": []}}
-
-    report_path = generate_pdf_report(
-        input_file="/path/to/input.json",
-        output_file=str(pdf_path),
-        template_pack_type="built-in",
-        template_pack_path="built-in",
-        pdf_ready_data=pdf_ready_data,
-        pdf_path=str(pdf_path),
-        errors=[],
-        warnings=[],
-    )
-
-    with open(report_path, "r", encoding="utf-8") as f:
-        report = json.load(f)
-
-    # Check all required fields exist
-    assert "schema_version" in report
-    assert "generated_at" in report
-    assert "input_file" in report
-    assert "output_file" in report
-    assert "template_pack" in report
-    assert "statistics" in report
-    assert "errors" in report
-    assert "warnings" in report
-
-    # Check template_pack structure
-    assert "type" in report["template_pack"]
-    assert "path" in report["template_pack"]
-
-    # Check statistics structure
-    assert "user_story_count" in report["statistics"]
-    assert "total_pages" in report["statistics"]
-    assert "file_size_bytes" in report["statistics"]
+def test_report_schema_fields(tmp_path):
+    """Report contains all expected top-level fields."""
+    report_path = _generate(tmp_path, {"items": []})
+    report = json.loads(Path(report_path).read_text(encoding="utf-8"))
+    for field in (
+        "schema_version",
+        "generated_at",
+        "input_file",
+        "output_file",
+        "template_pack",
+        "statistics",
+        "errors",
+        "warnings",
+    ):
+        assert field in report

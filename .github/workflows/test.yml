@@ -188,7 +188,7 @@ jobs:
           # Generate PDFs from example files
           python -c "
           from pathlib import Path
-          from generator.schema_validator import validate_pdf_ready_json
+          from generator.schema_validator import load_source
           from generator.template_renderer import TemplateRenderer
           from generator.pdf_generator import PdfGenerator
 
@@ -200,7 +200,7 @@ jobs:
           for json_file in ['minimal_valid.json', 'full_example.json', 'multiple_stories.json']:
               try:
                   json_path = examples_dir / json_file
-                  pdf_data = validate_pdf_ready_json(str(json_path))
+                  pdf_data = load_source(str(json_path))
                   renderer = TemplateRenderer(None)
                   html = renderer.render(pdf_data)
                   output_pdf = output_dir / json_file.replace('.json', '.pdf')

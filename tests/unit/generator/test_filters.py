@@ -16,7 +16,12 @@
 
 """Unit tests for custom Jinja2 filters."""
 
-from generator.filters import format_datetime_filter, markdown_filter
+from generator.filters import (
+    default_if_none_filter,
+    format_datetime_filter,
+    markdown_filter,
+    natural_sort_filter,
+)
 
 
 def test_markdown_filter_basic() -> None:
@@ -73,7 +78,27 @@ def test_markdown_filter_links() -> None:
     # Link
     link = "[GitHub](https://github.com)"
     link_result = markdown_filter(link)
-    assert '<a href="https://github.com">GitHub</a>' in link_result
+    assert 'href="https://github.com"' in link_result
+    assert ">GitHub</a>" in link_result
+
+
+def test_markdown_filter_strips_script_tag() -> None:
+    """markdown_filter must sanitize <script> tags from the output."""
+    result = markdown_filter("<script>alert('xss')</script>")
+    assert "<script>" not in result
+    assert "alert" not in result
+
+
+def test_markdown_filter_strips_inline_event_handler() -> None:
+    """markdown_filter must strip inline event handlers from HTML output."""
+    result = markdown_filter('[click me](http://example.com " onmouseover=alert(1))')
+    assert "onmouseover" not in result
+
+
+def test_markdown_filter_strips_raw_html_in_input() -> None:
+    """Raw HTML injected via source JSON must not pass through unsanitized."""
+    result = markdown_filter('<img src=x onerror=alert(1)>')
+    assert "onerror" not in result
 
 
 def test_markdown_filter_none() -> None:
@@ -129,3 +154,37 @@ def test_format_datetime_filter_with_timezone() -> None:
     """Test timestamp with timezone offset."""
     result = format_datetime_filter("2026-01-21T12:00:00+02:00")
     assert "2026-01-21" in result
+
+
+def test_default_if_none_returns_value_when_present() -> None:
+    """default_if_none returns the value when it is not None."""
+    assert default_if_none_filter("hello") == "hello"
+    assert default_if_none_filter(0) == 0
+
+
+def test_default_if_none_returns_fallback_when_none() -> None:
+    """default_if_none returns the fallback when the value is None."""
+    assert default_if_none_filter(None) == ""
+    assert default_if_none_filter(None, "N/A") == "N/A"
+
+
+def test_natural_sort_orders_embedded_numbers() -> None:
+    """natural_sort orders IDs by embedded number, not lexicographically."""
+    assert natural_sort_filter(["US-10", "US-2", "US-1"]) == ["US-1", "US-2", "US-10"]
+
+
+def test_natural_sort_by_attribute() -> None:
+    """natural_sort sorts dicts by a named attribute."""
+    items = [{"id": "US-10"}, {"id": "US-2"}, {"id": "US-1"}]
+    result = natural_sort_filter(items, attribute="id")
+    assert [i["id"] for i in result] == ["US-1", "US-2", "US-10"]
+
+
+def test_natural_sort_handles_empty_and_none() -> None:
+    """natural_sort returns an empty list for falsy input and tolerates None values."""
+    assert natural_sort_filter(None) == []
+    assert natural_sort_filter([]) == []
+    items = [{"id": "US-2"}, {"id": None}, {"id": "US-1"}]
+    result = natural_sort_filter(items, attribute="id")
+    assert [i["id"] for i in result] == [None, "US-1", "US-2"]
+

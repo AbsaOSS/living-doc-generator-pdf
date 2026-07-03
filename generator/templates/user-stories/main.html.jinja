@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ meta.document_title }}</title>
+    <style>
+        {% include 'styles.css' %}
+    </style>
+</head>
+<body>
+    {% if 'features' in data %}
+        {# doc-source format: 3-layer living doc (Features + User Stories + Functionalities) #}
+        {% set features = data.get('features', []) | natural_sort(attribute='id') %}
+        {% set user_stories = data.get('user_stories', []) | natural_sort(attribute='id') %}
+        {% set functionalities = data.get('functionalities', []) | natural_sort(attribute='id') %}
+        {% set items = [] %}
+    {% else %}
+        {# Legacy format: flat list under 'user_stories' or 'items' key #}
+        {% set features = [] %}
+        {% set user_stories = [] %}
+        {% set functionalities = [] %}
+        {% set items = (data.get('user_stories') or data.get('items') or []) | natural_sort(attribute='id') %}
+    {% endif %}
+    {% include 'cover.html.jinja' %}
+    {% include 'toc.html.jinja' %}
+    <main class="chapters">
+        {% if user_stories %}
+        <section class="entity-group" id="user-stories-group">
+            {% if features or functionalities %}<h2 class="group-heading">User Stories</h2>{% endif %}
+            {% for item in user_stories %}
+            {% include 'user_story.html.jinja' %}
+            {% endfor %}
+        </section>
+        {% endif %}
+        {% if features %}
+        <section class="entity-group" id="features-group">
+            <h2 class="group-heading">Features</h2>
+            {% for item in features %}
+            {% include 'feature.html.jinja' %}
+            {% endfor %}
+        </section>
+        {% endif %}
+        {% if functionalities %}
+        <section class="entity-group" id="functionalities-group">
+            <h2 class="group-heading">Functionalities</h2>
+            {% for item in functionalities %}
+            {% include 'functionality.html.jinja' %}
+            {% endfor %}
+        </section>
+        {% endif %}
+        {% for item in items %}
+        {% include 'user_story.html.jinja' %}
+        {% endfor %}
+    </main>
+</body>
+</html>

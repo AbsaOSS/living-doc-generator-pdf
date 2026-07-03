@@ -22,41 +22,43 @@ from pathlib import Path
 
 import pytest
 
+_REPO_ROOT = Path(__file__).parent.parent.parent
+
 
 @pytest.fixture
 def examples_dir() -> Path:
     """Return the path to the examples directory."""
-    return Path(__file__).parent.parent.parent / "examples"
+    return _REPO_ROOT / "examples"
 
 
 @pytest.fixture
-def minimal_valid_json(examples_dir: Path) -> Path:
-    """Return the path to minimal_valid.json example."""
-    return examples_dir / "minimal_valid.json"
+def schemas_dir() -> Path:
+    """Return the path to the built-in schemas directory."""
+    return _REPO_ROOT / "generator" / "schemas"
 
 
 @pytest.fixture
-def full_example_json(examples_dir: Path) -> Path:
-    """Return the path to full_example.json example."""
-    return examples_dir / "full_example.json"
+def minimal_json(examples_dir: Path) -> Path:
+    """Return the path to the minimal user-stories example."""
+    return examples_dir / "minimal.json"
 
 
 @pytest.fixture
-def multiple_stories_json(examples_dir: Path) -> Path:
-    """Return the path to multiple_stories.json example."""
-    return examples_dir / "multiple_stories.json"
+def user_stories_json(examples_dir: Path) -> Path:
+    """Return the path to the user-stories example."""
+    return examples_dir / "user_stories.json"
 
 
 @pytest.fixture
-def invalid_missing_schema_json(examples_dir: Path) -> Path:
-    """Return the path to invalid_missing_schema.json example."""
-    return examples_dir / "invalid_missing_schema.json"
+def ui_tests_json(examples_dir: Path) -> Path:
+    """Return the path to the ui-test-catalog example."""
+    return examples_dir / "ui_tests.json"
 
 
 @pytest.fixture
-def invalid_bad_timestamp_json(examples_dir: Path) -> Path:
-    """Return the path to invalid_bad_timestamp.json example."""
-    return examples_dir / "invalid_bad_timestamp.json"
+def coverage_matrix_json(examples_dir: Path) -> Path:
+    """Return the path to the coverage-matrix example."""
+    return examples_dir / "coverage_matrix.json"
 
 
 @pytest.fixture

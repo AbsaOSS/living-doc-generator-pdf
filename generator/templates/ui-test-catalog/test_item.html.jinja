@@ -1,0 +1,37 @@
+<article class="scenario">
+    <h4 class="scenario-name">
+        {{ scenario.scenario_name }}
+        <span class="scenario-type type-{{ scenario.scenario_type | lower | replace(' ', '-') }}">{{ scenario.scenario_type }}</span>
+    </h4>
+    {% if scenario.tags %}
+    <div class="scenario-tags">
+        {% for tag in scenario.tags %}
+        <span class="tag">{{ tag }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% if scenario.ac_ids %}
+    <div class="scenario-acs">
+        <span class="acs-label">Covers:</span>
+        {% for ac in scenario.ac_ids %}
+        <span class="ac-ref">{{ ac }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% if scenario.get('func_id') and not scenario.get('us_id') %}
+    <div class="scenario-func">
+        <span class="acs-label">Functionality:</span>
+        <span class="ac-ref">{{ scenario.func_id }}</span>
+    </div>
+    {% endif %}
+    {% if scenario.steps %}
+    <ol class="steps">
+        {% for step in scenario.steps %}
+        <li class="step">
+            <span class="step-keyword">{{ step.keyword }}</span>
+            <span class="step-text">{{ step.text }}</span>
+        </li>
+        {% endfor %}
+    </ol>
+    {% endif %}
+</article>

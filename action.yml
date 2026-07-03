@@ -21,17 +21,26 @@ branding:
   color: 'blue'
 
 inputs:
-  pdf_ready_json:
-    description: 'Path to pdf_ready.json file'
-    required: true
-  output_path:
-    description: 'Path for generated PDF file'
+  source-path:
+    description: 'Path to the canonical source JSON file to render'
+    required: false
+  template-path:
+    description: 'Directory containing custom Jinja templates (overrides or extends a built-in set)'
+    required: false
+  document-type:
+    description: 'Built-in template set to use: user-stories | ui-test-catalog | coverage-matrix'
+    required: false
+  output-path:
+    description: 'Path for the generated PDF file'
     required: false
     default: 'output.pdf'
-  template_dir:
-    description: 'Directory containing custom Jinja templates'
+  document-title:
+    description: 'Title shown on the cover page (defaults to the document type or source file name)'
     required: false
-  debug_html:
+  schema-path:
+    description: 'Optional JSON Schema path; when set, the source JSON is validated before rendering'
+    required: false
+  debug-html:
     description: 'Save intermediate HTML as rendered.html'
     required: false
     default: 'false'
@@ -39,13 +48,16 @@ inputs:
     description: 'Enable verbose logging'
     required: false
     default: 'false'
+  pdf_ready_json:
+    description: 'Deprecated alias for source-path; use source-path instead'
+    required: false
 
 outputs:
   pdf_path:
     description: 'Absolute path to generated PDF file'
     value: ${{ steps.run-generator.outputs.pdf-path }}
   html_path:
-    description: 'Absolute path to debug HTML (if debug_html=true)'
+    description: 'Absolute path to debug HTML (if debug-html=true)'
     value: ${{ steps.run-generator.outputs.html-path }}
   report_path:
     description: 'Absolute path to pdf_report.json'
@@ -73,8 +85,12 @@ runs:
       run: python ${{ github.action_path }}/main.py
       shell: bash
       env:
-        INPUT_PDF-READY-JSON: ${{ inputs.pdf_ready_json }}
-        INPUT_OUTPUT-PATH: ${{ inputs.output_path }}
-        INPUT_TEMPLATE-DIR: ${{ inputs.template_dir }}
-        INPUT_DEBUG-HTML: ${{ inputs.debug_html }}
+        INPUT_SOURCE_PATH: ${{ inputs.source-path }}
+        INPUT_TEMPLATE_PATH: ${{ inputs.template-path }}
+        INPUT_DOCUMENT_TYPE: ${{ inputs.document-type }}
+        INPUT_OUTPUT_PATH: ${{ inputs.output-path }}
+        INPUT_DOCUMENT_TITLE: ${{ inputs.document-title }}
+        INPUT_SCHEMA_PATH: ${{ inputs.schema-path }}
+        INPUT_DEBUG_HTML: ${{ inputs.debug-html }}
         INPUT_VERBOSE: ${{ inputs.verbose }}
+        INPUT_PDF_READY_JSON: ${{ inputs.pdf_ready_json }}
