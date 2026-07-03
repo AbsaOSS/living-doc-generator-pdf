@@ -1,5 +1,6 @@
 {% set short_id = item.id.split('/') | last %}
-<section class="chapter feature" id="{{ short_id }}">
+{% set anchor_id = item.id | replace('/', '-') %}
+<section class="chapter feature" id="{{ anchor_id }}">
     <header class="story-header">
         <h2 class="story-title">
             <span class="story-id">{{ short_id }}</span> &mdash; {{ item.title }}

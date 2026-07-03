@@ -101,7 +101,7 @@ def test_markdown_filter_strips_raw_html_in_input() -> None:
     assert "onerror" not in result
 
 
-
+def test_markdown_filter_none() -> None:
     """Test None handling returns empty string."""
     result = markdown_filter(None)
     assert result == ""

@@ -5,8 +5,9 @@
         {% if features or functionalities %}<li class="toc-group-label"><span class="toc-text">User Stories</span></li>{% endif %}
         {% for item in user_stories %}
         {% set short_id = item.id.split('/') | last %}
+        {% set anchor_id = item.id | replace('/', '-') %}
         <li class="toc-entry">
-            <a class="toc-link" href="#{{ short_id }}">
+            <a class="toc-link" href="#{{ anchor_id }}">
                 <span class="toc-id">{{ short_id }}</span>
                 <span class="toc-text">{{ item.title }}</span>
                 {% if item.state %}
@@ -20,8 +21,9 @@
         <li class="toc-group-label"><span class="toc-text">Features</span></li>
         {% for item in features %}
         {% set short_id = item.id.split('/') | last %}
+        {% set anchor_id = item.id | replace('/', '-') %}
         <li class="toc-entry toc-feature">
-            <a class="toc-link" href="#{{ short_id }}">
+            <a class="toc-link" href="#{{ anchor_id }}">
                 <span class="toc-id">{{ short_id }}</span>
                 <span class="toc-text">{{ item.title }}</span>
                 {% if item.state %}
@@ -35,8 +37,9 @@
         <li class="toc-group-label"><span class="toc-text">Functionalities</span></li>
         {% for item in functionalities %}
         {% set short_id = item.id.split('/') | last %}
+        {% set anchor_id = item.id | replace('/', '-') %}
         <li class="toc-entry toc-functionality">
-            <a class="toc-link" href="#{{ short_id }}">
+            <a class="toc-link" href="#{{ anchor_id }}">
                 <span class="toc-id">{{ short_id }}</span>
                 <span class="toc-text">{{ item.title }}</span>
                 {% if item.state %}
@@ -48,8 +51,9 @@
         {% endif %}
         {% for item in items %}
         {% set short_id = item.id.split('/') | last %}
+        {% set anchor_id = item.id | replace('/', '-') %}
         <li class="toc-entry">
-            <a class="toc-link" href="#{{ short_id }}">
+            <a class="toc-link" href="#{{ anchor_id }}">
                 <span class="toc-id">{{ short_id }}</span>
                 <span class="toc-text">{{ item.title }}</span>
                 {% if item.state %}

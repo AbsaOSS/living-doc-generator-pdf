@@ -1,6 +1,7 @@
 {% set short_id = item.id.split('/') | last %}
+{% set anchor_id = item.id | replace('/', '-') %}
 {% set repo_context = item.id.rsplit('/', 1)[0] if '/' in item.id else '' %}
-<section class="chapter user-story" id="{{ short_id }}">
+<section class="chapter user-story" id="{{ anchor_id }}">
     <header class="story-header">
         <h2 class="story-title">
             <span class="story-id">{{ short_id }}</span> &mdash; {{ item.title }}

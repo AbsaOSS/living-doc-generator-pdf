@@ -74,14 +74,12 @@ def test_generate_pdf_with_schema_validation(
     request, fixture_name: str, document_type: str, schema_file: str, temp_output_dir: Path
 ) -> None:
     """Each document type renders a valid PDF when schema-path is provided.
-    
+
     This test covers the bundled schema/example pairing and validates the
     schema-path plumbing end-to-end.
     """
-    from pathlib import Path as PathlibPath
-    
     source = request.getfixturevalue(fixture_name)
-    schema_path = PathlibPath(__file__).parent.parent.parent / schema_file
+    schema_path = Path(__file__).parent.parent.parent / schema_file
     output_pdf = temp_output_dir / f"{document_type}_validated.pdf"
     
     # Load and validate source against bundled schema

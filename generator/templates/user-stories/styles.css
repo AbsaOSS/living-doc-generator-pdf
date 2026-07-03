@@ -286,8 +286,8 @@ body {
 
 /* Prevent the first chapter in a group from being pushed to a separate page,
    which would leave the group heading stranded alone. */
-.entity-group > .chapter:first-of-type {
-    page-break-before: auto;
+.entity-group + .chapter {
+    break-before: auto;
 }
 
 .group-heading {
