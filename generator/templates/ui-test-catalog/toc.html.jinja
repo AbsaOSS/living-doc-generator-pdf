@@ -19,6 +19,23 @@
             </ul>
         </li>
         {% endfor %}
+        {% if func_file_groups %}
+        <li class="toc-file">
+            <a class="toc-link" href="#func-linked">
+                <span class="toc-text">Functionality Tests</span>
+            </a>
+            <ul class="toc-sublist">
+                {% for file, file_items in func_file_groups %}
+                {% set file_index = loop.index %}
+                <li class="toc-us">
+                    <a class="toc-link" href="#func-file-{{ file_index }}">
+                        <span class="toc-text">{{ file }}</span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </li>
+        {% endif %}
         {% if unlinked %}
         <li class="toc-file">
             <a class="toc-link" href="#unlinked">

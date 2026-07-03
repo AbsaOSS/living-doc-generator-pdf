@@ -18,6 +18,12 @@
         {% endfor %}
     </div>
     {% endif %}
+    {% if scenario.get('func_id') and not scenario.get('us_id') %}
+    <div class="scenario-func">
+        <span class="acs-label">Functionality:</span>
+        <span class="ac-ref">{{ scenario.func_id }}</span>
+    </div>
+    {% endif %}
     {% if scenario.steps %}
     <ol class="steps">
         {% for step in scenario.steps %}

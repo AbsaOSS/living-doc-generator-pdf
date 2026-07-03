@@ -4,6 +4,8 @@
         <li class="toc-entry">
             <a class="toc-link" href="#summary"><span class="toc-text">Coverage Summary</span></a>
         </li>
+        {% if stories %}
+        {% if functionalities %}<li class="toc-group-label"><span class="toc-text">User Stories</span></li>{% endif %}
         {% for story in stories %}
         <li class="toc-entry">
             <a class="toc-link" href="#{{ story.id }}">
@@ -13,6 +15,19 @@
             </a>
         </li>
         {% endfor %}
+        {% endif %}
+        {% if functionalities %}
+        <li class="toc-group-label"><span class="toc-text">Functionalities</span></li>
+        {% for func in functionalities %}
+        <li class="toc-entry">
+            <a class="toc-link" href="#{{ func.id }}">
+                <span class="toc-id">{{ func.id }}</span>
+                <span class="toc-text">{{ func.title }}</span>
+                <span class="toc-pct">{{ func.get('summary', {}).get('coverage_pct', 0) }}%</span>
+            </a>
+        </li>
+        {% endfor %}
+        {% endif %}
         {% if data.get('unlinked_tests') or data.get('stale_ac_refs') %}
         <li class="toc-entry">
             <a class="toc-link" href="#appendix"><span class="toc-text">Appendix</span></a>

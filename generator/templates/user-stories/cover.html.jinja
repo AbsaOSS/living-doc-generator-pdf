@@ -1,8 +1,12 @@
 <section class="cover-page">
     <div class="cover-content">
-        <h1 class="document-title">{{ meta.document_title }}</h1>
+        <h1 class="document-title">{{ meta.document_title }} Living Documentation</h1>
         <div class="generated-at">Generated on {{ meta.generated_at | format_datetime }}</div>
-        <div class="source-file">Source: {{ meta.source_file }}</div>
-        <div class="item-count">{{ items | length }} user stor{{ 'y' if items | length == 1 else 'ies' }}</div>
+        {% set us_count = (user_stories | length) + (items | length) %}
+        {% set feat_count = features | length %}
+        {% set func_count = functionalities | length %}
+        <div class="item-count">{{ us_count }} user stor{{ 'y' if us_count == 1 else 'ies' }}</div>
+        <div class="item-count">{{ feat_count }} feature{{ 's' if feat_count != 1 else '' }}</div>
+        <div class="item-count">{{ func_count }} functionalit{{ 'y' if func_count == 1 else 'ies' }}</div>
     </div>
 </section>

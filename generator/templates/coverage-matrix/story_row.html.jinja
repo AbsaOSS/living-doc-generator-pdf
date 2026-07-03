@@ -11,6 +11,12 @@
             {{ story_summary.get('covered_acs', 0) }}/{{ story_summary.get('total_acs', 0) }}
             acceptance criteria covered ({{ story_summary.get('coverage_pct', 0) }}%)
         </div>
+        {% if story.get('func_type') or story.get('parent') %}
+        <div class="story-meta">
+            {% if story.get('func_type') %}<span class="badge-func-type">{{ story.func_type }}</span>{% endif %}
+            {% if story.get('parent') %}<span class="story-parent">Parent: {{ story.parent }}</span>{% endif %}
+        </div>
+        {% endif %}
     </header>
 
     {% if story.acceptance_criteria %}

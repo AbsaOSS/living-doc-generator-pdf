@@ -28,6 +28,7 @@ from generator.filters import (
     markdown_filter,
     natural_sort_filter,
 )
+from generator.utils.constants import DOCUMENT_TYPE_TEMPLATE_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -71,7 +72,8 @@ class TemplateRenderer:
             logger.info("Using custom templates from '%s'", template_path)
 
         if document_type:
-            built_in_dir = Path(__file__).parent / "templates" / document_type
+            template_dir_name = DOCUMENT_TYPE_TEMPLATE_DIR.get(document_type, document_type)
+            built_in_dir = Path(__file__).parent / "templates" / template_dir_name
             if not built_in_dir.exists():
                 msg = f"Template error: Built-in template set '{document_type}' not found."
                 logger.error(msg)

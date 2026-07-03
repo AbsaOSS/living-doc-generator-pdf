@@ -313,3 +313,49 @@ body {
     margin-left: 22px;
     font-size: 10pt;
 }
+
+/* Functionality groups in coverage matrix */
+.entity-group {
+    page-break-before: always;
+}
+
+.group-heading {
+    font-size: 20pt;
+    color: #1a1a1a;
+    border-bottom: 3px solid #2e7d32;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+}
+
+.toc-group-label {
+    margin-top: 12px;
+    margin-bottom: 4px;
+    font-weight: bold;
+    font-size: 10pt;
+    color: #2e7d32;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.story-meta {
+    margin-top: 6px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.badge-func-type {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 8pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.story-parent {
+    font-size: 9pt;
+    color: #666;
+}

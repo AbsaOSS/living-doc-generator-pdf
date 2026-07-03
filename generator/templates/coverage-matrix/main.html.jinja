@@ -9,6 +9,7 @@
 </head>
 <body>
     {% set stories = data.get('user_stories', []) | natural_sort(attribute='id') %}
+    {% set functionalities = data.get('functionalities', []) | natural_sort(attribute='id') %}
     {% set summary = data.get('summary', {}) %}
     {% include 'cover.html.jinja' %}
     {% include 'toc.html.jinja' %}
@@ -16,6 +17,18 @@
     <section class="summary-bar" id="summary">
         <h2 class="summary-title">Coverage Summary</h2>
         <div class="summary-stats">
+            {% if summary.get('total_user_stories') is not none %}
+            <div class="stat-item">
+                <span class="stat-value">{{ summary.get('total_user_stories', 0) }}</span>
+                <span class="stat-label">User Stories</span>
+            </div>
+            {% endif %}
+            {% if summary.get('total_functionalities') is not none %}
+            <div class="stat-item">
+                <span class="stat-value">{{ summary.get('total_functionalities', 0) }}</span>
+                <span class="stat-label">Functionalities</span>
+            </div>
+            {% endif %}
             <div class="stat-item">
                 <span class="stat-value">{{ summary.get('total_acs', 0) }}</span>
                 <span class="stat-label">Total ACs</span>
@@ -40,9 +53,20 @@
     </section>
 
     <main class="chapters">
+        {% if stories %}
+        {% if functionalities %}<h2 class="group-heading">User Stories</h2>{% endif %}
         {% for story in stories %}
         {% include 'story_row.html.jinja' %}
         {% endfor %}
+        {% endif %}
+        {% if functionalities %}
+        <section class="entity-group" id="functionalities-group">
+            <h2 class="group-heading">Functionalities</h2>
+        </section>
+        {% for story in functionalities %}
+        {% include 'story_row.html.jinja' %}
+        {% endfor %}
+        {% endif %}
     </main>
 
     {% set unlinked_tests = data.get('unlinked_tests', []) %}

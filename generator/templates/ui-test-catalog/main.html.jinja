@@ -9,9 +9,11 @@
 </head>
 <body>
     {% set items = data.get('items', []) %}
-    {% set linked = items | selectattr('us_id') | list %}
-    {% set unlinked = items | rejectattr('us_id') | list %}
-    {% set file_groups = linked | groupby('source.file') %}
+    {% set linked_us = items | selectattr('us_id') | list %}
+    {% set linked_func = items | rejectattr('us_id') | selectattr('func_id') | list %}
+    {% set unlinked = items | rejectattr('us_id') | rejectattr('func_id') | list %}
+    {% set file_groups = linked_us | groupby('source.file') %}
+    {% set func_file_groups = linked_func | groupby('source.file') %}
     {% include 'cover.html.jinja' %}
     {% include 'toc.html.jinja' %}
     <main class="chapters">
@@ -31,6 +33,26 @@
             {% endfor %}
         </section>
         {% endfor %}
+        {% if func_file_groups %}
+        <section class="chapter feature-file" id="func-linked">
+            <h2 class="feature-title">Functionality Tests</h2>
+            {% for file, file_items in func_file_groups %}
+            {% set file_index = loop.index %}
+            <section class="func-file-group" id="func-file-{{ file_index }}">
+                <h3 class="func-file-title">{{ file }}</h3>
+                {% set func_ids = file_items | map(attribute='func_id') | unique | list | natural_sort %}
+                {% for func_id in func_ids %}
+                <section class="us-group" id="func-file-{{ file_index }}-func-{{ loop.index }}">
+                    <h4 class="us-title">{{ func_id }}</h4>
+                    {% for scenario in file_items if scenario.func_id == func_id %}
+                    {% include 'test_item.html.jinja' %}
+                    {% endfor %}
+                </section>
+                {% endfor %}
+            </section>
+            {% endfor %}
+        </section>
+        {% endif %}
         {% if unlinked %}
         <section class="chapter feature-file" id="unlinked">
             <h2 class="feature-title">Unlinked Scenarios</h2>
