@@ -1,12 +1,13 @@
 {
-  "items": [
+  "user_stories": [
     {
       "id": "AbsaOSS/living-doc-example/US-1",
+      "repository_name": "living-doc-example",
       "title": "Generate PDF from a JSON source",
       "state": "active",
       "tags": ["documentation", "pdf"],
       "url": "https://github.com/AbsaOSS/living-doc-example/issues/1",
-      "timestamps": { "created": null, "updated": null },
+      "timestamps": null,
       "description": "As a documentation maintainer\nI can render a PDF from a canonical JSON file\nso that I can publish living documentation.",
       "business_value": [
         "Removes manual document assembly using **markdown** formatting.",
@@ -33,11 +34,12 @@
     },
     {
       "id": "AbsaOSS/living-doc-example/US-10",
+      "repository_name": "living-doc-example",
       "title": "Validate the source against a schema",
       "state": "planned",
       "tags": ["validation"],
       "url": "https://github.com/AbsaOSS/living-doc-example/issues/10",
-      "timestamps": { "created": null, "updated": null },
+      "timestamps": null,
       "description": "As a producer\nI can validate my JSON against a schema\nso that I catch contract drift early.",
       "business_value": ["Detects breaking changes before rendering."],
       "preconditions": ["A JSON Schema file is available."],
@@ -52,11 +54,12 @@
     },
     {
       "id": "AbsaOSS/living-doc-example/US-2",
+      "repository_name": "living-doc-example",
       "title": "Override the built-in template",
       "state": "closed",
       "tags": ["templates"],
       "url": "https://github.com/AbsaOSS/living-doc-example/issues/2",
-      "timestamps": { "created": null, "updated": null },
+      "timestamps": null,
       "description": "As a maintainer\nI can provide my own templates\nso that the output matches my brand.",
       "business_value": ["Enables branded documentation."],
       "preconditions": ["A custom template directory exists."],
@@ -70,6 +73,29 @@
       ]
     }
   ],
-  "metadata": { "source": "living-doc-collector" },
+  "functionalities": [],
+  "features": [],
+  "metadata": {
+    "producer": {
+      "name": "living-doc-collector",
+      "version": "1.0.0",
+      "build": null
+    },
+    "run": {
+      "run_id": null,
+      "run_attempt": null,
+      "actor": null,
+      "workflow": null,
+      "ref": null,
+      "sha": null
+    },
+    "source": {
+      "systems": ["documentation-system"],
+      "repositories": ["AbsaOSS/living-doc-example"],
+      "organization": "AbsaOSS",
+      "enterprise": null
+    },
+    "original_metadata": {}
+  },
   "warnings": []
 }

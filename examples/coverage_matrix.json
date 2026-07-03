@@ -3,6 +3,8 @@
   "generated_at": "2024-01-01T00:00:00Z",
   "summary": {
     "total_user_stories": 2,
+    "total_functionalities": 0,
+    "total_features": 0,
     "total_acs": 3,
     "active_acs": 3,
     "covered_acs": 2,
@@ -85,10 +87,15 @@
       ]
     }
   ],
+  "functionalities": [],
+  "features": [],
   "unlinked_tests": [
     {
       "id": "test-3",
       "scenario_name": "Unlinked exploratory scenario",
+      "us_id": null,
+      "func_id": null,
+      "ac_ids": [],
       "source": { "org": "AbsaOSS", "repo": "living-doc-example", "file": "features/exploratory.feature" }
     }
   ],

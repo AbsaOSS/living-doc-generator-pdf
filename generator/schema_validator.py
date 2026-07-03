@@ -67,14 +67,14 @@ def _load_json(file_path: str) -> dict[str, Any]:
     try:
         with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
-        
+
         if not isinstance(data, dict):
             logger.error("Invalid JSON structure in '%s': expected object, got %s", file_path, type(data).__name__)
             raise ValueError(
                 f"Invalid input: File '{file_path}' must contain a JSON object (not an array or scalar). "
                 f"Ensure the file is valid JSON with a top-level object."
             )
-        
+
         return data
     except json.JSONDecodeError as e:
         logger.error("Invalid JSON in '%s': %s", file_path, str(e))

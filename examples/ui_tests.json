@@ -3,6 +3,7 @@
     {
       "id": "test-1",
       "us_id": "US-1",
+      "func_id": null,
       "ac_ids": ["AC-1"],
       "scenario_name": "Render a PDF from a valid source",
       "scenario_type": "Scenario",
@@ -15,12 +16,14 @@
       "source": {
         "org": "AbsaOSS",
         "repo": "living-doc-example",
-        "file": "features/pdf_generation.feature"
+        "file": "features/pdf_generation.feature",
+        "line": 1
       }
     },
     {
       "id": "test-2",
       "us_id": "US-1",
+      "func_id": null,
       "ac_ids": ["AC-2"],
       "scenario_name": "Render markdown content",
       "scenario_type": "Scenario",
@@ -33,12 +36,14 @@
       "source": {
         "org": "AbsaOSS",
         "repo": "living-doc-example",
-        "file": "features/pdf_generation.feature"
+        "file": "features/pdf_generation.feature",
+        "line": 5
       }
     },
     {
       "id": "test-3",
       "us_id": null,
+      "func_id": null,
       "ac_ids": [],
       "scenario_name": "Unlinked exploratory scenario",
       "scenario_type": "Scenario",
@@ -51,10 +56,32 @@
       "source": {
         "org": "AbsaOSS",
         "repo": "living-doc-example",
-        "file": "features/exploratory.feature"
+        "file": "features/exploratory.feature",
+        "line": 10
       }
     }
   ],
-  "metadata": { "source": "living-doc-collector" },
+  "metadata": {
+    "producer": {
+      "name": "living-doc-collector",
+      "version": "1.0.0",
+      "build": null
+    },
+    "run": {
+      "run_id": null,
+      "run_attempt": null,
+      "actor": null,
+      "workflow": null,
+      "ref": null,
+      "sha": null
+    },
+    "source": {
+      "systems": ["test-system"],
+      "repositories": ["AbsaOSS/living-doc-example"],
+      "organization": "AbsaOSS",
+      "enterprise": null
+    },
+    "original_metadata": {}
+  },
   "warnings": []
 }

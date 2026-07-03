@@ -22,6 +22,7 @@ from datetime import datetime
 from typing import Any, Iterable, Optional
 
 import markdown
+import nh3
 
 logger = logging.getLogger(__name__)
 
@@ -29,20 +30,21 @@ _NATURAL_CHUNK_RE = re.compile(r"(\d+)")
 
 
 def markdown_filter(text: Optional[str]) -> str:
-    """Convert Markdown text to HTML.
+    """Convert Markdown text to sanitized HTML.
 
-    By default, markdown safely handles user input by escaping unsafe HTML
-    in the source while preserving legitimate markdown-generated HTML.
+    Python-Markdown does not sanitize raw HTML in its input, so the rendered
+    output is passed through ``nh3.clean()`` to strip unsafe tags and
+    attributes before the result is used in a ``| safe`` Jinja2 context.
 
     Args:
         text: Markdown string or None
 
     Returns:
-        HTML string, or empty string if input is None/empty
+        Sanitized HTML string, or empty string if input is None/empty
     """
     if not text:
         return ""
-    return markdown.markdown(text)
+    return nh3.clean(markdown.markdown(text))
 
 
 def format_datetime_filter(iso_timestamp: Optional[str], format_str: str = "%Y-%m-%d %H:%M") -> str:

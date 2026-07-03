@@ -78,10 +78,30 @@ def test_markdown_filter_links() -> None:
     # Link
     link = "[GitHub](https://github.com)"
     link_result = markdown_filter(link)
-    assert '<a href="https://github.com">GitHub</a>' in link_result
+    assert 'href="https://github.com"' in link_result
+    assert ">GitHub</a>" in link_result
 
 
-def test_markdown_filter_none() -> None:
+def test_markdown_filter_strips_script_tag() -> None:
+    """markdown_filter must sanitize <script> tags from the output."""
+    result = markdown_filter("<script>alert('xss')</script>")
+    assert "<script>" not in result
+    assert "alert" not in result
+
+
+def test_markdown_filter_strips_inline_event_handler() -> None:
+    """markdown_filter must strip inline event handlers from HTML output."""
+    result = markdown_filter('[click me](http://example.com " onmouseover=alert(1))')
+    assert "onmouseover" not in result
+
+
+def test_markdown_filter_strips_raw_html_in_input() -> None:
+    """Raw HTML injected via source JSON must not pass through unsanitized."""
+    result = markdown_filter('<img src=x onerror=alert(1)>')
+    assert "onerror" not in result
+
+
+
     """Test None handling returns empty string."""
     result = markdown_filter(None)
     assert result == ""
