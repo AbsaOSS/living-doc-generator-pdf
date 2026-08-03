@@ -3,7 +3,7 @@ pytest-cov==7.1.0
 pytest-mock==3.15.1
 responses==0.26.2
 pylint==4.0.6
-requests==2.33.1
+requests==2.34.2
 black==26.5.1
 PyYAML==6.0.3
 semver==3.0.4
@@ -18,5 +18,5 @@ jsonschema>=4.26.0
 rfc3339-validator>=0.1.4
 Jinja2>=3.1.6
 Markdown>=3.10.2
-nh3>=0.2.14
 WeasyPrint>=69.0
+nh3>=0.3.6
