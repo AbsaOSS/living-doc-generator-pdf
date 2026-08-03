@@ -18,5 +18,5 @@ jsonschema>=4.26.0
 rfc3339-validator>=0.1.4
 Jinja2>=3.1.6
 Markdown>=3.10.2
+WeasyPrint>=69.0
 nh3>=0.3.6
-WeasyPrint>=68.1
