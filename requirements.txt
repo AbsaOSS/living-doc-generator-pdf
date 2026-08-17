@@ -13,10 +13,10 @@ types-requests==2.33.0.20260712
 types-PyYAML==6.0.12.20260724
 types-jsonschema>=4.26.0.20260518
 types-Markdown>=3.10.2.20260712
-pre-commit==4.6.0
+pre-commit==4.6.2
 jsonschema>=4.26.0
 rfc3339-validator>=0.1.4
 Jinja2>=3.1.6
-Markdown>=3.10.2
+Markdown>=3.10.3
 WeasyPrint>=69.0
 nh3>=0.3.6
