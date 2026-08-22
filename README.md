@@ -11,6 +11,9 @@ The action is a generic JSON-to-PDF engine: you provide a JSON source file and e
 
 
 
+
+
+
 **Built-in document types**
 
 | `document-type` | Purpose | Typical source |
