@@ -9,6 +9,8 @@ A source-agnostic GitHub Action that renders **any** structured JSON into a prof
 
 The action is a generic JSON-to-PDF engine: you provide a JSON source file and either a built-in `document-type` or your own `template-path`. The raw JSON is passed to the templates unchanged as `data`, alongside injected `meta` (title, timestamp, source file name).
 
+
+
 **Built-in document types**
 
 | `document-type` | Purpose | Typical source |
