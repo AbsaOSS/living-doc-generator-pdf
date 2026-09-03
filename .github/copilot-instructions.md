@@ -1,119 +1,137 @@
-Purpose
-- Define consistent, portable rules for this repository's `.github/copilot-instructions.md`.
-- Keep rules concrete and testable (a reviewer can verify them).
+# Copilot Instructions — Living Doc Generator PDF
 
-Structure
-- Must keep sections ordered exactly as listed in this file.
+This file tells a coding agent how to work in this repository. It describes this repo's
+own layout, contract, and workflow; it is not shared with or copied from other repos.
+
+**Section order** — keep the sections below in exactly this order:
+Overview → Repo specifics → Coding guidelines → Inputs → Language and style →
+Logging and string formatting → Docstrings and comments → Patterns → Testing →
+Tooling and quality gates → Common pitfalls → Learned rules.
+
+**House rules for this file**
+
+- Must write every guidance bullet as a constraint led by one of `Must`, `Must not`, `Prefer`, `Avoid`.
+- Must not put a colon after the leading keyword, and Must not use any other keyword style such as `Do`, `Should`, or a two-keyword `Do` / `Avoid` variant.
 - Prefer bullet lists over paragraphs.
-- Must write rules as constraints using: Must / Must not / Prefer / Avoid.
-- Must end the file with a single blank line.
+- Must end the file with a single trailing newline.
 
-Context
-- Runs as a GitHub Action on GitHub-hosted runners.
-- Must read action inputs via `INPUT_*` environment variables.
-- Prefer keeping environment access at module boundaries (input layer + entrypoint).
+## Overview
 
-Coding guidelines
-- Must keep changes small and focused.
-- Prefer clear, explicit code over clever tricks.
-- Must keep externally-visible behavior stable unless intentionally updating the contract.
-- Must not change existing error messages or log texts without a strong reason (tests may assert exact strings).
-- Prefer keeping pure logic free of environment access where practical.
+`Living Doc Generator PDF` is a composite GitHub Action that renders a canonical source
+JSON file into a PDF using Jinja2 templates and WeasyPrint.
 
-Output discipline (reduce review time)
-- Prefer concise final recaps (aim for ≤ 10 lines).
-- Avoid restating large file contents/configs/checklists; link and summarize deltas.
-- Must end code-change work with:
-  - What changed
-  - Why
-  - How to verify (commands/tests)
-- Avoid long rationale, alternatives, or big examples unless explicitly requested.
+- Must treat execution as a GitHub Action on a GitHub-hosted runner as the supported path; the `run_locally.sh` / `python main.py` flow is a development and debugging affordance only.
+- Must read action inputs from `INPUT_*` environment variables and nowhere else.
+- Prefer keeping environment access at the module boundary — the input layer and the entry point — and Must keep the render and PDF pipeline free of environment reads.
 
-PR Body Management (optional but recommended)
-- Prefer treating the PR description as a changelog and appending updates.
-- Must not rewrite/replace the entire PR body when adding new information.
-- Prefer this structure:
-  - Keep the original description at the top
-  - Add updates chronologically below (e.g., `## Update YYYY-MM-DD`)
-  - Each update references the commit hash that introduced the change
+## Repo specifics
 
-Inputs (if applicable)
-- Must treat inputs as coming from environment variables with the `INPUT_` prefix.
-- Must centralize input parsing and validation in a single input layer.
-- Avoid duplicating validation logic across modules.
+Module map — the `generator/` package:
 
-Language and style
-- Must target Python 3.14+.
+| Path | Responsibility |
+|---|---|
+| `generator/action_inputs.py` | Input layer — class `ActionInputs`, reads every `INPUT_*` var, `validate_inputs()` |
+| `generator/schema_validator.py` | `load_source()`, optional JSON Schema validation, raises `SchemaValidationError` |
+| `generator/models.py` | `build_meta()` and the per-document data structures |
+| `generator/template_renderer.py` | `TemplateRenderer` — resolves built-in vs custom template packs, raises `TemplateError` |
+| `generator/filters.py` | Jinja2 filters used by the templates |
+| `generator/pdf_generator.py` | `PdfGenerator` — HTML to PDF via WeasyPrint, raises `RenderingError` / `FileIOError` |
+| `generator/report_generator.py` | `generate_pdf_report()` — writes `pdf_report.json` |
+| `generator/schemas/` | Bundled `*-v1.0.0-schema.json` files |
+| `generator/templates/` | Built-in template packs — `user-stories/`, `ui-test-catalog/`, `coverage-matrix/` |
+| `generator/utils/` | `constants.py`, `enums.py`, `gh_action.py`, `logging_config.py`, `decorators.py` |
+
+- Must treat `main.py` function `run()` as the entry point — it orchestrates validate inputs → load source (optional schema validation) → resolve template set → render HTML → optional debug HTML → generate PDF → generate report.
+- Must keep the step order and step logs in `run()` stable, since tests assert on them.
+
+Inputs — `INPUT_*` environment variables, parsed only in `ActionInputs`:
+
+| Input | Env var | Required | Notes |
+|---|---|---|---|
+| `source-path` | `INPUT_SOURCE_PATH` | yes | deprecated alias `pdf_ready_json` / `INPUT_PDF_READY_JSON` (logs a warning) |
+| `output-path` | `INPUT_OUTPUT_PATH` | no | defaults to `output.pdf` |
+| `document-type` | `INPUT_DOCUMENT_TYPE` | conditional | one of `user-stories` / `ui-test-catalog` / `coverage-matrix`; `template-path` or `document-type` must be set |
+| `template-path` | `INPUT_TEMPLATE_PATH` | conditional | custom Jinja template directory |
+| `schema-path` | `INPUT_SCHEMA_PATH` | no | when set, the source JSON is validated before rendering |
+| `document-title` | `INPUT_DOCUMENT_TITLE` | no | cover-page title override |
+| `debug-html` | `INPUT_DEBUG_HTML` | no | default `false` |
+| `verbose` | `INPUT_VERBOSE` | no | default `false`; also true when `RUNNER_DEBUG=1` |
+
+Contract-sensitive outputs:
+
+- Must keep the Action output keys stable — `pdf-path`, `html-path` (only when `debug-html` is set), `report-path` — set via `set_action_output` and exposed by `action.yml` as `pdf_path` / `html_path` / `report_path`.
+- Must keep failure strings and exit codes stable — `1` invalid input (`ValueError`), `2` `SchemaValidationError`, `3` `TemplateError`, `4` `RenderingError`, `5` `FileIOError`. Tests assert exact message text.
+- Must keep the debug HTML filename pattern `<pdf-stem>_rendered.html`.
+
+## Coding guidelines
+
+- Must keep changes small and scoped to the task.
+- Prefer explicit code over clever constructs.
+- Must keep externally visible behaviour stable unless the task is an intentional contract change.
+- Must not change existing log texts or error messages without a stated reason.
+- Prefer pure functions for pipeline logic, and Avoid reading the environment outside `ActionInputs` and `main.run()`.
+
+## Inputs
+
+- Must read every input through `ActionInputs`, and Must not call `os.getenv("INPUT_...")` from any other module.
+- Must centralise parsing, defaulting, and validation in `ActionInputs` and `validate_inputs()`.
+- Avoid duplicating input validation across modules.
+- Must raise `ValueError` for invalid input so `run()` maps it to exit code 1.
+
+## Language and style
+
+- Must target Python 3.10+.
 - Must add type hints for new public functions and classes.
-- Must use logging (not `print`).
-- Must keep Python imports at the top of the file (no imports inside functions/methods).
-- Must not disable linter rules inline unless this file documents an allowed exception.
+- Must keep imports at module top — no imports inside functions or methods.
+- Must not disable a linter rule inline unless this file records the exception under Learned rules.
 
-String formatting
-- Must use lazy `%` formatting for logging (e.g., `logger.info("msg %s", value)`).
-- Must not use f-strings in logging calls.
-- Prefer the clearest formatting for exceptions/errors when constructing failure messages.
+## Logging and string formatting
 
-Docstrings and comments
-- Prefer self-explanatory code over comments.
-- Prefer comments only for intent, edge cases, and the “why”.
-- Docstrings:
-  - Prefer a short summary line.
-  - Avoid tutorial-style prose and long examples.
+- Must use `logging`, never `print`.
+- Must use lazy `%` formatting in logging calls — `logger.info("msg %s", value)`.
+- Must not use f-strings inside logging calls.
+- Prefer the clearest formatting when constructing exception and failure messages.
 
-Patterns
-- Error handling contract:
-  - Prefer leaf modules raising exceptions.
-  - Must have the entry point translate failures into GitHub Action failure output.
-- Internal helpers:
-  - Prefer private helpers for internal behavior (e.g., `_helper_name`).
-- Testability:
-  - Must keep integration boundaries explicit and mockable.
-  - Must not call external APIs in unit tests.
+## Docstrings and comments
 
-Testing
-- Must use `pytest` with tests under `tests/`.
-- Must not use `unittest` module; use `pytest` and `pytest-mock` exclusively.
-- Must test behavior (return values, raised errors, log messages, exit codes).
-- Must mock environment variables in unit tests.
-- Prefer shared fixtures in `conftest.py`.
+- Prefer self-explanatory code, and Prefer comments only for intent, edge cases, and the "why".
+- Prefer a one-line docstring summary.
+- Avoid tutorial-style prose or long examples in docstrings.
 
-Tooling
-- Must format with Black (configuration in `pyproject.toml`).
-- Must run Pylint on tracked Python files (excluding `tests/`).
-- Must run mypy and prefer fixing types over ignoring errors.
-- Must run tests with coverage and keep coverage ≥ 80% when enforced.
+## Patterns
 
-Quality gates
-- Run after changes; fix only if below threshold:
-  - Unit tests: `pytest tests/unit/`
-  - Full tests (if needed): `pytest tests/`
-  - Coverage (minimum 80%): `pytest --ignore=tests/integration --cov=. tests/ --cov-fail-under=80 --cov-report=html`
-  - Format: `black $(git ls-files '*.py')`
-  - Lint (target ≥ 9.5/10): `pylint --ignore=tests $(git ls-files '*.py')`
-  - Types: `mypy .`
+- Prefer leaf modules raising the typed exceptions listed under Repo specifics.
+- Must let `main.run()` be the only place that translates an exception into GitHub Action failure output and an exit code.
+- Prefer private helpers (`_name`) for internal behaviour.
+- Must keep integration boundaries — WeasyPrint, the filesystem, the GitHub Actions environment — explicit and mockable.
 
-Common pitfalls to avoid
-- Dependencies: must verify compatibility with the target Python version before adding.
-- Logging: must follow lazy `%` formatting; avoid “workarounds”.
-- Cleanup: must remove unused imports/variables promptly; avoid dead code.
-- Stability: avoid changing externally-visible strings/outputs unless intentional.
+## Testing
 
-Learned rules (optional)
+- Must use `pytest` with `pytest-mock`, and Must not use `unittest`.
+- Must put unit tests under `tests/unit/` and integration tests under `tests/integration/`.
+- Must test behaviour — return values, raised exceptions, log messages, exit codes.
+- Must mock `INPUT_*` environment variables in unit tests.
+- Must not call external services or run WeasyPrint in unit tests.
+- Prefer shared fixtures in `tests/unit/conftest.py` and `tests/integration/conftest.py`.
+
+## Tooling and quality gates
+
+- Must run `make qa` before finishing a code change — it runs `format-check` → `lint` → `types` → `test` and fails on the first failing gate.
+- Must use the individual targets while iterating — `make format`, `make format-check`, `make lint`, `make types`, `make test`, `make coverage`.
+- Must keep `make lint` (Pylint over tracked `*.py`) at a score of 9.5 or higher.
+- Must keep `make format-check` (Black, line length 120, config in `pyproject.toml`) clean.
+- Must keep `make types` (mypy, config in `pyproject.toml`) clean, and Prefer fixing types over adding ignores.
+- Must keep `make coverage` (pytest, `--cov-fail-under=80`) passing.
+
+## Common pitfalls
+
+- Must verify a new dependency supports Python 3.10 before adding it.
+- Must remove unused imports and variables in the same change, and Avoid leaving dead code.
+- Avoid changing externally visible strings, output keys, or exit codes unless the task calls for it.
+- Must keep `requirements.txt` and `action.yml` in step when inputs or dependencies change.
+
+## Learned rules
+
 - Must keep error messages stable where tests assert exact strings.
 - Must not change exit codes for existing failure scenarios.
-
-Repo additions (required)
-- Project name: `Living Doc Generator PDF`.
-- Entry points:
-  - `main.py` (function `run()`).
-  - Input layer: `generator/action_inputs.py` (class `ActionInputs`).
-- Inputs (via `INPUT_*` env vars):
-  - Required/behavioral: `output-path`, `source-path`.
-  - Optional: `template-path`, `document-title`, `verbose`, `github-token`.
-- Contract-sensitive outputs:
-  - GitHub Action failure strings and log texts (tests may assert exact content).
-  - Action output key: `pdf-path`.
-- Commands (canonical): see “Quality gates”.
-- Allowed exceptions to this template:
-  - None.
+- Avoid adding inline linter suppressions; the one allowed today is `# pylint: disable=broad-except` on the catch-all handler in `main.run()`.
