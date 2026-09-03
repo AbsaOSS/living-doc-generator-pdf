@@ -7,6 +7,10 @@ A source-agnostic GitHub Action that renders **any** structured JSON into a prof
 
 ## Overview
 
+> **Expected usage: GitHub Actions first.** The supported way to run this action is as a step in a GitHub Actions workflow, chained with the other `living-doc-*` actions. Running it locally — the `run_script.sh` / `python3 main.py` pattern documented in `DEVELOPER.md` — is a development and debugging affordance only, not a second supported deployment target.
+
+> **The Living Documentation pipeline runs AI-free.** Every step — collect → normalize → generate — is deterministic tooling (Python, JSON Schema validation, Jinja2/Markdown templates) with no LLM call anywhere in that path. [`AbsaOSS/agentic-toolkit`](https://github.com/AbsaOSS/agentic-toolkit) can accelerate the upstream *authoring* of GitHub Issues and `.feature` files, but it is never a runtime dependency of this pipeline: a human writing the same input by hand is a fully supported, identical path.
+
 The action is a generic JSON-to-PDF engine: you provide a JSON source file and either a built-in `document-type` or your own `template-path`. The raw JSON is passed to the templates unchanged as `data`, alongside injected `meta` (title, timestamp, source file name).
 
 **Built-in document types**
@@ -25,7 +29,25 @@ The action is a generic JSON-to-PDF engine: you provide a JSON source file and e
 - 🔍 Debug mode: save the intermediate HTML for troubleshooting
 - 📊 Reporting: emits `pdf_report.json` with statistics
 
-## Quick Start
+## Usage
+
+### Prerequisites
+
+- **Python 3.10 or later.**
+- **System dependencies** (WeasyPrint): `libpango-1.0-0`, `libpangocairo-1.0-0`, `libgdk-pixbuf2.0-0`, `libffi-dev`, `libcairo2`. These are installed automatically by the action on Ubuntu runners.
+
+### Adding the Action to Your Workflow
+
+```yaml
+- name: Generate PDF
+  uses: AbsaOSS/living-doc-generator-pdf@v1
+  with:
+    source-path: 'doc-source.json'
+    document-type: 'user-stories'
+    output-path: 'documentation.pdf'
+```
+
+#### Full Example of Action Step Definition
 
 ```yaml
 # .github/workflows/generate-docs.yml
@@ -47,6 +69,10 @@ jobs:
           source-path: 'doc-source.json'
           document-type: 'user-stories'
           output-path: 'documentation.pdf'
+          document-title: 'Product Backlog'
+          schema-path: 'generator/schemas/doc-issues-v1.0.0-schema.json'
+          debug-html: 'true'
+          verbose: 'true'
 
       - name: Upload PDF
         uses: actions/upload-artifact@v4
@@ -55,12 +81,11 @@ jobs:
           path: documentation.pdf
 ```
 
-## Requirements
+## Action Configuration
 
-- **Python:** 3.14 or later
-- **System dependencies** (WeasyPrint): `libpango-1.0-0`, `libpangocairo-1.0-0`, `libgdk-pixbuf2.0-0`, `libffi-dev`, `libcairo2`. These are installed automatically by the action on Ubuntu runners.
+### Environment Variables
 
-## Configuration
+None. All configuration is passed through the `with:` inputs below.
 
 ### Inputs
 
@@ -76,9 +101,9 @@ jobs:
 | `verbose` | boolean | No | `false` | Enable verbose logging |
 | `pdf_ready_json` | string (path) | No | - | **Deprecated** alias for `source-path` |
 
-At least one of `document-type` or `template-path` must be provided. When neither `document-title` is set, the title is derived from the document type's default (e.g. "User Stories") or the source file name.
+At least one of `document-type` or `template-path` must be provided. When `document-title` is not set, the title is derived from the document type's default (e.g. "User Stories") or the source file name.
 
-### Outputs
+## Action Outputs
 
 | Output | Description |
 |--------|-------------|
@@ -97,7 +122,13 @@ At least one of `document-type` or `template-path` must be provided. When neithe
 | 4 | Rendering error (WeasyPrint) | `Rendering failed:` |
 | 5 | File I/O error (write failure) | `File I/O error:` |
 
-## Source JSON
+## Developer Guide
+
+For local setup, static analysis, testing, coverage, running the action locally, and the branch-naming convention, see [DEVELOPER.md](./DEVELOPER.md).
+
+## How-to
+
+### Source JSON
 
 The action does not transform the source JSON — it is exposed to templates as `data` exactly as parsed. Each built-in document type expects a particular shape; see [examples/](./examples/) for runnable samples:
 
@@ -105,7 +136,7 @@ The action does not transform the source JSON — it is exposed to templates as 
 - [examples/ui_tests.json](./examples/ui_tests.json) — `ui-test-catalog`
 - [examples/coverage_matrix.json](./examples/coverage_matrix.json) — `coverage-matrix`
 
-### Optional schema validation
+#### Optional schema validation
 
 Validation is opt-in. Pass `schema-path` to validate the source before rendering; omit it to render as-is. Built-in schemas live in [generator/schemas/](./generator/schemas/):
 
@@ -116,7 +147,7 @@ with:
   schema-path: 'generator/schemas/doc-issues-v1.0.0-schema.json'
 ```
 
-## Template customization
+### Template customization
 
 Templates always have a single entry point: `main.html.jinja`. They receive two variables:
 
@@ -139,7 +170,7 @@ Three override levels are supported:
 {% endfor %}
 ```
 
-### Custom Jinja filters
+#### Custom Jinja filters
 
 - `markdown(text)` — convert Markdown to HTML.
 - `format_datetime(value, fmt='%Y-%m-%d %H:%M')` — format an ISO 8601 timestamp.
@@ -148,7 +179,7 @@ Three override levels are supported:
 
 See the full [template override guide](./docs/template-override-guide.md) for copying a built-in set, overriding partials, and troubleshooting.
 
-## Troubleshooting
+### Troubleshooting
 
 **`Invalid input: File '...' not found`** — `source-path` points to a missing file; verify the path.
 
@@ -160,22 +191,14 @@ See the full [template override guide](./docs/template-override-guide.md) for co
 
 **`File I/O error: Permission denied`** — the output directory is not writable; change `output-path` or grant write permission.
 
-## Contributing
+## Contribution Guidelines
 
-Contributions are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md). For development guidelines, see [DEVELOPER.md](./DEVELOPER.md).
+Contributions are welcome. See [CONTRIBUTING.md](./CONTRIBUTING.md) for the bug-report, feature-request, branch-naming, and PR conventions. For development guidelines, see [DEVELOPER.md](./DEVELOPER.md).
 
-```bash
-git clone https://github.com/AbsaOSS/living-doc-generator-pdf.git
-cd living-doc-generator-pdf
-pip install -r requirements.txt
-pytest tests/
-```
-
-## License
+### License Information
 
 Licensed under the Apache License 2.0 — see [LICENSE](./LICENSE).
 
----
+### Contact or Support Information
 
-**Maintained by:** [ABSA Group Limited](https://github.com/AbsaOSS)
-**Documentation:** [spec.md](./spec.md) | [DEVELOPER.md](./DEVELOPER.md) | [Template override guide](./docs/template-override-guide.md)
+Maintained by [ABSA Group Limited](https://github.com/AbsaOSS). Open a [GitHub Issue](https://github.com/AbsaOSS/living-doc-generator-pdf/issues) for questions, bug reports, or feature requests.
