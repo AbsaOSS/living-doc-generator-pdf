@@ -20,10 +20,10 @@ This file is intentionally dependency-light to keep the action runtime small.
 """
 
 import logging
-
 from functools import wraps
-from typing import Callable, Optional, Any
-from requests.exceptions import Timeout, RequestException
+from typing import Any, Callable, Optional
+
+from requests.exceptions import RequestException, Timeout
 
 logger = logging.getLogger(__name__)
 

@@ -2,7 +2,8 @@ pytest==9.1.1
 pytest-cov==7.1.0
 pytest-mock==3.15.1
 responses==0.26.3
-pylint==4.0.7
+pylint==4.0.8
+ruff==0.16.6
 requests==2.34.2
 black==26.5.1
 PyYAML==6.0.3
@@ -13,7 +14,6 @@ types-requests==2.33.0.20260712
 types-PyYAML==6.0.12.20260815
 types-jsonschema>=4.26.0.20260518
 types-Markdown>=3.10.2.20260712
-pre-commit==4.6.2
 jsonschema>=4.26.0
 rfc3339-validator>=0.1.4
 Jinja2>=3.1.6

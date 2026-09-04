@@ -1,7 +1,6 @@
 # Living Doc Generator PDF—for Developers
 
 - [Get Started](#get-started)
-- [Pre-commit Hooks](#pre-commit-hooks)
 - [Run Static Code Analysis](#running-static-code-analysis)
 - [Run Black Tool Locally](#run-black-tool-locally)
 - [Run mypy Tool Locally](#run-mypy-tool-locally)
@@ -27,75 +26,25 @@ Install the dependencies:
 pip install -r requirements.txt
 ```
 
-## Pre-commit Hooks
+## Quality Gate
 
-This project uses [pre-commit](https://pre-commit.com/) to enforce code quality and consistency before commits. Pre-commit automatically runs formatting, linting, and type checking on your code.
+The root `Makefile` is the single source of truth for local and CI checks. Run `make qa`
+before opening a pull request — it runs `format-check` → `lint` → `types` → `test` and fails
+on the first failing gate.
 
-### Install Pre-commit
-
-After installing project dependencies, set up pre-commit hooks:
-
-```shell
-pip install pre-commit
-pre-commit install
-```
-
-This configures Git to run pre-commit hooks before each commit.
-
-### Using Pre-commit
-
-Pre-commit runs automatically on staged files when you commit:
-
-```shell
-git add <files>
-git commit -m "Your commit message"
-```
-
-If any hook fails, the commit will be blocked, and you'll see which checks failed. Fix the issues and try committing again.
-
-### Manual Pre-commit Runs
-
-Run pre-commit on all files manually:
-
-```shell
-pre-commit run --all-files
-```
-
-Run pre-commit on specific files:
-
-```shell
-pre-commit run --files <file1> <file2>
-```
-
-### Update Pre-commit Hooks
-
-Keep hooks up to date:
-
-```shell
-pre-commit autoupdate
-```
-
-### Pre-commit Hooks in This Project
-
-The `.pre-commit-config.yaml` configuration includes:
-- **Black**: Code formatting (line length 120, target Python 3.14)
-- **Pylint**: Static code analysis (score threshold ≥ 9.5)
-- **mypy**: Type checking
-- **General hooks**: Trailing whitespace, end-of-file fixer, YAML syntax, etc.
-
-### Skip Pre-commit (Not Recommended)
-
-In rare cases, you can skip pre-commit hooks:
-
-```shell
-git commit --no-verify -m "Your commit message"
-```
-
-Note: CI will still run all checks, so skipping pre-commit locally may result in CI failures.
+| Target | What it does |
+|---|---|
+| `make qa` | Full gate: `format-check`, `lint`, `types`, `test`. |
+| `make format` | `ruff check --fix` then Black — rewrites files in place. |
+| `make format-check` | Black in `--check` mode (no writes). |
+| `make lint` | ruff then Pylint, failing under a 9.5 score. |
+| `make types` | mypy. |
+| `make test` | pytest, unit tests only. |
+| `make coverage` | pytest with the `--cov-fail-under=80` gate. |
 
 ## Running Static Code Analysis
 
-This project uses the Pylint tool for static code analysis. Pylint analyzes your code without actually running it. It checks for errors, enforces coding standards, looks for code smells, etc.
+This project runs [ruff](https://docs.astral.sh/ruff/) followed by Pylint for static code analysis via `make lint`. Ruff checks import placement/sorting, syntax errors, and a small bug-pattern set; Pylint analyzes your code without actually running it, checking for errors, enforcing coding standards, and looking for code smells.
 
 Pylint displays a global evaluation score for the code, rated out of a maximum score of 10.0. We aim to keep our code quality above 9.5.
 
@@ -107,12 +56,12 @@ pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-This command will also install a Pylint tool, since it is listed in the project requirements.
+This command will also install ruff and Pylint, since they are listed in the project requirements.
 
-### Run Pylint
-Run Pylint on all files currently tracked by Git in the project.
+### Run the Lint Gate
+Run ruff and Pylint on all files currently tracked by Git in the project.
 ```shell
-pylint $(git ls-files '*.py')
+make lint
 ```
 
 To run Pylint on a specific file, follow the pattern `pylint <path_to_file>/<name_of_file>.py`.
@@ -327,7 +276,7 @@ generator.schema_validator.SchemaValidationError: Missing required field 'tags'
 
 When tests fail in CI but pass locally:
 
-1. **Environment differences**: Check Python version (CI uses 3.14)
+1. **Environment differences**: Check Python version (CI matrix runs 3.10–3.14)
 2. **Missing dependencies**: Verify `requirements.txt` includes all dependencies
 3. **Path issues**: Ensure `PYTHONPATH` is set correctly in CI workflow
 4. **Artifact generation**: Check if CI has permission to write files
