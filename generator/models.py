@@ -21,7 +21,7 @@ the fields below. There is no Python-side transformation of ``data``.
 """
 
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -53,7 +53,7 @@ def build_meta(document_title: str, source_path: str) -> Meta:
     Returns:
         A populated :class:`Meta` instance.
     """
-    generated_at = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+    generated_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     return Meta(
         document_title=document_title,
         generated_at=generated_at,

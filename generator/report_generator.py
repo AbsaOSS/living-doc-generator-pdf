@@ -18,7 +18,7 @@
 
 import json
 import logging
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -66,7 +66,7 @@ def generate_pdf_report(
 
     report = {
         "schema_version": "1.0",
-        "generated_at": datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "input_file": input_file,
         "output_file": output_file,
         "template_pack": {"type": template_pack_type, "path": template_pack_path},

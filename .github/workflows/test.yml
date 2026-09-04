@@ -14,207 +14,130 @@
 # limitations under the License.
 #
 
-name: Build and Test
+name: "Static analysis & tests"
+
 on:
+  push:
+    branches: [ "master" ]
   pull_request:
-    branches:
-      - master
     types: [ opened, synchronize, reopened ]
+  workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
-  static-code-analysis:
+  detect:
+    name: Detect Python Changes
     runs-on: ubuntu-latest
-    name: Pylint Static Code Analysis
+    outputs:
+      python_changed: ${{ steps.changes.outputs.python_changed }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          fetch-depth: 0
           persist-credentials: false
 
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
-        with:
-          python-version: '3.14'
-          cache: 'pip'
-
-      - name: Install dependencies
+      - name: Check whether Python-related files changed
+        id: changes
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          pip install -r requirements.txt
+          set -euo pipefail
 
-      - name: Analyze code with Pylint
-        id: analyze-code
-        run: |
-          pylint_score=$(pylint $(git ls-files '*.py')| grep 'rated at' | awk '{print $7}' | cut -d'/' -f1)
-          if [ -z "$pylint_score" ]; then
-            echo "Failed to extract Pylint score"
-            exit 1
-          fi
-          echo "score=$pylint_score" >> "$GITHUB_OUTPUT"
-
-      - name: Check Pylint score
-        run: |
-          score="${{ steps.analyze-code.outputs.score }}"
-          echo "Pylint score is $score"
-
-          if (( $(echo "$score < 9.5" | bc -l) )); then
-            echo "Failure: Pylint score is below 9.5 (project score: $score)."
-            exit 1
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            changed_files=$(gh api \
+              "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" \
+              --paginate --jq '.[].filename')
           else
-            echo "Success: Pylint score is above 9.5 (project score: $score)."
+            changed_files=$(git diff --name-only "${{ github.sha }}~1" "${{ github.sha }}")
           fi
 
-  code-format-check:
+          if echo "$changed_files" | grep -E '(\.py$|(^|/)requirements\.txt$|(^|/)pyproject\.toml$)' > /dev/null; then
+            echo "python_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "python_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  static-analysis-and-tests:
+    needs: detect
+    if: needs.detect.outputs.python_changed == 'true'
     runs-on: ubuntu-latest
-    name: Black Format Check
+    name: ${{ matrix.task.name }} (Python ${{ matrix.python-version }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # Python 3.10 is the supported floor (see `requires-python` in pyproject.toml);
+        # 3.14 is the version used by the published action image.
+        python-version: [ "3.10", "3.11", "3.12", "3.13", "3.14" ]
+        task:
+          - name: Black Format Check
+            target: format-check
+          - name: Lint (ruff + Pylint)
+            target: lint
+          - name: Mypy Type Check
+            target: types
+          - name: Python Tests
+            target: coverage
     steps:
       - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
-        with:
-          python-version: '3.14'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-
-      - name: Check code format with Black
-        id: check-format
-        run: |
-          black --check $(git ls-files '*.py')
-
-  unit-test:
-    name: Unit Tests
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        shell: bash
-
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
-        with:
-          python-version: '3.14'
-          cache: 'pip'
-
-      - name: Install Python dependencies
-        run: |
-          pip install -r requirements.txt
-
-      - name: Set PYTHONPATH environment variable
-        run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
-
-      - name: Check code coverage with Pytest
-        run: python -m pytest --cov=generator --cov=main -v tests/unit --cov-fail-under=80 --cov-report=html --cov-report=term
-
-      - name: Upload coverage report
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: coverage-report
-          path: htmlcov/
-          retention-days: 30
-
-  mypy-check:
-    runs-on: ubuntu-latest
-    name: Mypy Type Check
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-        with:
-          persist-credentials: false
-
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
-          python-version: '3.14'
+          python-version: ${{ matrix.python-version }}
           cache: 'pip'
+
+      - name: Install WeasyPrint system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev libcairo2
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
-      - name: Check types with Mypy
-        id: check-types
-        run: |
-          mypy .
+        run: make install
 
-  integration-test:
+      - name: Run ${{ matrix.task.name }}
+        run: make ${{ matrix.task.target }}
+
+  integration-tests:
+    needs: [ detect, static-analysis-and-tests ]
+    if: needs.detect.outputs.python_changed == 'true'
+    runs-on: ubuntu-latest
     name: Integration Tests
-    runs-on: ubuntu-latest
-    needs: [unit-test]
-
-    defaults:
-      run:
-        shell: bash
-
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
 
-      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: '3.14'
           cache: 'pip'
 
-      - name: Install Python dependencies
-        run: |
-          pip install -r requirements.txt
+      - name: Install WeasyPrint system dependencies
+        run: sudo apt-get update && sudo apt-get install -y libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev libcairo2
 
-      - name: Set PYTHONPATH environment variable
-        run: echo "PYTHONPATH=${GITHUB_WORKSPACE}" >> $GITHUB_ENV
+      - name: Install dependencies
+        run: make install
 
       - name: Run integration tests
-        run: python -m pytest tests/integration/ -v
+        run: pytest tests/integration/ -v
 
-      - name: Generate example PDFs from integration tests
-        if: always()
-        run: |
-          mkdir -p test-outputs
-          # Generate PDFs from example files
-          python -c "
-          from pathlib import Path
-          from generator.schema_validator import load_source
-          from generator.template_renderer import TemplateRenderer
-          from generator.pdf_generator import PdfGenerator
-
-          examples_dir = Path('examples')
-          output_dir = Path('test-outputs')
-          output_dir.mkdir(exist_ok=True)
-          template_dir = str(Path('generator/templates'))
-
-          for json_file in ['minimal_valid.json', 'full_example.json', 'multiple_stories.json']:
-              try:
-                  json_path = examples_dir / json_file
-                  pdf_data = load_source(str(json_path))
-                  renderer = TemplateRenderer(None)
-                  html = renderer.render(pdf_data)
-                  output_pdf = output_dir / json_file.replace('.json', '.pdf')
-                  generator = PdfGenerator()
-                  generator.generate_pdf(html, str(output_pdf), template_dir)
-                  print(f'Generated: {output_pdf}')
-              except Exception as e:
-                  print(f'Failed to generate {json_file}: {e}')
-          "
-
-      - name: Upload example PDFs
-        if: always()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: example-pdfs
-          path: test-outputs/*.pdf
-          retention-days: 30
+  noop:
+    needs: detect
+    if: needs.detect.outputs.python_changed != 'true'
+    runs-on: ubuntu-latest
+    name: No Python Changes
+    steps:
+      - run: echo "No Python-related changes detected — static analysis & tests skipped."
