@@ -62,6 +62,12 @@ def coverage_matrix_json(examples_dir: Path) -> Path:
 
 
 @pytest.fixture
+def generator_ready_json(examples_dir: Path) -> Path:
+    """Return the path to the renamed canonical artifact example (``generator-ready.json``)."""
+    return examples_dir / "generator-ready.json"
+
+
+@pytest.fixture
 def temp_output_dir(tmp_path: Path) -> Path:
     """Create a temporary directory for test outputs."""
     output_dir = tmp_path / "outputs"
