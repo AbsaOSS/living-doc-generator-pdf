@@ -18,11 +18,8 @@ surface** — so you mock the right target on the first try instead of guessing.
 - Must mock `INPUT_*` environment variables (via `monkeypatch.setenv` / `monkeypatch.delenv`),
   never rely on the ambient environment — the autouse `_clean_action_input_env` fixture in
   `tests/unit/conftest.py` already isolates tests from developer env vars.
-- Must cover the success path and the failure/edge paths for the changed logic.
 - Must assert on behavior — return values, raised exceptions, log messages, exit codes —
   and keep contract-sensitive strings, output keys, and exit codes stable.
-- Prefer adding to shared fixtures in `tests/unit/conftest.py` / `tests/integration/conftest.py`
-  over duplicating setup.
 - Must keep the suite green under `make test` / `make coverage` (≥ 80%).
 
 ## Mock / fixture cheat-table (sourced from what already exists in `tests/`)
