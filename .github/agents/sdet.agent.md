@@ -93,15 +93,4 @@ Repo specifics
 - Mocking rules
   - Must mock `INPUT_*` environment variables in unit tests.
   - Must not call external services or run WeasyPrint in unit tests.
-- Mock/fixture cheat-table (use these targets, do not invent new ones)
-
-  | Surface to isolate | How | Reference pattern |
-  |---|---|---|
-  | `INPUT_*` action inputs | `monkeypatch.setenv` / `monkeypatch.delenv`, isolated by the autouse `_clean_action_input_env` fixture | `tests/unit/conftest.py`, `tests/unit/generator/test_action_inputs.py` |
-  | WeasyPrint `HTML` rendering | `mocker.patch("generator.pdf_generator.HTML")` | `tests/unit/generator/test_pdf_generator.py` |
-  | Pipeline collaborators in `main.run()` (`TemplateRenderer`, `PdfGenerator`, `load_source`, `generate_pdf_report`) | `mocker.patch("main.<Name>", ...)` and assert on the returned mock's calls | `tests/unit/test_main.py` |
-  | Action output / failure reporting | `mocker.patch("main.set_action_output")` / `mocker.patch("main.set_action_failed")` and assert call args | `tests/unit/test_main.py` |
-  | Filesystem failures | `mocker.patch("pathlib.Path.mkdir", side_effect=OSError(...))` or equivalent | `tests/unit/generator/test_pdf_generator.py` |
-  | End-to-end document rendering (real WeasyPrint) | integration test against `examples/*.json` fixtures (`minimal.json`, `user_stories.json`, `ui_tests.json`, `coverage_matrix.json`) | `tests/integration/test_pdf_generation.py` |
-  | Custom/override template packs | integration test pointing `INPUT_TEMPLATE_PATH` at a `tmp_path` template dir | `tests/integration/test_custom_templates.py` |
-  | Logging assertions | `mocker.patch("<module>.logger")` and assert on `.info` / `.warning` / `.error` | existing `tests/unit/generator/` suites |
+- Concrete mock/fixture targets for this repo — see `.claude/agents/test-author.md`.
