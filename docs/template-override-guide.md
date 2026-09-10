@@ -25,7 +25,7 @@ Use a shipped template set; provide no custom templates.
 
 ```yaml
 with:
-  source-path: doc-source.json
+  source-path: generator-ready.json
   document-type: technical-project
 ```
 
@@ -47,7 +47,7 @@ any partial you do not provide falls back to the built-in set.
 
 ```yaml
 with:
-  source-path: doc-source.json
+  source-path: generator-ready.json
   document-type: technical-project
   template-path: templates/my-overrides   # e.g. only cover.html.jinja
 ```

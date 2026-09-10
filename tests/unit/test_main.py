@@ -271,6 +271,25 @@ def test_run_raw_collector_source_rejected_with_normalization_hint(base_env, moc
     assert message.startswith("Schema validation failed:")
 
 
+def test_run_raw_collector_source_rejected_even_when_schema_version_out_of_range(base_env, mocker) -> None:
+    """The raw-collector guard is a hard guarantee: an out-of-range schema_version still
+    cannot smuggle raw collector output past the defaulted technical-project schema."""
+    mocker.patch(
+        "main.load_json",
+        return_value={"schema_version": "generator-ready-v2.0.0", "user_stories": [], "features": []},
+    )
+    validate_source = mocker.patch("main.validate_source")
+    set_failed = mocker.patch("main.set_action_failed")
+
+    main.run()
+
+    validate_source.assert_not_called()
+    message, kwargs = set_failed.call_args.args[0], set_failed.call_args.kwargs
+    assert kwargs["exit_code"] == 2
+    assert message.startswith("Schema validation failed:")
+    assert "normalization" in message
+
+
 def test_run_normalized_source_runs_structural_validation(base_env, mocker) -> None:
     """A normalized envelope passes the raw-collector guard and reaches structural validation."""
     mocker.patch(

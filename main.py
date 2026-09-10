@@ -146,11 +146,15 @@ def _load_and_check_source(
     report_warnings = [w.to_dict() for w in warnings]
     out_of_range = any(w.code == "schema_version_out_of_range" for w in warnings)
 
+    # The raw-collector rejection is a hard guarantee for a defaulted
+    # ``technical-project`` run: it must hold even when structural validation is
+    # later skipped because ``schema_version`` is out of the supported range.
+    if schema_path and schema_is_default:
+        _reject_raw_collector_source(data, source_path)
+
     if out_of_range:
         log_validation_skipped_out_of_range(source_path)
     elif schema_path:
-        if schema_is_default:
-            _reject_raw_collector_source(data, source_path)
         validate_source(data, schema_path, source_path)
     else:
         log_validation_skipped(source_path)

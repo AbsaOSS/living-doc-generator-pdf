@@ -42,7 +42,7 @@ The action is a generic JSON-to-PDF engine: you provide a JSON source file and e
 - name: Generate PDF
   uses: AbsaOSS/living-doc-generator-pdf@v1
   with:
-    source-path: 'doc-source.json'
+    source-path: 'generator-ready.json'
     document-type: 'technical-project'
     output-path: 'documentation.pdf'
 ```
@@ -66,11 +66,11 @@ jobs:
       - name: Generate PDF
         uses: AbsaOSS/living-doc-generator-pdf@v1
         with:
-          source-path: 'doc-source.json'
+          source-path: 'generator-ready.json'
           document-type: 'technical-project'
           output-path: 'documentation.pdf'
           document-title: 'Product Backlog'
-          schema-path: 'generator/schemas/doc-issues-v1.0.0-schema.json'
+          schema-path: 'generator/schemas/generator-ready-v1.0.0-schema.json'
           debug-html: 'true'
           verbose: 'true'
 
