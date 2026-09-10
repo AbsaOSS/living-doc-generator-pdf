@@ -34,13 +34,16 @@ by `living-doc-toolkit`. Do not hand-edit it; re-vendor it from upstream instead
 Re-vendor with:
 
 ```bash
-curl -sL -o generator/schemas/generator-ready-v1.0.0-schema.json \
+curl -fsSL -o generator/schemas/generator-ready-v1.0.0-schema.json \
   https://raw.githubusercontent.com/AbsaOSS/living-doc-toolkit/<commit>/packages/datasets_generator_ready/schemas/generator-ready-v1.0.0-schema.json
 ```
 
 ## Usage
 
-Pass the schema path alongside the source file to enable validation:
+For `technical-project`, omit `schema-path` to validate against the default
+`generator-ready-v1.0.0-schema.json`; set it only to override the default. For
+every other document type, pass `schema-path` alongside the source file to enable
+validation:
 
 ```yaml
 - uses: absaoss/living-doc-generator-pdf@v1
