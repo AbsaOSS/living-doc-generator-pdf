@@ -52,7 +52,7 @@ SUPPORTED_SCHEMA_RANGE = f">={SUPPORTED_SCHEMA_RANGE_MIN},<{SUPPORTED_SCHEMA_RAN
 # ``1.0`` / ``1.0.0``, optionally with a SemVer pre-release / build suffix
 # (``generator-ready-v1.5.0-rc.1``). Capture the trailing version token.
 _VERSION_TOKEN_RE = re.compile(
-    r"(?:^|[-_/]v?)(\d+(?:\.\d+){0,2}(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?)$"
+    r"(?:^|[-_/]v?)(\d+(?:\.\d+){1,2}(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?)$"
 )
 
 
@@ -74,7 +74,7 @@ class CompatibilityWarning:
 
 
 def _coerce_semver(token: str) -> semver.Version:
-    """Parse a 1-to-3 component dotted-number token, with an optional SemVer
+    """Parse a 2-to-3 component dotted-number token, with an optional SemVer
     pre-release / build suffix, into a full semver Version."""
     core, sep, suffix = token.partition("-")
     build = ""

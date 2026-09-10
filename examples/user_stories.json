@@ -1,4 +1,5 @@
 {
+  "schema_version": "generator-ready-v1.0.0",
   "user_stories": [
     {
       "id": "AbsaOSS/living-doc-example/US-1",

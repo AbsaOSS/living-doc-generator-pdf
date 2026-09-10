@@ -60,7 +60,7 @@ def test_out_of_range_returns_single_warning(value) -> None:
 
 
 @pytest.mark.parametrize(
-    "value", ["generator-ready", "abc", "v-nope", "1.0.0-", "1.2.3.4"]
+    "value", ["generator-ready", "abc", "v-nope", "1.0.0-", "1.2.3.4", "1", "generator-ready-v1"]
 )
 def test_unparseable_raises_value_error(value) -> None:
     with pytest.raises(VersionCompatibilityError) as exc_info:

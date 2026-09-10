@@ -143,9 +143,10 @@ def test_run_out_of_range_schema_version_still_renders(base_env, mocker) -> None
     assert warnings[0]["code"] == "schema_version_out_of_range"
 
 
-def test_run_out_of_range_skips_structural_validation(base_env, monkeypatch, tmp_path, mocker) -> None:
+def test_run_out_of_range_skips_structural_validation(base_env, monkeypatch, tmp_path, mocker, caplog) -> None:
     """An out-of-range schema_version renders best-effort: structural validation is skipped
-    so a schema pinning the version (const) cannot pre-empt the warn-and-render path."""
+    so a schema pinning the version (const) cannot pre-empt the warn-and-render path, and the
+    step log states the real reason (not the misleading 'No schema-path provided')."""
     monkeypatch.setenv("INPUT_SCHEMA_PATH", str(tmp_path / "schema.json"))
     mocker.patch("main.load_json", return_value={"items": [], "schema_version": "coverage-matrix-v2.0.0"})
     renderer = mocker.Mock()
@@ -158,11 +159,15 @@ def test_run_out_of_range_skips_structural_validation(base_env, monkeypatch, tmp
     mocker.patch("main.set_action_output")
     set_failed = mocker.patch("main.set_action_failed")
 
-    main.run()
+    with caplog.at_level("INFO"):
+        main.run()
 
     set_failed.assert_not_called()
     validate_source.assert_not_called()
     generate_pdf.assert_called_once()
+    messages = [r.message for r in caplog.records]
+    assert any("outside the supported range" in m and "best-effort" in m for m in messages)
+    assert not any("No schema-path provided" in m for m in messages)
 
 
 def test_run_no_schema_path_logs_skip_step(base_env, mocker, caplog) -> None:

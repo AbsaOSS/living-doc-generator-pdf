@@ -37,6 +37,7 @@ from generator.schema_validator import (
     SchemaValidationError,
     load_json,
     log_validation_skipped,
+    log_validation_skipped_out_of_range,
     validate_source,
 )
 from generator.template_renderer import TemplateError, TemplateRenderer
@@ -102,7 +103,9 @@ def _load_and_check_source(source_path: str, schema_path: str | None) -> tuple[d
     report_warnings = [w.to_dict() for w in warnings]
     out_of_range = any(w.code == "schema_version_out_of_range" for w in warnings)
 
-    if schema_path and not out_of_range:
+    if out_of_range:
+        log_validation_skipped_out_of_range(source_path)
+    elif schema_path:
         validate_source(data, schema_path, source_path)
     else:
         log_validation_skipped(source_path)

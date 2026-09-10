@@ -71,6 +71,20 @@ def log_validation_skipped(source_path: str) -> None:
     logger.info("No schema-path provided; skipping validation for '%s'.", source_path)
 
 
+def log_validation_skipped_out_of_range(source_path: str) -> None:
+    """Emit the canonical step log for the best-effort render path.
+
+    Used when a schema-path is configured but ``schema_version`` is outside the
+    supported range: structural validation is intentionally bypassed because a
+    supported-range schema no longer describes the document.
+    """
+    logger.info(
+        "Source 'schema_version' is outside the supported range; skipping structural "
+        "validation for '%s' and rendering best-effort.",
+        source_path,
+    )
+
+
 def load_json(file_path: str) -> dict[str, Any]:
     """Load and parse a JSON file, raising ValueError on failure."""
     if not os.path.exists(file_path):
