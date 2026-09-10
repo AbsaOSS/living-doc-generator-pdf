@@ -124,8 +124,7 @@ def check_schema_version(schema_version: Any = MISSING) -> list[CompatibilityWar
 
     if not isinstance(schema_version, str):
         raise VersionCompatibilityError(
-            f"Invalid input: 'schema_version' must be a string, got "
-            f"{type(schema_version).__name__}. {_expected}"
+            f"Invalid input: 'schema_version' must be a string, got {type(schema_version).__name__}. {_expected}"
         )
 
     raw = schema_version.strip()
