@@ -42,8 +42,11 @@ SUPPORTED_SCHEMA_RANGE_MAX = "2.0.0"
 SUPPORTED_SCHEMA_RANGE = f">={SUPPORTED_SCHEMA_RANGE_MIN},<{SUPPORTED_SCHEMA_RANGE_MAX}"
 
 # ``schema_version`` values look like ``generator-ready-v1.0.0`` or a bare
-# ``1.0`` / ``1.0.0``. Capture the trailing dotted-number token.
-_VERSION_TOKEN_RE = re.compile(r"(?:^|[-_/]v?)(\d+(?:\.\d+){0,2})$")
+# ``1.0`` / ``1.0.0``, optionally with a SemVer pre-release / build suffix
+# (``generator-ready-v1.5.0-rc.1``). Capture the trailing version token.
+_VERSION_TOKEN_RE = re.compile(
+    r"(?:^|[-_/]v?)(\d+(?:\.\d+){0,2}(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?)$"
+)
 
 
 class VersionCompatibilityError(ValueError):
@@ -64,11 +67,25 @@ class CompatibilityWarning:
 
 
 def _coerce_semver(token: str) -> semver.Version:
-    """Parse a 1-to-3 component dotted-number token into a full semver Version."""
-    parts = token.split(".")
+    """Parse a 1-to-3 component dotted-number token, with an optional SemVer
+    pre-release / build suffix, into a full semver Version."""
+    core, sep, suffix = token.partition("-")
+    build = ""
+    if "+" in (suffix if sep else core):
+        base, _, build = (suffix if sep else core).partition("+")
+        if sep:
+            suffix = base
+        else:
+            core, suffix = base, ""
+    parts = core.split(".")
     while len(parts) < 3:
         parts.append("0")
-    return semver.Version.parse(".".join(parts))
+    normalized = ".".join(parts)
+    if sep and suffix:
+        normalized += f"-{suffix}"
+    if build:
+        normalized += f"+{build}"
+    return semver.Version.parse(normalized)
 
 
 def check_schema_version(schema_version: Optional[str]) -> list[CompatibilityWarning]:
@@ -117,7 +134,10 @@ def check_schema_version(schema_version: Optional[str]) -> list[CompatibilityWar
 
     lower = semver.Version.parse(SUPPORTED_SCHEMA_RANGE_MIN)
     upper = semver.Version.parse(SUPPORTED_SCHEMA_RANGE_MAX)
-    if version < lower or version >= upper:
+    # Compare on the released (core) version so a pre-release such as
+    # ``1.5.0-rc.1`` is judged by its ``1.5.0`` target, not ranked below it.
+    core_version = version.finalize_version()
+    if core_version < lower or core_version >= upper:
         message = (
             f"Source 'schema_version' {raw!r} (parsed as {version}) is outside the "
             f"supported range {SUPPORTED_SCHEMA_RANGE}; attempting to render anyway."

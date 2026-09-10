@@ -20,13 +20,22 @@ def test_blank_declared_raises_value_error(value) -> None:
 
 @pytest.mark.parametrize(
     "value",
-    ["generator-ready-v1.0.0", "coverage-matrix-v1.0.0", "1.0", "1.2.3"],
+    [
+        "generator-ready-v1.0.0",
+        "coverage-matrix-v1.0.0",
+        "1.0",
+        "1.2.3",
+        "generator-ready-v1.5.0-rc.1",
+        "1.0.0-rc.1",
+        "1.0.0+build.7",
+        "generator-ready-v1.2.3-rc.1+build.7",
+    ],
 )
 def test_in_range_returns_empty(value) -> None:
     assert check_schema_version(value) == []
 
 
-@pytest.mark.parametrize("value", ["generator-ready-v2.0.0", "thing-v0.9.0"])
+@pytest.mark.parametrize("value", ["generator-ready-v2.0.0", "thing-v0.9.0", "2.0.0-rc.1"])
 def test_out_of_range_returns_single_warning(value) -> None:
     warnings = check_schema_version(value)
     assert len(warnings) == 1
@@ -37,7 +46,7 @@ def test_out_of_range_returns_single_warning(value) -> None:
 
 
 @pytest.mark.parametrize(
-    "value", ["generator-ready", "abc", "v-nope", "1.0.0-rc.1", "1.0.0+build.7"]
+    "value", ["generator-ready", "abc", "v-nope", "1.0.0-", "1.2.3.4"]
 )
 def test_unparseable_raises_value_error(value) -> None:
     with pytest.raises(VersionCompatibilityError) as exc_info:

@@ -161,9 +161,10 @@ against the supported range `>=1.0.0,<2.0.0`:
 - **Absent** (key omitted entirely) — a warning is logged and the check is
   skipped; the source renders as-is.
 
-The check lives in a dependency-free helper
-([generator/utils/version_compat.py](./generator/utils/version_compat.py)) so
-other generators can reuse it.
+The check lives in a PDF-independent helper
+([generator/utils/version_compat.py](./generator/utils/version_compat.py)) — its
+only third-party dependency is [`semver`](https://pypi.org/project/semver/) — so
+other generators can reuse it verbatim.
 
 ### Template customization
 
