@@ -147,6 +147,23 @@ with:
   schema-path: 'generator/schemas/doc-issues-v1.0.0-schema.json'
 ```
 
+#### Input schema-version compatibility
+
+If the source JSON declares a top-level `schema_version` (for example
+`"generator-ready-v1.0.0"`), the action checks the embedded semantic version
+against the supported range `>=1.0.0,<2.0.0`:
+
+- **In range** — rendered normally.
+- **Out of range** — a warning is logged and recorded in `pdf_report.json`
+  (`warnings[]`, code `schema_version_out_of_range`); rendering still proceeds.
+- **Present but unparseable** — the run fails fast with exit code 1 and a single
+  `Invalid input: unparseable 'schema_version' ...` message.
+- **Absent** — a warning is logged and the check is skipped; the source renders as-is.
+
+The check lives in a dependency-free helper
+([generator/utils/version_compat.py](./generator/utils/version_compat.py)) so
+other generators can reuse it.
+
 ### Template customization
 
 Templates always have a single entry point: `main.html.jinja`. They receive two variables:
@@ -184,6 +201,8 @@ See the full [template override guide](./docs/template-override-guide.md) for co
 **`Invalid input: File '...' not found`** — `source-path` points to a missing file; verify the path.
 
 **`Schema validation failed: ...`** — the source does not match the schema passed via `schema-path`; fix the data or omit `schema-path` to skip validation.
+
+**`Invalid input: unparseable 'schema_version' ...`** — the source has a `schema_version` with no recognizable semantic version; use a value like `generator-ready-v1.0.0` or remove the key.
 
 **`Template error: Template 'main.html.jinja' not found`** — a custom `template-path` lacks `main.html.jinja`; add it or also set `document-type` for fallback.
 

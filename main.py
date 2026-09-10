@@ -38,6 +38,7 @@ from generator.template_renderer import TemplateError, TemplateRenderer
 from generator.utils.constants import DEFAULT_DOCUMENT_TITLES
 from generator.utils.gh_action import set_action_failed, set_action_output
 from generator.utils.logging_config import setup_logging
+from generator.utils.version_compat import check_schema_version
 
 
 def _save_debug_html(html: str, output_path: str) -> str:
@@ -93,6 +94,11 @@ def run() -> None:
         logger.info("Loading source JSON from %s", source_path)
         data = load_source(source_path, schema_path)
 
+        # Step 2b: Check the declared input schema version against the supported range.
+        # Out-of-range versions warn and still render; an unparseable version raises
+        # ValueError (exit code 1).
+        report_warnings = [w.to_dict() for w in check_schema_version(data.get("schema_version"))]
+
         # Step 3: Resolve template set
         template_path = ActionInputs.get_template_path()
         document_type = ActionInputs.get_document_type()
@@ -134,7 +140,7 @@ def run() -> None:
             data=data,
             pdf_path=output_path,
             errors=[],
-            warnings=[],
+            warnings=report_warnings,
         )
         set_action_output("report-path", report_path)
 

@@ -119,6 +119,36 @@ def test_run_file_io_error_exit_code_5(base_env, mocker) -> None:
     set_failed.assert_called_once_with("io bad", exit_code=5)
 
 
+def test_run_out_of_range_schema_version_still_renders(base_env, mocker) -> None:
+    """An out-of-range schema_version warns but still renders and passes the warning through."""
+    mocker.patch("main.load_source", return_value={"items": [], "schema_version": "generator-ready-v2.0.0"})
+    renderer = mocker.Mock()
+    renderer.render.return_value = "<html></html>"
+    renderer.base_dir = "/tmp"
+    mocker.patch("main.TemplateRenderer", return_value=renderer)
+    mocker.patch("main.PdfGenerator").return_value.generate_pdf = mocker.Mock()
+    report = mocker.patch("main.generate_pdf_report", return_value="pdf_report.json")
+    mocker.patch("main.set_action_output")
+    set_failed = mocker.patch("main.set_action_failed")
+
+    main.run()
+
+    set_failed.assert_not_called()
+    warnings = report.call_args.kwargs["warnings"]
+    assert warnings
+    assert warnings[0]["code"] == "schema_version_out_of_range"
+
+
+def test_run_unparseable_schema_version_exit_code_1(base_env, mocker) -> None:
+    """A present-but-unparseable schema_version maps to exit code 1."""
+    mocker.patch("main.load_source", return_value={"items": [], "schema_version": "generator-ready"})
+    set_failed = mocker.patch("main.set_action_failed")
+
+    main.run()
+
+    assert set_failed.call_args.kwargs["exit_code"] == 1
+
+
 def test_run_unexpected_error_exit_code_1(base_env, mocker) -> None:
     """An unexpected exception maps to exit code 1 with a prefixed message."""
     mocker.patch("main.load_source", side_effect=RuntimeError("boom"))
