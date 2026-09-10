@@ -57,9 +57,9 @@ def test_base_dir_points_to_custom_dir(custom_template_dir, meta) -> None:
     assert renderer.base_dir == str(custom_template_dir)
 
 
-def test_render_builtin_user_stories(meta) -> None:
-    """render works with the built-in user-stories document type."""
-    renderer = TemplateRenderer(document_type="user-stories")
+def test_render_builtin_technical_project(meta) -> None:
+    """render works with the built-in technical-project document type."""
+    renderer = TemplateRenderer(document_type="technical-project")
     data = {"items": [{"id": "US-1", "title": "First", "acceptance_criteria": []}]}
     html = renderer.render(data, meta)
 
@@ -72,7 +72,7 @@ def test_partial_override_prefers_custom(tmp_path, meta) -> None:
         "<html><body>CUSTOM {{ meta.document_title }}</body></html>",
         encoding="utf-8",
     )
-    renderer = TemplateRenderer(template_path=str(tmp_path), document_type="user-stories")
+    renderer = TemplateRenderer(template_path=str(tmp_path), document_type="technical-project")
     html = renderer.render({"items": []}, meta)
 
     assert "CUSTOM My Title" in html

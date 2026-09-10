@@ -151,7 +151,7 @@ This will execute all tests located in the tests/unit directory.
 
 Integration tests verify end-to-end functionality of the PDF generator using real file I/O and actual PDF generation. These tests are located in `tests/integration/` and cover:
 
-- **PDF Generation**: End-to-end scenarios for all three built-in document types (`user-stories`, `ui-test-catalog`, `coverage-matrix`) plus a minimal empty-items case
+- **PDF Generation**: End-to-end scenarios for all three built-in document types (`technical-project`, `ui-test-catalog`, `coverage-matrix`) plus a minimal empty-items case
 - **Custom Templates**: Full override, partial override (fallback to built-in), and custom CSS scenarios
 - **Error Handling**: Error scenarios with expected exit codes (missing file, schema violation, template syntax, read-only directory)
 - **Edge Cases**: Empty items, minimal fields, large markdown content, special characters and Unicode
@@ -293,14 +293,14 @@ bash run_locally.sh
 The key variables to configure:
 
 ```bash
-export INPUT_SOURCE_PATH="examples/user_stories.json"   # path to your source JSON
-export INPUT_DOCUMENT_TYPE="user-stories"                # user-stories | ui-test-catalog | coverage-matrix
+export INPUT_SOURCE_PATH="examples/generator-ready.json"   # path to your source JSON
+export INPUT_DOCUMENT_TYPE="technical-project"           # technical-project | ui-test-catalog | coverage-matrix
 export INPUT_OUTPUT_PATH="output.pdf"
 export INPUT_DEBUG_HTML="true"
 export INPUT_VERBOSE="true"
 # Optional:
 # export INPUT_TEMPLATE_PATH="./custom_templates"        # custom template directory
-# export INPUT_SCHEMA_PATH="generator/schemas/doc-issues-v1.0.0-schema.json"
+# export INPUT_SCHEMA_PATH="generator/schemas/generator-ready-v1.0.0-schema.json"
 ```
 
 ### macOS Prerequisites

@@ -20,6 +20,8 @@ Inputs are read from `INPUT_*` environment variables using
 `generator.utils.gh_action.get_action_input`.
 """
 
+from pathlib import Path
+
 # Common action inputs
 GITHUB_TOKEN = "github-token"
 VERBOSE = "verbose"
@@ -37,20 +39,20 @@ DOCUMENT_TITLE = "document-title"
 PDF_READY_JSON = "pdf-ready-json"
 
 # Built-in document types and their default titles
-DOCUMENT_TYPE_USER_STORIES = "user-stories"
+DOCUMENT_TYPE_TECHNICAL_PROJECT = "technical-project"
 DOCUMENT_TYPE_UI_TEST_CATALOG = "ui-test-catalog"
 DOCUMENT_TYPE_COVERAGE_MATRIX = "coverage-matrix"
 DOCUMENT_TYPE_LIVING_DOC_PROJECT = "living-doc-project"
 
 DOCUMENT_TYPES = (
-    DOCUMENT_TYPE_USER_STORIES,
+    DOCUMENT_TYPE_TECHNICAL_PROJECT,
     DOCUMENT_TYPE_UI_TEST_CATALOG,
     DOCUMENT_TYPE_COVERAGE_MATRIX,
     DOCUMENT_TYPE_LIVING_DOC_PROJECT,
 )
 
 DEFAULT_DOCUMENT_TITLES = {
-    DOCUMENT_TYPE_USER_STORIES: "User Stories",
+    DOCUMENT_TYPE_TECHNICAL_PROJECT: "Technical Project",
     DOCUMENT_TYPE_UI_TEST_CATALOG: "UI Test Catalog",
     DOCUMENT_TYPE_COVERAGE_MATRIX: "Coverage Matrix",
     DOCUMENT_TYPE_LIVING_DOC_PROJECT: "Living Documentation",
@@ -59,8 +61,16 @@ DEFAULT_DOCUMENT_TITLES = {
 # Maps logical document types to the template directory they use.
 # Aliases allow user-facing names that differ from the template folder name.
 DOCUMENT_TYPE_TEMPLATE_DIR = {
-    DOCUMENT_TYPE_USER_STORIES: DOCUMENT_TYPE_USER_STORIES,
+    DOCUMENT_TYPE_TECHNICAL_PROJECT: DOCUMENT_TYPE_TECHNICAL_PROJECT,
     DOCUMENT_TYPE_UI_TEST_CATALOG: DOCUMENT_TYPE_UI_TEST_CATALOG,
     DOCUMENT_TYPE_COVERAGE_MATRIX: DOCUMENT_TYPE_COVERAGE_MATRIX,
-    DOCUMENT_TYPE_LIVING_DOC_PROJECT: DOCUMENT_TYPE_USER_STORIES,
+    DOCUMENT_TYPE_LIVING_DOC_PROJECT: DOCUMENT_TYPE_TECHNICAL_PROJECT,
 }
+
+# The vendored canonical schema for the ``technical-project`` document type.
+# Pinned copy of ``living-doc-toolkit``'s generated file; see
+# ``generator/schemas/README.md`` for the pin location.
+GENERATOR_READY_SCHEMA_FILENAME = "generator-ready-v1.0.0-schema.json"
+DEFAULT_GENERATOR_READY_SCHEMA_PATH = str(
+    Path(__file__).resolve().parent.parent / "schemas" / GENERATOR_READY_SCHEMA_FILENAME
+)

@@ -28,7 +28,7 @@ inputs:
     description: 'Directory containing custom Jinja templates (overrides or extends a built-in set)'
     required: false
   document-type:
-    description: 'Built-in template set to use: user-stories | ui-test-catalog | coverage-matrix'
+    description: 'Built-in template set to use: technical-project | ui-test-catalog | coverage-matrix'
     required: false
   output-path:
     description: 'Path for the generated PDF file'

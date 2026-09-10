@@ -39,14 +39,14 @@ def schemas_dir() -> Path:
 
 @pytest.fixture
 def minimal_json(examples_dir: Path) -> Path:
-    """Return the path to the minimal user-stories example."""
+    """Return the path to the minimal technical-project example."""
     return examples_dir / "minimal.json"
 
 
 @pytest.fixture
-def user_stories_json(examples_dir: Path) -> Path:
-    """Return the path to the user-stories example."""
-    return examples_dir / "user_stories.json"
+def technical_project_json(examples_dir: Path) -> Path:
+    """Return the path to the technical-project example."""
+    return examples_dir / "technical_project.json"
 
 
 @pytest.fixture

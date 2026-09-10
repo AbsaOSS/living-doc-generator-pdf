@@ -64,6 +64,14 @@ def test_item_count_falls_back_to_user_stories_key(tmp_path):
     assert report["statistics"]["item_count"] == 2
 
 
+def test_item_count_reads_nested_generator_ready_content(tmp_path):
+    """item_count reads content.user_stories from the normalized generator-ready envelope."""
+    data = {"meta": {}, "content": {"user_stories": [{"id": "US-1"}, {"id": "US-2"}, {"id": "US-3"}]}}
+    report_path = _generate(tmp_path, data)
+    report = json.loads(Path(report_path).read_text(encoding="utf-8"))
+    assert report["statistics"]["item_count"] == 3
+
+
 def test_includes_file_size_and_template_pack(tmp_path):
     """Report records the PDF file size and the template pack metadata."""
     pdf_path = tmp_path / "output.pdf"

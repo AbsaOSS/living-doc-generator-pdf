@@ -42,7 +42,7 @@ def _render_to_pdf(source: Path, document_type: str, output_pdf: Path) -> str:
 @pytest.mark.parametrize(
     "fixture_name, document_type",
     [
-        ("user_stories_json", "user-stories"),
+        ("technical_project_json", "technical-project"),
         ("ui_tests_json", "ui-test-catalog"),
         ("coverage_matrix_json", "coverage-matrix"),
     ],
@@ -65,7 +65,7 @@ def test_generate_pdf_per_document_type(
 @pytest.mark.parametrize(
     "fixture_name, document_type, schema_file",
     [
-        ("user_stories_json", "user-stories", "generator/schemas/doc-source-v1.0.0-schema.json"),
+        ("technical_project_json", "technical-project", "generator/schemas/generator-ready-v1.0.0-schema.json"),
         ("ui_tests_json", "ui-test-catalog", "generator/schemas/ui-tests-v1.0.0-schema.json"),
         ("coverage_matrix_json", "coverage-matrix", "generator/schemas/coverage-matrix-v1.0.0-schema.json"),
     ],
@@ -98,24 +98,24 @@ def test_generate_pdf_with_schema_validation(
 def test_generate_pdf_minimal(minimal_json: Path, temp_output_dir: Path) -> None:
     """An empty items list still renders a valid PDF."""
     output_pdf = temp_output_dir / "minimal.pdf"
-    _render_to_pdf(minimal_json, "user-stories", output_pdf)
+    _render_to_pdf(minimal_json, "technical-project", output_pdf)
 
     assert output_pdf.exists()
     with open(output_pdf, "rb") as f:
         assert f.read(5) == b"%PDF-"
 
 
-def test_pdf_report_created(user_stories_json: Path, temp_output_dir: Path) -> None:
+def test_pdf_report_created(technical_project_json: Path, temp_output_dir: Path) -> None:
     """pdf_report.json is created with the expected structure and item count."""
     output_pdf = temp_output_dir / "report.pdf"
-    _render_to_pdf(user_stories_json, "user-stories", output_pdf)
+    _render_to_pdf(technical_project_json, "technical-project", output_pdf)
 
-    data = load_source(str(user_stories_json))
+    data = load_source(str(technical_project_json))
     report_path = generate_pdf_report(
-        input_file=str(user_stories_json),
+        input_file=str(technical_project_json),
         output_file=str(output_pdf),
         template_pack_type="built-in",
-        template_pack_path="user-stories",
+        template_pack_path="technical-project",
         data=data,
         pdf_path=str(output_pdf),
         errors=[],
@@ -124,7 +124,7 @@ def test_pdf_report_created(user_stories_json: Path, temp_output_dir: Path) -> N
 
     report = json.loads(Path(report_path).read_text(encoding="utf-8"))
     assert report["schema_version"] == "1.0"
-    assert report["input_file"] == str(user_stories_json)
+    assert report["input_file"] == str(technical_project_json)
     assert report["template_pack"]["type"] == "built-in"
-    assert report["statistics"]["item_count"] == 3
+    assert report["statistics"]["item_count"] == 2
     assert "file_size_bytes" in report["statistics"]

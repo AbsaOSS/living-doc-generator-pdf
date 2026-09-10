@@ -50,8 +50,8 @@ def test_get_document_type_optional(monkeypatch) -> None:
 
 def test_get_document_type_from_env(monkeypatch) -> None:
     """get_document_type reads the value."""
-    monkeypatch.setenv("INPUT_DOCUMENT_TYPE", "user-stories")
-    assert ActionInputs.get_document_type() == "user-stories"
+    monkeypatch.setenv("INPUT_DOCUMENT_TYPE", "technical-project")
+    assert ActionInputs.get_document_type() == "technical-project"
 
 
 def test_get_schema_path_optional(monkeypatch) -> None:
@@ -181,7 +181,7 @@ def test_validate_inputs_accepts_document_type(monkeypatch) -> None:
     """validate_inputs passes for a valid document-type."""
     monkeypatch.setenv("INPUT_OUTPUT_PATH", "output.pdf")
     monkeypatch.setenv("INPUT_SOURCE_PATH", "data.json")
-    monkeypatch.setenv("INPUT_DOCUMENT_TYPE", "user-stories")
+    monkeypatch.setenv("INPUT_DOCUMENT_TYPE", "technical-project")
 
     ActionInputs.validate_inputs()
 

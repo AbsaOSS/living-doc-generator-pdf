@@ -36,7 +36,7 @@ jobs:
         uses: ./
         with:
           source-path: examples/minimal.json
-          document-type: user-stories
+          document-type: technical-project
           debug-html: 'true'
 
       - name: Print action outputs
@@ -70,7 +70,7 @@ jobs:
         uses: ./
         with:
           source-path: examples/generator-ready.json
-          document-type: user-stories
+          document-type: technical-project
           debug-html: 'true'
 
       - name: Print action outputs

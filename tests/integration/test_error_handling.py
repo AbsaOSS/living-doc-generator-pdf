@@ -55,10 +55,10 @@ def test_schema_validation_failure(temp_output_dir: Path, schemas_dir: Path) -> 
         load_source(str(source), str(schema))
 
 
-def test_schema_file_not_found(user_stories_json: Path) -> None:
+def test_schema_file_not_found(technical_project_json: Path) -> None:
     """A missing schema file raises ValueError (exit code 1)."""
     with pytest.raises(ValueError, match="Schema file"):
-        load_source(str(user_stories_json), "/tmp/nonexistent_schema.json")
+        load_source(str(technical_project_json), "/tmp/nonexistent_schema.json")
 
 
 def test_missing_template_raises(temp_output_dir: Path) -> None:
@@ -93,7 +93,7 @@ def test_file_io_error_readonly_directory(minimal_json: Path, temp_output_dir: P
 
     try:
         data = load_source(str(minimal_json))
-        renderer = TemplateRenderer(document_type="user-stories")
+        renderer = TemplateRenderer(document_type="technical-project")
         html = renderer.render(data, build_meta("T", str(minimal_json)).to_dict())
         output_pdf = readonly_dir / "output.pdf"
 
