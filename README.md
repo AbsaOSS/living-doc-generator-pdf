@@ -29,8 +29,8 @@ end-to-end `collector → toolkit normalize → generator-pdf` workflow.
 **Key features**
 - 📄 Source-independent: renders raw JSON; no knowledge of GitHub, Jira, etc.
 - 🎨 Template-driven: built-in sets plus full or partial custom overrides
-- ✅ Validated by default: `technical-project` is checked against the vendored
-  `generator-ready-v1.0.0-schema.json` with no configuration
+- ✅ Validated by default: every built-in `document-type` is checked against its
+  own vendored schema with no configuration
 - ⚡ Deterministic: same input always produces the same output
 - 🔍 Debug mode: save the intermediate HTML for troubleshooting
 - 📊 Reporting: emits `pdf_report.json` with statistics
@@ -180,7 +180,7 @@ None. All configuration is passed through the `with:` inputs below.
 
 At least one of `document-type` or `template-path` must be provided. When `document-title` is not set, the title is derived from the document type's default (e.g. "Technical Project") or the source file name.
 
-The `technical-project` document type is **validated by default**: when no `schema-path` is given, the source is checked against the vendored `generator-ready-v1.0.0-schema.json`. A raw collector file (one with no normalized `meta`/`content` envelope) fails with a message directing you to the [`living-doc-toolkit` `normalize-issues` step][toolkit-normalize]. `schema-path` is an advanced, bring-your-own override for that default and is unsupported — prefer normalizing your input instead.
+Every built-in `document-type` is **validated by default**: when no `schema-path` is given, the source is checked against the vendored schema for that type — `generator-ready-v1.0.0-schema.json` for `technical-project`, `ui-tests-v1.0.0-schema.json` for `ui-test-catalog`, `coverage-matrix-v1.0.0-schema.json` for `coverage-matrix`. Additionally, a `technical-project` source that is a raw collector file (no normalized `meta`/`content` envelope) fails with a message directing you to the [`living-doc-toolkit` `normalize-issues` step][toolkit-normalize]. `schema-path` is an advanced, bring-your-own override for that default and is unsupported — prefer normalizing your input instead.
 
 ## Action Outputs
 
@@ -217,12 +217,19 @@ The action does not transform the source JSON — it is exposed to templates as 
 
 #### Schema validation
 
-`technical-project` is validated by default against the vendored
-`generator-ready-v1.0.0-schema.json`; raw collector output (no normalized
-`meta`/`content` envelope) fails with a pointer to the
-[`living-doc-toolkit` `normalize-issues` step][toolkit-normalize]. For every other
-document type, validation is opt-in. Built-in schemas live in
-[generator/schemas/](./generator/schemas/):
+Every built-in `document-type` is validated by default against its vendored
+schema — no `schema-path` needed:
+
+| `document-type` | Input artifact | Vendored schema | Producer |
+|-----------------|----------------|-----------------|----------|
+| `technical-project` | `generator-ready.json` | `generator-ready-v1.0.0-schema.json` | `living-doc normalize-issues` |
+| `ui-test-catalog` | `ui-tests.json` | `ui-tests-v1.0.0-schema.json` | `living-doc-collector-gh` `ui-tests` mode |
+| `coverage-matrix` | `coverage-matrix.json` | `coverage-matrix-v1.0.0-schema.json` | `living-doc coverage-matrix` |
+
+For `technical-project`, raw collector output (no normalized `meta`/`content`
+envelope) additionally fails with a pointer to the
+[`living-doc-toolkit` `normalize-issues` step][toolkit-normalize]. Built-in
+schemas live in [generator/schemas/](./generator/schemas/):
 
 ```yaml
 with:
@@ -231,10 +238,10 @@ with:
 ```
 
 **Advanced / bring-your-own `schema-path` (unsupported).** Passing a custom
-`schema-path` replaces the default schema for `technical-project`, or adds
-validation for another document type. This is an escape hatch, not the
-recommended flow — the supported path is to normalize your input into
-`generator-ready.json` and let default validation run:
+`schema-path` replaces the vendored default schema for whichever `document-type`
+you selected. This is an escape hatch, not the recommended flow — the supported
+path is to feed the toolkit-produced artifact for that `document-type` and let
+default validation run:
 
 ```yaml
 with:
@@ -267,6 +274,39 @@ The check lives in a PDF-independent helper
 ([generator/utils/version_compat.py](./generator/utils/version_compat.py)) — its
 only third-party dependency is [`semver`](https://pypi.org/project/semver/) — so
 other generators can reuse it verbatim.
+
+### `coverage-matrix`: merge before you run
+
+`coverage-matrix.json` is produced by the toolkit's `coverage-matrix` service,
+which joins a technical project (User Stories + ACs) to a test catalog
+(scenarios) on **AC ID**. That join is only valid when both sides describe the
+**same** dataset.
+
+**A cross-source coverage matrix is only valid on the merged dataset.** If the
+matrix must span more than one source (a GitHub repo *and* an Azure DevOps
+project, or GitHub issues *and* source-code `.feature` files), the sources must be
+merged into a single `doc-source.json` / `ui-tests.json` pair **before**
+`coverage-matrix` runs. This generator renders whatever `coverage-matrix.json` it
+is given — it cannot detect or repair an unmerged one.
+
+**The false-gap failure mode.** Running `coverage-matrix` per-source, while the
+covering scenarios live in another source's catalog, does not merely miss the
+cross-source coverage — it **reports every cross-source AC as an uncovered gap**.
+The covering scenario is absent from the input, so the AC lands in the "no
+scenario" bucket and `coverage_pct` drops. In the rendered PDF this false gap is
+indistinguishable from a genuine coverage hole. A wall of uncovered ACs is the
+signal to check that the `doc-source.json` and `ui-tests.json` behind the matrix
+were produced from the *same* merged set of sources.
+
+This depends on an authoring-time rule: **entity and AC IDs must be globally
+unique across every source** — no `US-1` meaning one thing in a GitHub repo and
+another in Azure DevOps. `coverage-matrix` cannot reconcile colliding IDs after
+the fact.
+
+See the toolkit's
+[`coverage-matrix` service — "Multi-source coverage matrices"](https://github.com/AbsaOSS/living-doc-toolkit/blob/master/packages/services/coverage_matrix/README.md#multi-source-coverage-matrices--merge-before-you-run)
+and the
+[Living Doc Glossary — "ID uniqueness"](https://github.com/AbsaOSS/living-doc/blob/master/docs/guides/living-doc-glossary.md#id-uniqueness).
 
 ### Template customization
 

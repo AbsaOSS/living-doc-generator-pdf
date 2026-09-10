@@ -191,8 +191,9 @@ def test_run_out_of_range_skips_structural_validation(base_env, monkeypatch, tmp
 
 
 def test_run_no_schema_path_logs_skip_step(base_env, monkeypatch, mocker, caplog) -> None:
-    """A document type without a default schema still emits the canonical 'skipping validation' step log."""
-    monkeypatch.setenv("INPUT_DOCUMENT_TYPE", "ui-test-catalog")
+    """A bare template-path run (no default schema) still emits the canonical 'skipping validation' step log."""
+    monkeypatch.delenv("INPUT_DOCUMENT_TYPE", raising=False)
+    monkeypatch.setenv("INPUT_TEMPLATE_PATH", "custom-templates")
     mocker.patch("main.load_json", return_value={"schema_version": "generator-ready-v1.0.0", "meta": {}, "content": {"user_stories": []}})
     renderer = mocker.Mock()
     renderer.render.return_value = "<html></html>"
@@ -248,9 +249,21 @@ def test_resolve_schema_path_defaults_for_technical_project() -> None:
     assert path.endswith("generator-ready-v1.0.0-schema.json")
 
 
-def test_resolve_schema_path_opt_in_for_other_types() -> None:
-    """Other document types keep validation opt-in."""
-    assert main._resolve_schema_path("ui-test-catalog", None) == (None, False)
+def test_resolve_schema_path_defaults_for_other_document_types() -> None:
+    """ui-test-catalog and coverage-matrix also validate by default, but do not
+    enforce the generator-ready envelope."""
+    ui_path, ui_envelope = main._resolve_schema_path("ui-test-catalog", None)
+    assert ui_path.endswith("ui-tests-v1.0.0-schema.json")
+    assert ui_envelope is False
+
+    cm_path, cm_envelope = main._resolve_schema_path("coverage-matrix", None)
+    assert cm_path.endswith("coverage-matrix-v1.0.0-schema.json")
+    assert cm_envelope is False
+
+
+def test_resolve_schema_path_opt_in_without_document_type() -> None:
+    """A bare template-path run (no document-type) keeps validation opt-in."""
+    assert main._resolve_schema_path(None, None) == (None, False)
 
 
 def test_run_raw_collector_source_rejected_with_normalization_hint(base_env, mocker) -> None:

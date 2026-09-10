@@ -62,10 +62,23 @@ DOCUMENT_TYPE_TEMPLATE_DIR = {
     DOCUMENT_TYPE_COVERAGE_MATRIX: DOCUMENT_TYPE_COVERAGE_MATRIX,
 }
 
-# The vendored canonical schema for the ``technical-project`` document type.
-# Pinned copy of ``living-doc-toolkit``'s generated file; see
-# ``generator/schemas/README.md`` for the pin location.
+# Vendored input schemas, one per built-in document type. Each is a pinned copy
+# of the owning repo's generated file; see ``generator/schemas/README.md`` for
+# the pin locations.
+_SCHEMAS_DIR = Path(__file__).resolve().parent.parent / "schemas"
+
 GENERATOR_READY_SCHEMA_FILENAME = "generator-ready-v1.0.0-schema.json"
-DEFAULT_GENERATOR_READY_SCHEMA_PATH = str(
-    Path(__file__).resolve().parent.parent / "schemas" / GENERATOR_READY_SCHEMA_FILENAME
-)
+UI_TESTS_SCHEMA_FILENAME = "ui-tests-v1.0.0-schema.json"
+COVERAGE_MATRIX_SCHEMA_FILENAME = "coverage-matrix-v1.0.0-schema.json"
+
+DEFAULT_GENERATOR_READY_SCHEMA_PATH = str(_SCHEMAS_DIR / GENERATOR_READY_SCHEMA_FILENAME)
+
+# Structural-validation schema applied by default for each built-in document
+# type when the caller passes no explicit ``schema-path``. Every built-in type
+# validates its source against a vendored schema out of the box; an explicit
+# ``schema-path`` always overrides the default.
+DOCUMENT_TYPE_DEFAULT_SCHEMA = {
+    DOCUMENT_TYPE_TECHNICAL_PROJECT: DEFAULT_GENERATOR_READY_SCHEMA_PATH,
+    DOCUMENT_TYPE_UI_TEST_CATALOG: str(_SCHEMAS_DIR / UI_TESTS_SCHEMA_FILENAME),
+    DOCUMENT_TYPE_COVERAGE_MATRIX: str(_SCHEMAS_DIR / COVERAGE_MATRIX_SCHEMA_FILENAME),
+}

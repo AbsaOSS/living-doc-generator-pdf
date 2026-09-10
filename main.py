@@ -43,7 +43,7 @@ from generator.schema_validator import (
 from generator.template_renderer import TemplateError, TemplateRenderer
 from generator.utils.constants import (
     DEFAULT_DOCUMENT_TITLES,
-    DEFAULT_GENERATOR_READY_SCHEMA_PATH,
+    DOCUMENT_TYPE_DEFAULT_SCHEMA,
     DOCUMENT_TYPE_TECHNICAL_PROJECT,
 )
 from generator.utils.gh_action import set_action_failed, set_action_output
@@ -91,18 +91,21 @@ def _resolve_document_title(document_type: str | None, source_path: str) -> str:
 def _resolve_schema_path(document_type: str | None, schema_path: str | None) -> tuple[str | None, bool]:
     """Resolve the schema used for structural validation.
 
-    An explicit ``schema-path`` always wins. Otherwise the ``technical-project``
-    document type defaults to the vendored generator-ready schema, so a run with
-    no ``schema-path`` still validates the normalized envelope. Every other
-    document type keeps validation opt-in.
+    An explicit ``schema-path`` always wins. Otherwise every built-in
+    ``document-type`` defaults to its vendored schema
+    (``DOCUMENT_TYPE_DEFAULT_SCHEMA``), so a run with no ``schema-path`` still
+    validates the source structurally. A bare ``template-path`` run (no
+    ``document-type``) keeps validation opt-in.
 
-    Returns the schema path (or ``None``) and whether it was applied as the
-    ``technical-project`` default.
+    Returns the schema path (or ``None``) and whether the resolved schema is the
+    defaulted ``technical-project`` generator-ready schema — the one case that
+    additionally enforces the normalized ``meta``/``content`` envelope.
     """
     if schema_path:
         return schema_path, False
-    if document_type == DOCUMENT_TYPE_TECHNICAL_PROJECT:
-        return DEFAULT_GENERATOR_READY_SCHEMA_PATH, True
+    default = DOCUMENT_TYPE_DEFAULT_SCHEMA.get(document_type or "")
+    if default:
+        return default, document_type == DOCUMENT_TYPE_TECHNICAL_PROJECT
     return None, False
 
 
@@ -125,7 +128,7 @@ def _reject_raw_collector_source(data: dict, source_path: str) -> None:
 
 
 def _load_and_check_source(
-    source_path: str, schema_path: str | None, schema_is_default: bool = False
+    source_path: str, schema_path: str | None, enforce_generator_ready_envelope: bool = False
 ) -> tuple[dict, list[dict]]:
     """Parse the source JSON, enforce ``schema_version`` compatibility, then run
     optional structural validation.
@@ -149,7 +152,7 @@ def _load_and_check_source(
     # The raw-collector rejection is a hard guarantee for a defaulted
     # ``technical-project`` run: it must hold even when structural validation is
     # later skipped because ``schema_version`` is out of the supported range.
-    if schema_path and schema_is_default:
+    if schema_path and enforce_generator_ready_envelope:
         _reject_raw_collector_source(data, source_path)
 
     if out_of_range:
@@ -175,9 +178,11 @@ def run() -> None:
         source_path = ActionInputs.get_source_path()
         template_path = ActionInputs.get_template_path()
         document_type = ActionInputs.get_document_type()
-        schema_path, schema_is_default = _resolve_schema_path(document_type, ActionInputs.get_schema_path())
+        schema_path, enforce_generator_ready_envelope = _resolve_schema_path(
+            document_type, ActionInputs.get_schema_path()
+        )
         logger.info("Loading source JSON from %s", source_path)
-        data, report_warnings = _load_and_check_source(source_path, schema_path, schema_is_default)
+        data, report_warnings = _load_and_check_source(source_path, schema_path, enforce_generator_ready_envelope)
 
         # Step 3: Resolve template set
         if template_path:
