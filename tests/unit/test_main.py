@@ -191,8 +191,9 @@ def test_run_out_of_range_skips_structural_validation(base_env, monkeypatch, tmp
 
 
 def test_run_no_schema_path_logs_skip_step(base_env, monkeypatch, mocker, caplog) -> None:
-    """A document type without a default schema still emits the canonical 'skipping validation' step log."""
-    monkeypatch.setenv("INPUT_DOCUMENT_TYPE", "ui-test-catalog")
+    """A bare template-path run (no default schema) still emits the canonical 'skipping validation' step log."""
+    monkeypatch.delenv("INPUT_DOCUMENT_TYPE", raising=False)
+    monkeypatch.setenv("INPUT_TEMPLATE_PATH", "custom-templates")
     mocker.patch("main.load_json", return_value={"schema_version": "generator-ready-v1.0.0", "meta": {}, "content": {"user_stories": []}})
     renderer = mocker.Mock()
     renderer.render.return_value = "<html></html>"
@@ -248,9 +249,65 @@ def test_resolve_schema_path_defaults_for_technical_project() -> None:
     assert path.endswith("generator-ready-v1.0.0-schema.json")
 
 
-def test_resolve_schema_path_opt_in_for_other_types() -> None:
-    """Other document types keep validation opt-in."""
-    assert main._resolve_schema_path("ui-test-catalog", None) == (None, False)
+def test_resolve_schema_path_defaults_for_other_document_types() -> None:
+    """ui-test-catalog and coverage-matrix also validate by default, but do not
+    enforce the generator-ready envelope."""
+    ui_path, ui_envelope = main._resolve_schema_path("ui-test-catalog", None)
+    assert ui_path.endswith("ui-tests-v1.0.0-schema.json")
+    assert ui_envelope is False
+
+    cm_path, cm_envelope = main._resolve_schema_path("coverage-matrix", None)
+    assert cm_path.endswith("coverage-matrix-v1.0.0-schema.json")
+    assert cm_envelope is False
+
+
+def test_resolve_schema_path_opt_in_without_document_type() -> None:
+    """A bare template-path run (no document-type) keeps validation opt-in."""
+    assert main._resolve_schema_path(None, None) == (None, False)
+
+
+def test_resolve_schema_version_top_level_required_by_default() -> None:
+    """technical-project / coverage-matrix read a required top-level schema_version."""
+    for doc_type in ("technical-project", "coverage-matrix", None):
+        assert main._resolve_schema_version({"schema_version": "v1.0.0"}, doc_type) == ("v1.0.0", True)
+        raw, required = main._resolve_schema_version({}, doc_type)
+        assert raw is main.MISSING
+        assert required is True
+
+
+def test_resolve_schema_version_ui_test_catalog_reads_original_metadata() -> None:
+    """ui-test-catalog has no top-level version; it comes from metadata.original_metadata."""
+    data = {"metadata": {"original_metadata": {"schema_version": "1.0.0"}}}
+    assert main._resolve_schema_version(data, "ui-test-catalog") == ("1.0.0", False)
+
+
+def test_resolve_schema_version_top_level_wins_for_ui_test_catalog() -> None:
+    """When collector-gh grows a top-level schema_version it is used and checked,
+    even for a type that also has a nested fallback path."""
+    data = {
+        "schema_version": "ui-tests-v1.0.0",
+        "metadata": {"original_metadata": {"schema_version": "1.0.0"}},
+    }
+    assert main._resolve_schema_version(data, "ui-test-catalog") == ("ui-tests-v1.0.0", True)
+
+
+def test_resolve_schema_version_ui_test_catalog_absent_is_tolerated() -> None:
+    """A real ui-tests.json with no version anywhere is not a hard error."""
+    raw, required = main._resolve_schema_version({"metadata": {"original_metadata": {}}}, "ui-test-catalog")
+    assert raw is main.MISSING
+    assert required is False
+
+
+def test_load_and_check_source_ui_test_catalog_without_top_level_version(tmp_path) -> None:
+    """An unmodified ui-tests.json (no top-level schema_version) loads without exit code 1."""
+    source = tmp_path / "ui-tests.json"
+    source.write_text(
+        json.dumps({"items": [], "metadata": {"original_metadata": {}}, "warnings": []}),
+        encoding="utf-8",
+    )
+    data, warnings = main._load_and_check_source(str(source), None, False, "ui-test-catalog")
+    assert data["items"] == []
+    assert warnings == []
 
 
 def test_run_raw_collector_source_rejected_with_normalization_hint(base_env, mocker) -> None:

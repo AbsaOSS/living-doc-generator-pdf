@@ -28,6 +28,7 @@ Implements the processing pipeline:
 
 import logging
 from pathlib import Path
+from typing import Any
 
 from generator.action_inputs import ActionInputs
 from generator.models import build_meta
@@ -43,7 +44,8 @@ from generator.schema_validator import (
 from generator.template_renderer import TemplateError, TemplateRenderer
 from generator.utils.constants import (
     DEFAULT_DOCUMENT_TITLES,
-    DEFAULT_GENERATOR_READY_SCHEMA_PATH,
+    DOCUMENT_TYPE_DEFAULT_SCHEMA,
+    DOCUMENT_TYPE_SCHEMA_VERSION_PATH,
     DOCUMENT_TYPE_TECHNICAL_PROJECT,
 )
 from generator.utils.gh_action import set_action_failed, set_action_output
@@ -91,18 +93,21 @@ def _resolve_document_title(document_type: str | None, source_path: str) -> str:
 def _resolve_schema_path(document_type: str | None, schema_path: str | None) -> tuple[str | None, bool]:
     """Resolve the schema used for structural validation.
 
-    An explicit ``schema-path`` always wins. Otherwise the ``technical-project``
-    document type defaults to the vendored generator-ready schema, so a run with
-    no ``schema-path`` still validates the normalized envelope. Every other
-    document type keeps validation opt-in.
+    An explicit ``schema-path`` always wins. Otherwise every built-in
+    ``document-type`` defaults to its vendored schema
+    (``DOCUMENT_TYPE_DEFAULT_SCHEMA``), so a run with no ``schema-path`` still
+    validates the source structurally. A bare ``template-path`` run (no
+    ``document-type``) keeps validation opt-in.
 
-    Returns the schema path (or ``None``) and whether it was applied as the
-    ``technical-project`` default.
+    Returns the schema path (or ``None``) and whether the resolved schema is the
+    defaulted ``technical-project`` generator-ready schema — the one case that
+    additionally enforces the normalized ``meta``/``content`` envelope.
     """
     if schema_path:
         return schema_path, False
-    if document_type == DOCUMENT_TYPE_TECHNICAL_PROJECT:
-        return DEFAULT_GENERATOR_READY_SCHEMA_PATH, True
+    default = DOCUMENT_TYPE_DEFAULT_SCHEMA.get(document_type or "")
+    if default:
+        return default, document_type == DOCUMENT_TYPE_TECHNICAL_PROJECT
     return None, False
 
 
@@ -124,11 +129,50 @@ def _reject_raw_collector_source(data: dict, source_path: str) -> None:
     raise SchemaValidationError(message)
 
 
+def _resolve_schema_version(data: dict, document_type: str | None) -> tuple[Any, bool]:
+    """Locate the source's declared ``schema_version``.
+
+    A top-level ``schema_version`` always wins and is always checked — this is
+    the shape of the toolkit *final* artifacts (``technical-project``'s
+    generator-ready document, ``coverage-matrix``) and the shape the ``ui-tests``
+    collector is expected to grow.
+
+    For a collector/adapter contract that does not yet carry one
+    (``ui-test-catalog`` today; see ``DOCUMENT_TYPE_SCHEMA_VERSION_PATH``) the
+    version is read from its nested fallback location
+    (``metadata.original_metadata.schema_version``) and an entirely absent value
+    is tolerated: the vendored schema pins the contract, so structural validation
+    is the compatibility check.
+
+    Returns the raw value (or :data:`MISSING`) and whether a missing value is a
+    hard error for this document type.
+    """
+    if isinstance(data, dict) and "schema_version" in data:
+        return data["schema_version"], True
+    path = DOCUMENT_TYPE_SCHEMA_VERSION_PATH.get(document_type or "")
+    if path is None:
+        return MISSING, True
+    node: Any = data
+    for key in path:
+        if not isinstance(node, dict) or key not in node:
+            return MISSING, False
+        node = node[key]
+    return node, False
+
+
 def _load_and_check_source(
-    source_path: str, schema_path: str | None, schema_is_default: bool = False
+    source_path: str,
+    schema_path: str | None,
+    enforce_generator_ready_envelope: bool = False,
+    document_type: str | None = None,
 ) -> tuple[dict, list[dict]]:
     """Parse the source JSON, enforce ``schema_version`` compatibility, then run
     optional structural validation.
+
+    ``schema_version`` is read from the location its ``document-type`` uses
+    (:func:`_resolve_schema_version`). For a contract with no data-level version
+    (``ui-test-catalog``) an absent value is not an error: the vendored schema
+    pins the contract, so structural validation is the compatibility check.
 
     When ``schema_version`` parses but falls outside the supported range the
     document is rendered best-effort: structural validation is skipped entirely,
@@ -142,14 +186,23 @@ def _load_and_check_source(
     mismatch.
     """
     data = load_json(source_path)
-    warnings = check_schema_version(data.get("schema_version", MISSING))
+    raw_version, version_required = _resolve_schema_version(data, document_type)
+    if raw_version is MISSING and not version_required:
+        logger.info(
+            "Source declares no 'schema_version'; the '%s' contract pins its version in "
+            "the vendored schema, so structural validation is the compatibility check.",
+            document_type,
+        )
+        warnings: list = []
+    else:
+        warnings = check_schema_version(raw_version)
     report_warnings = [w.to_dict() for w in warnings]
     out_of_range = any(w.code == "schema_version_out_of_range" for w in warnings)
 
     # The raw-collector rejection is a hard guarantee for a defaulted
     # ``technical-project`` run: it must hold even when structural validation is
     # later skipped because ``schema_version`` is out of the supported range.
-    if schema_path and schema_is_default:
+    if schema_path and enforce_generator_ready_envelope:
         _reject_raw_collector_source(data, source_path)
 
     if out_of_range:
@@ -175,9 +228,13 @@ def run() -> None:
         source_path = ActionInputs.get_source_path()
         template_path = ActionInputs.get_template_path()
         document_type = ActionInputs.get_document_type()
-        schema_path, schema_is_default = _resolve_schema_path(document_type, ActionInputs.get_schema_path())
+        schema_path, enforce_generator_ready_envelope = _resolve_schema_path(
+            document_type, ActionInputs.get_schema_path()
+        )
         logger.info("Loading source JSON from %s", source_path)
-        data, report_warnings = _load_and_check_source(source_path, schema_path, schema_is_default)
+        data, report_warnings = _load_and_check_source(
+            source_path, schema_path, enforce_generator_ready_envelope, document_type
+        )
 
         # Step 3: Resolve template set
         if template_path:

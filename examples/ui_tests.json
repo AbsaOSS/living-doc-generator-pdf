@@ -1,5 +1,4 @@
 {
-  "schema_version": "generator-ready-v1.0.0",
   "items": [
     {
       "id": "test-1",
@@ -64,7 +63,7 @@
   ],
   "metadata": {
     "producer": {
-      "name": "living-doc-collector",
+      "name": "AbsaOSS/living-doc-collector-gh",
       "version": "1.0.0",
       "build": null
     },
@@ -82,7 +81,11 @@
       "organization": "AbsaOSS",
       "enterprise": null
     },
-    "original_metadata": {}
+    "original_metadata": {
+      "generated_at": "2025-01-01T00:00:00+00:00",
+      "schema_version": "1.0.0",
+      "inputs": {}
+    }
   },
   "warnings": []
 }
