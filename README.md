@@ -21,10 +21,16 @@ The action is a generic JSON-to-PDF engine: you provide a JSON source file and e
 | `ui-test-catalog` | BDD/UI test scenarios grouped by feature file | `ui-tests.json` |
 | `coverage-matrix` | AC-to-test coverage report | `coverage-matrix.json` |
 
+`generator-ready.json` is **not** raw collector output — it is the normalized,
+schema-versioned artifact produced by the toolkit's `normalize-issues` step. See
+[Producing `generator-ready.json`](#producing-generator-readyjson) for the
+end-to-end `collector → toolkit normalize → generator-pdf` workflow.
+
 **Key features**
 - 📄 Source-independent: renders raw JSON; no knowledge of GitHub, Jira, etc.
 - 🎨 Template-driven: built-in sets plus full or partial custom overrides
-- ✅ Optional validation: opt-in JSON Schema checking via `schema-path`
+- ✅ Validated by default: `technical-project` is checked against the vendored
+  `generator-ready-v1.0.0-schema.json` with no configuration
 - ⚡ Deterministic: same input always produces the same output
 - 🔍 Debug mode: save the intermediate HTML for troubleshooting
 - 📊 Reporting: emits `pdf_report.json` with statistics
@@ -38,16 +44,27 @@ The action is a generic JSON-to-PDF engine: you provide a JSON source file and e
 
 ### Adding the Action to Your Workflow
 
+This action is the **last** step of the Living Documentation pipeline. It consumes
+`generator-ready.json`, which is produced by the toolkit's `normalize-issues` step —
+never by feeding raw collector output straight into this action.
+
 ```yaml
 - name: Generate PDF
   uses: AbsaOSS/living-doc-generator-pdf@v1
   with:
+    # generator-ready.json comes from `living-doc normalize-issues` (see below)
     source-path: 'generator-ready.json'
     document-type: 'technical-project'
     output-path: 'documentation.pdf'
 ```
 
-#### Full Example of Action Step Definition
+#### Producing `generator-ready.json`
+
+The recommended, supported path is `collector → toolkit normalize → generator-pdf`.
+The collector mines the source system, the toolkit's `normalize-issues` service
+converts that raw output into the canonical, schema-versioned `generator-ready.json`
+envelope (`meta` + `content`, `schema_version: "generator-ready-v1.0.0"`), and this
+action renders it:
 
 ```yaml
 # .github/workflows/generate-docs.yml
@@ -58,10 +75,59 @@ on:
     branches: [main]
 
 jobs:
-  generate-pdf:
+  collect:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Collect issues
+        uses: AbsaOSS/living-doc-collector-gh@v0.1.0
+        with:
+          doc-issues: 'true'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # see the collector README for mode-specific inputs
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: collector-output
+          path: output/
+
+  normalize:
+    needs: collect
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: collector-output
+          path: output/
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install the toolkit
+        run: pip install living-doc-toolkit
+
+      - name: Normalize collector output to generator-ready.json
+        run: |
+          living-doc normalize-issues \
+            --input output/doc-issues.json \
+            --output generator-ready.json \
+            --source collector-gh \
+            --document-title 'Product Backlog'
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: generator-ready
+          path: generator-ready.json
+
+  generate-pdf:
+    needs: normalize
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: generator-ready
 
       - name: Generate PDF
         uses: AbsaOSS/living-doc-generator-pdf@v1
@@ -70,7 +136,6 @@ jobs:
           document-type: 'technical-project'
           output-path: 'documentation.pdf'
           document-title: 'Product Backlog'
-          schema-path: 'generator/schemas/generator-ready-v1.0.0-schema.json'
           debug-html: 'true'
           verbose: 'true'
 
@@ -80,6 +145,18 @@ jobs:
           name: documentation-pdf
           path: documentation.pdf
 ```
+
+> The exact collector inputs and the toolkit install command depend on your source
+> system and release; treat the step bodies above as a shape, and follow
+> [the toolkit's `normalize-issues` cookbook][toolkit-normalize] and
+> [its GitHub Actions recipe][toolkit-recipe] for the authoritative commands.
+
+[toolkit-normalize]: https://github.com/AbsaOSS/living-doc-toolkit/blob/master/docs/cookbooks/normalize-issues.md
+[toolkit-recipe]: https://github.com/AbsaOSS/living-doc-toolkit/blob/master/docs/recipes/github-actions-normalize-issues.md
+[ecosystem-dataflow]: https://github.com/AbsaOSS/living-doc-toolkit/blob/master/docs/architecture.md
+
+For how `generator-ready.json` fits the wider ecosystem contract, see the
+[Living Documentation data-flow architecture][ecosystem-dataflow].
 
 ## Action Configuration
 
@@ -96,14 +173,14 @@ None. All configuration is passed through the `with:` inputs below.
 | `template-path` | string (path) | Conditional | - | Custom template directory (overrides or extends a built-in set) |
 | `output-path` | string (path) | No | `output.pdf` | Path for the generated PDF |
 | `document-title` | string | No | _(derived)_ | Cover-page title |
-| `schema-path` | string (path) | No | - | JSON Schema for opt-in source validation |
+| `schema-path` | string (path) | No | - | **Advanced / bring-your-own.** Overrides the default validation with a custom JSON Schema. Unsupported — the recommended path is to feed a normalized `generator-ready.json` and let default validation run. |
 | `debug-html` | boolean | No | `false` | Save the rendered HTML next to the PDF |
 | `verbose` | boolean | No | `false` | Enable verbose logging |
 | `pdf_ready_json` | string (path) | No | - | **Deprecated** alias for `source-path` |
 
 At least one of `document-type` or `template-path` must be provided. When `document-title` is not set, the title is derived from the document type's default (e.g. "Technical Project") or the source file name.
 
-The `technical-project` document type is **validated by default**: when no `schema-path` is given, the source is checked against the vendored `generator-ready-v1.0.0-schema.json`. A raw collector file (one with no normalized `meta`/`content` envelope) fails with a message directing you to the `living-doc-toolkit` normalization step. Pass an explicit `schema-path` to override the default.
+The `technical-project` document type is **validated by default**: when no `schema-path` is given, the source is checked against the vendored `generator-ready-v1.0.0-schema.json`. A raw collector file (one with no normalized `meta`/`content` envelope) fails with a message directing you to the [`living-doc-toolkit` `normalize-issues` step][toolkit-normalize]. `schema-path` is an advanced, bring-your-own override for that default and is unsupported — prefer normalizing your input instead.
 
 ## Action Outputs
 
@@ -142,16 +219,28 @@ The action does not transform the source JSON — it is exposed to templates as 
 
 `technical-project` is validated by default against the vendored
 `generator-ready-v1.0.0-schema.json`; raw collector output (no normalized
-`meta`/`content` envelope) fails with a pointer to the `living-doc-toolkit`
-normalization step. For every other document type, validation is opt-in: pass
-`schema-path` to validate the source before rendering; omit it to render as-is.
-Built-in schemas live in [generator/schemas/](./generator/schemas/):
+`meta`/`content` envelope) fails with a pointer to the
+[`living-doc-toolkit` `normalize-issues` step][toolkit-normalize]. For every other
+document type, validation is opt-in. Built-in schemas live in
+[generator/schemas/](./generator/schemas/):
 
 ```yaml
 with:
-  source-path: 'generator-ready.json'
+  source-path: 'generator-ready.json'   # normalized by `living-doc normalize-issues`
   document-type: 'technical-project'
-  # schema-path optional here; pass one to override the default schema
+```
+
+**Advanced / bring-your-own `schema-path` (unsupported).** Passing a custom
+`schema-path` replaces the default schema for `technical-project`, or adds
+validation for another document type. This is an escape hatch, not the
+recommended flow — the supported path is to normalize your input into
+`generator-ready.json` and let default validation run:
+
+```yaml
+with:
+  source-path: 'my-source.json'
+  document-type: 'technical-project'
+  schema-path: 'my/own-schema.json'   # advanced, unsupported override
 ```
 
 #### Input schema-version compatibility
@@ -215,7 +304,7 @@ See the full [template override guide](./docs/template-override-guide.md) for co
 
 **`Invalid input: File '...' not found`** — `source-path` points to a missing file; verify the path.
 
-**`Schema validation failed: ...`** — the source does not match the active schema. For `technical-project` this is `generator-ready-v1.0.0-schema.json` by default; if the file is raw collector output, run it through the `living-doc-toolkit` normalization step first. For other document types, fix the data or omit `schema-path` to skip validation.
+**`Schema validation failed: ...`** — the source does not match the active schema. For `technical-project` this is `generator-ready-v1.0.0-schema.json` by default; if the file is raw collector output, run it through the [`living-doc-toolkit` `normalize-issues` step][toolkit-normalize] first. For other document types, fix the data or omit `schema-path` to skip validation.
 
 **`Invalid input: 'schema_version' is absent ...`** / **`... unparseable 'schema_version' ...`** — every source must declare a parseable `schema_version` (for example `generator-ready-v1.0.0`); add or fix the key. Omitting it is not allowed.
 
