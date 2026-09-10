@@ -147,6 +147,31 @@ with:
   schema-path: 'generator/schemas/doc-issues-v1.0.0-schema.json'
 ```
 
+#### Input schema-version compatibility
+
+Every source JSON must declare a top-level `schema_version` (for example
+`"generator-ready-v1.0.0"`) naming the input contract it targets. The action
+checks the embedded semantic version against the supported range
+`>=1.0.0,<2.0.0`, **before** any optional `schema-path` validation:
+
+- **In range** — rendered normally.
+- **Out of range** but parseable — a warning is logged and recorded in
+  `pdf_report.json` (`warnings[]`, code `schema_version_out_of_range`); rendering
+  still proceeds, so a newer canonical artifact is a best-effort render, not a
+  hard stop.
+- **Absent, `null`, blank, or unparseable** — the run fails fast with exit code 1
+  and a single structured `Invalid input: ... 'schema_version' ...` message. A
+  document with no declared contract is never rendered.
+
+Because the compatibility check runs first, a bundled `schema-path` that pins one
+exact `schema_version` cannot pre-empt the out-of-range warning path with an
+exit-code-2 `SchemaValidationError`.
+
+The check lives in a PDF-independent helper
+([generator/utils/version_compat.py](./generator/utils/version_compat.py)) — its
+only third-party dependency is [`semver`](https://pypi.org/project/semver/) — so
+other generators can reuse it verbatim.
+
 ### Template customization
 
 Templates always have a single entry point: `main.html.jinja`. They receive two variables:
@@ -184,6 +209,8 @@ See the full [template override guide](./docs/template-override-guide.md) for co
 **`Invalid input: File '...' not found`** — `source-path` points to a missing file; verify the path.
 
 **`Schema validation failed: ...`** — the source does not match the schema passed via `schema-path`; fix the data or omit `schema-path` to skip validation.
+
+**`Invalid input: 'schema_version' is absent ...`** / **`... unparseable 'schema_version' ...`** — every source must declare a parseable `schema_version` (for example `generator-ready-v1.0.0`); add or fix the key. Omitting it is not allowed.
 
 **`Template error: Template 'main.html.jinja' not found`** — a custom `template-path` lacks `main.html.jinja`; add it or also set `document-type` for fallback.
 

@@ -35,7 +35,10 @@ def load_source(source_path: str, schema_path: Optional[str] = None) -> dict[str
     """Load a JSON source file and optionally validate it against a schema.
 
     Validation is decoupled from loading: when ``schema_path`` is omitted the
-    file is parsed and returned without structural validation.
+    file is parsed and returned without structural validation. Callers that need
+    to run other checks (for example the input schema-version compatibility
+    check) between parsing and structural validation can call :func:`load_json`
+    and :func:`validate_source` directly.
 
     Args:
         source_path: Path to the JSON source file to load.
@@ -48,17 +51,41 @@ def load_source(source_path: str, schema_path: Optional[str] = None) -> dict[str
         ValueError: When the file is missing or contains invalid JSON (exit code 1).
         SchemaValidationError: When schema validation fails (exit code 2).
     """
-    data = _load_json(source_path)
+    data = load_json(source_path)
 
     if schema_path:
-        _validate_against_schema(data, schema_path, source_path)
+        validate_source(data, schema_path, source_path)
     else:
-        logger.info("No schema-path provided; skipping validation for '%s'.", source_path)
+        log_validation_skipped(source_path)
 
     return data
 
 
-def _load_json(file_path: str) -> dict[str, Any]:
+def log_validation_skipped(source_path: str) -> None:
+    """Emit the canonical 'no schema-path' step log.
+
+    Shared by :func:`load_source` and callers that run :func:`load_json` /
+    :func:`validate_source` directly, so the ``run()`` step log is identical
+    regardless of which path parsed the source.
+    """
+    logger.info("No schema-path provided; skipping validation for '%s'.", source_path)
+
+
+def log_validation_skipped_out_of_range(source_path: str) -> None:
+    """Emit the canonical step log for the best-effort render path.
+
+    Used when a schema-path is configured but ``schema_version`` is outside the
+    supported range: structural validation is intentionally bypassed because a
+    supported-range schema no longer describes the document.
+    """
+    logger.info(
+        "Source 'schema_version' is outside the supported range; skipping structural "
+        "validation for '%s' and rendering best-effort.",
+        source_path,
+    )
+
+
+def load_json(file_path: str) -> dict[str, Any]:
     """Load and parse a JSON file, raising ValueError on failure."""
     if not os.path.exists(file_path):
         logger.error("File '%s' not found.", file_path)
@@ -84,7 +111,7 @@ def _load_json(file_path: str) -> dict[str, Any]:
         ) from e
 
 
-def _validate_against_schema(data: dict[str, Any], schema_path: str, source_path: str) -> None:
+def validate_source(data: dict[str, Any], schema_path: str, source_path: str) -> None:
     """Validate ``data`` against the schema at ``schema_path``."""
     if not os.path.exists(schema_path):
         logger.error("Schema file '%s' not found.", schema_path)

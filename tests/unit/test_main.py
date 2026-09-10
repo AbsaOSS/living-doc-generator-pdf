@@ -10,7 +10,7 @@ from generator.template_renderer import TemplateError
 def base_env(monkeypatch, tmp_path):
     """Configure a minimal valid environment for run()."""
     source = tmp_path / "data.json"
-    source.write_text('{"items": []}', encoding="utf-8")
+    source.write_text('{"items": [], "schema_version": "generator-ready-v1.0.0"}', encoding="utf-8")
     output = tmp_path / "out.pdf"
     monkeypatch.setenv("INPUT_SOURCE_PATH", str(source))
     monkeypatch.setenv("INPUT_DOCUMENT_TYPE", "user-stories")
@@ -58,7 +58,7 @@ def test_run_success(base_env, mocker) -> None:
 
 def test_run_value_error_exit_code_1(base_env, mocker) -> None:
     """A ValueError maps to exit code 1."""
-    mocker.patch("main.load_source", side_effect=ValueError("bad input"))
+    mocker.patch("main.load_json", side_effect=ValueError("bad input"))
     set_failed = mocker.patch("main.set_action_failed")
 
     main.run()
@@ -66,9 +66,11 @@ def test_run_value_error_exit_code_1(base_env, mocker) -> None:
     set_failed.assert_called_once_with("bad input", exit_code=1)
 
 
-def test_run_schema_error_exit_code_2(base_env, mocker) -> None:
-    """A SchemaValidationError maps to exit code 2."""
-    mocker.patch("main.load_source", side_effect=SchemaValidationError("schema bad"))
+def test_run_schema_error_exit_code_2(base_env, monkeypatch, tmp_path, mocker) -> None:
+    """A SchemaValidationError from optional structural validation maps to exit code 2."""
+    monkeypatch.setenv("INPUT_SCHEMA_PATH", str(tmp_path / "schema.json"))
+    mocker.patch("main.load_json", return_value={"items": [], "schema_version": "generator-ready-v1.0.0"})
+    mocker.patch("main.validate_source", side_effect=SchemaValidationError("schema bad"))
     set_failed = mocker.patch("main.set_action_failed")
 
     main.run()
@@ -78,7 +80,7 @@ def test_run_schema_error_exit_code_2(base_env, mocker) -> None:
 
 def test_run_template_error_exit_code_3(base_env, mocker) -> None:
     """A TemplateError maps to exit code 3."""
-    mocker.patch("main.load_source", return_value={"items": []})
+    mocker.patch("main.load_json", return_value={"items": [], "schema_version": "generator-ready-v1.0.0"})
     mocker.patch("main.TemplateRenderer", side_effect=TemplateError("template bad"))
     set_failed = mocker.patch("main.set_action_failed")
 
@@ -89,7 +91,7 @@ def test_run_template_error_exit_code_3(base_env, mocker) -> None:
 
 def test_run_rendering_error_exit_code_4(base_env, mocker) -> None:
     """A RenderingError maps to exit code 4."""
-    mocker.patch("main.load_source", return_value={"items": []})
+    mocker.patch("main.load_json", return_value={"items": [], "schema_version": "generator-ready-v1.0.0"})
     renderer = mocker.Mock()
     renderer.render.return_value = "<html></html>"
     renderer.base_dir = "/tmp"
@@ -105,7 +107,7 @@ def test_run_rendering_error_exit_code_4(base_env, mocker) -> None:
 
 def test_run_file_io_error_exit_code_5(base_env, mocker) -> None:
     """A FileIOError maps to exit code 5."""
-    mocker.patch("main.load_source", return_value={"items": []})
+    mocker.patch("main.load_json", return_value={"items": [], "schema_version": "generator-ready-v1.0.0"})
     renderer = mocker.Mock()
     renderer.render.return_value = "<html></html>"
     renderer.base_dir = "/tmp"
@@ -119,9 +121,103 @@ def test_run_file_io_error_exit_code_5(base_env, mocker) -> None:
     set_failed.assert_called_once_with("io bad", exit_code=5)
 
 
+def test_run_out_of_range_schema_version_still_renders(base_env, mocker) -> None:
+    """An out-of-range schema_version warns but still renders and passes the warning through."""
+    mocker.patch("main.load_json", return_value={"items": [], "schema_version": "generator-ready-v2.0.0"})
+    renderer = mocker.Mock()
+    renderer.render.return_value = "<html></html>"
+    renderer.base_dir = "/tmp"
+    mocker.patch("main.TemplateRenderer", return_value=renderer)
+    generate_pdf = mocker.patch("main.PdfGenerator").return_value.generate_pdf
+    report = mocker.patch("main.generate_pdf_report", return_value="pdf_report.json")
+    mocker.patch("main.set_action_output")
+    set_failed = mocker.patch("main.set_action_failed")
+
+    main.run()
+
+    set_failed.assert_not_called()
+    renderer.render.assert_called_once()
+    generate_pdf.assert_called_once()
+    warnings = report.call_args.kwargs["warnings"]
+    assert warnings
+    assert warnings[0]["code"] == "schema_version_out_of_range"
+
+
+def test_run_out_of_range_skips_structural_validation(base_env, monkeypatch, tmp_path, mocker, caplog) -> None:
+    """An out-of-range schema_version renders best-effort: structural validation is skipped
+    so a schema pinning the version (const) cannot pre-empt the warn-and-render path, and the
+    step log states the real reason (not the misleading 'No schema-path provided')."""
+    monkeypatch.setenv("INPUT_SCHEMA_PATH", str(tmp_path / "schema.json"))
+    mocker.patch("main.load_json", return_value={"items": [], "schema_version": "coverage-matrix-v2.0.0"})
+    renderer = mocker.Mock()
+    renderer.render.return_value = "<html></html>"
+    renderer.base_dir = "/tmp"
+    mocker.patch("main.TemplateRenderer", return_value=renderer)
+    generate_pdf = mocker.patch("main.PdfGenerator").return_value.generate_pdf
+    validate_source = mocker.patch("main.validate_source")
+    mocker.patch("main.generate_pdf_report", return_value="pdf_report.json")
+    mocker.patch("main.set_action_output")
+    set_failed = mocker.patch("main.set_action_failed")
+
+    with caplog.at_level("INFO"):
+        main.run()
+
+    set_failed.assert_not_called()
+    validate_source.assert_not_called()
+    generate_pdf.assert_called_once()
+    messages = [r.message for r in caplog.records]
+    assert any("outside the supported range" in m and "best-effort" in m for m in messages)
+    assert not any("No schema-path provided" in m for m in messages)
+
+
+def test_run_no_schema_path_logs_skip_step(base_env, mocker, caplog) -> None:
+    """The direct load path still emits the canonical 'skipping validation' step log."""
+    mocker.patch("main.load_json", return_value={"items": [], "schema_version": "generator-ready-v1.0.0"})
+    renderer = mocker.Mock()
+    renderer.render.return_value = "<html></html>"
+    renderer.base_dir = "/tmp"
+    mocker.patch("main.TemplateRenderer", return_value=renderer)
+    mocker.patch("main.PdfGenerator").return_value.generate_pdf = mocker.Mock()
+    mocker.patch("main.generate_pdf_report", return_value="pdf_report.json")
+    mocker.patch("main.set_action_output")
+
+    with caplog.at_level("INFO"):
+        main.run()
+
+    assert any("skipping validation" in r.message for r in caplog.records)
+
+
+def test_run_unparseable_schema_version_exit_code_1(base_env, mocker) -> None:
+    """A present-but-unparseable schema_version maps to exit code 1."""
+    mocker.patch("main.load_json", return_value={"items": [], "schema_version": "generator-ready"})
+    set_failed = mocker.patch("main.set_action_failed")
+
+    main.run()
+
+    set_failed.assert_called_once()
+    message = set_failed.call_args.args[0]
+    assert message.startswith("Invalid input:")
+    assert "schema_version" in message
+    assert set_failed.call_args.kwargs["exit_code"] == 1
+
+
+def test_run_missing_schema_version_exit_code_1(base_env, mocker) -> None:
+    """An input with no schema_version fails with one structured message (exit code 1)."""
+    mocker.patch("main.load_json", return_value={"items": []})
+    set_failed = mocker.patch("main.set_action_failed")
+
+    main.run()
+
+    set_failed.assert_called_once()
+    message = set_failed.call_args.args[0]
+    assert message.startswith("Invalid input:")
+    assert "schema_version" in message
+    assert set_failed.call_args.kwargs["exit_code"] == 1
+
+
 def test_run_unexpected_error_exit_code_1(base_env, mocker) -> None:
     """An unexpected exception maps to exit code 1 with a prefixed message."""
-    mocker.patch("main.load_source", side_effect=RuntimeError("boom"))
+    mocker.patch("main.load_json", side_effect=RuntimeError("boom"))
     set_failed = mocker.patch("main.set_action_failed")
 
     main.run()
