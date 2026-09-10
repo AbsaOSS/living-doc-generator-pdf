@@ -35,7 +35,10 @@ def load_source(source_path: str, schema_path: Optional[str] = None) -> dict[str
     """Load a JSON source file and optionally validate it against a schema.
 
     Validation is decoupled from loading: when ``schema_path`` is omitted the
-    file is parsed and returned without structural validation.
+    file is parsed and returned without structural validation. Callers that need
+    to run other checks (for example the input schema-version compatibility
+    check) between parsing and structural validation can call :func:`load_json`
+    and :func:`validate_source` directly.
 
     Args:
         source_path: Path to the JSON source file to load.
@@ -48,17 +51,17 @@ def load_source(source_path: str, schema_path: Optional[str] = None) -> dict[str
         ValueError: When the file is missing or contains invalid JSON (exit code 1).
         SchemaValidationError: When schema validation fails (exit code 2).
     """
-    data = _load_json(source_path)
+    data = load_json(source_path)
 
     if schema_path:
-        _validate_against_schema(data, schema_path, source_path)
+        validate_source(data, schema_path, source_path)
     else:
         logger.info("No schema-path provided; skipping validation for '%s'.", source_path)
 
     return data
 
 
-def _load_json(file_path: str) -> dict[str, Any]:
+def load_json(file_path: str) -> dict[str, Any]:
     """Load and parse a JSON file, raising ValueError on failure."""
     if not os.path.exists(file_path):
         logger.error("File '%s' not found.", file_path)
@@ -84,7 +87,7 @@ def _load_json(file_path: str) -> dict[str, Any]:
         ) from e
 
 
-def _validate_against_schema(data: dict[str, Any], schema_path: str, source_path: str) -> None:
+def validate_source(data: dict[str, Any], schema_path: str, source_path: str) -> None:
     """Validate ``data`` against the schema at ``schema_path``."""
     if not os.path.exists(schema_path):
         logger.error("Schema file '%s' not found.", schema_path)

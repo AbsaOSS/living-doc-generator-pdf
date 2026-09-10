@@ -33,12 +33,12 @@ from generator.action_inputs import ActionInputs
 from generator.models import build_meta
 from generator.pdf_generator import FileIOError, PdfGenerator, RenderingError
 from generator.report_generator import generate_pdf_report
-from generator.schema_validator import SchemaValidationError, load_source
+from generator.schema_validator import SchemaValidationError, load_json, validate_source
 from generator.template_renderer import TemplateError, TemplateRenderer
 from generator.utils.constants import DEFAULT_DOCUMENT_TITLES
 from generator.utils.gh_action import set_action_failed, set_action_output
 from generator.utils.logging_config import setup_logging
-from generator.utils.version_compat import check_schema_version
+from generator.utils.version_compat import MISSING, check_schema_version
 
 
 def _save_debug_html(html: str, output_path: str) -> str:
@@ -77,6 +77,26 @@ def _resolve_document_title(document_type: str | None, source_path: str) -> str:
     return Path(source_path).stem
 
 
+def _load_and_check_source(source_path: str, schema_path: str | None) -> tuple[dict, list[dict]]:
+    """Parse the source JSON, enforce ``schema_version`` compatibility, then run
+    optional structural validation — in that order.
+
+    The version check runs *before* ``schema_path`` validation so a bundled schema
+    that pins one exact ``schema_version`` cannot pre-empt the out-of-range warning
+    path with a hard ``SchemaValidationError``.
+
+    Returns the parsed data and the ``pdf_report.json`` ``warnings`` list. Raises
+    ``ValueError`` (exit code 1) for a missing/null/blank/unparseable
+    ``schema_version`` and ``SchemaValidationError`` (exit code 2) for a structural
+    mismatch.
+    """
+    data = load_json(source_path)
+    report_warnings = [w.to_dict() for w in check_schema_version(data.get("schema_version", MISSING))]
+    if schema_path:
+        validate_source(data, schema_path, source_path)
+    return data, report_warnings
+
+
 def run() -> None:
     """Run the Living Doc Generator PDF action."""
     setup_logging()
@@ -92,12 +112,7 @@ def run() -> None:
         source_path = ActionInputs.get_source_path()
         schema_path = ActionInputs.get_schema_path()
         logger.info("Loading source JSON from %s", source_path)
-        data = load_source(source_path, schema_path)
-
-        # Step 2b: Check the declared input schema version against the supported range.
-        # Out-of-range versions warn and still render; an unparseable version raises
-        # ValueError (exit code 1).
-        report_warnings = [w.to_dict() for w in check_schema_version(data.get("schema_version"))]
+        data, report_warnings = _load_and_check_source(source_path, schema_path)
 
         # Step 3: Resolve template set
         template_path = ActionInputs.get_template_path()

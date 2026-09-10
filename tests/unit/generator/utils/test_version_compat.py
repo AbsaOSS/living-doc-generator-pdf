@@ -1,14 +1,28 @@
 import pytest
 
 from generator.utils.version_compat import (
+    MISSING,
     CompatibilityWarning,
     VersionCompatibilityError,
     check_schema_version,
 )
 
 
-def test_absent_returns_empty() -> None:
-    assert check_schema_version(None) == []
+def test_absent_key_raises_value_error() -> None:
+    with pytest.raises(VersionCompatibilityError) as exc_info:
+        check_schema_version(MISSING)
+    assert "absent" in str(exc_info.value)
+
+
+def test_default_arg_is_missing() -> None:
+    with pytest.raises(VersionCompatibilityError):
+        check_schema_version()
+
+
+def test_explicit_null_raises_value_error() -> None:
+    with pytest.raises(VersionCompatibilityError) as exc_info:
+        check_schema_version(None)
+    assert "null" in str(exc_info.value)
 
 
 @pytest.mark.parametrize("value", ["", "   ", "\t\n"])

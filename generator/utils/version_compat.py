@@ -18,8 +18,10 @@
 
 This helper mirrors the ``living-doc-toolkit`` adapter pattern: a canonical
 source document declares a ``schema_version`` and the consumer checks it against
-a supported semver range. An out-of-range version produces a captured warning and
-rendering still proceeds; a present-but-unparseable version is a hard error.
+a supported semver range. An out-of-range but parseable version produces a
+captured warning and rendering still proceeds; every other case — the key
+missing, an explicit JSON ``null``, a blank string, or an unparseable value — is
+a hard error with a single structured message (exit code 1).
 
 The module has no PDF-specific dependencies so other generators (for example a
 future Markdown generator) can reuse it verbatim.
@@ -36,6 +38,11 @@ import semver
 
 logger = logging.getLogger(__name__)
 
+# Sentinel so callers can distinguish "key absent" from an explicit JSON ``null``.
+# Both are treated identically (hard error), but keeping the distinction lets the
+# caller pass ``data.get("schema_version", MISSING)`` without ambiguity.
+MISSING: Any = object()
+
 # Supported range for the canonical input schema: any 1.x version.
 SUPPORTED_SCHEMA_RANGE_MIN = "1.0.0"
 SUPPORTED_SCHEMA_RANGE_MAX = "2.0.0"
@@ -50,7 +57,7 @@ _VERSION_TOKEN_RE = re.compile(
 
 
 class VersionCompatibilityError(ValueError):
-    """Raised when ``schema_version`` is present but cannot be parsed (exit code 1)."""
+    """Raised when ``schema_version`` is absent, null, blank, or unparseable (exit code 1)."""
 
 
 @dataclass(frozen=True)
@@ -88,48 +95,46 @@ def _coerce_semver(token: str) -> semver.Version:
     return semver.Version.parse(normalized)
 
 
-def check_schema_version(schema_version: Optional[str]) -> list[CompatibilityWarning]:
+def check_schema_version(schema_version: Any = MISSING) -> list[CompatibilityWarning]:
     """Check a source document's ``schema_version`` against the supported range.
 
     Args:
-        schema_version: The raw ``schema_version`` string from the source JSON, or
-            ``None`` when the key is absent.
+        schema_version: The raw ``schema_version`` value from the source JSON.
+            Pass :data:`MISSING` (the default) when the key is absent, ``None``
+            for an explicit JSON ``null``.
 
     Returns:
-        A list of :class:`CompatibilityWarning` (empty when the version is in
-        range). Absent ``schema_version`` (``None``) is treated as compatible and
-        returns an empty list.
+        A list of :class:`CompatibilityWarning`: empty when the version is in
+        range, one ``schema_version_out_of_range`` warning when it parses but
+        falls outside :data:`SUPPORTED_SCHEMA_RANGE`.
 
     Raises:
-        VersionCompatibilityError: When ``schema_version`` is present but blank,
-            or present but does not contain a parseable version token.
+        VersionCompatibilityError: When ``schema_version`` is absent, ``null``,
+            blank, or does not contain a parseable version token. The exception
+            message is a single structured line (exit code 1).
     """
-    if schema_version is None:
-        logger.warning("No 'schema_version' in source; skipping version compatibility check.")
-        return []
+    _expected = f"Expected a semantic version in range {SUPPORTED_SCHEMA_RANGE} (for example 'generator-ready-v1.0.0')."
+
+    if schema_version is MISSING or schema_version is None:
+        state = "absent" if schema_version is MISSING else "null"
+        raise VersionCompatibilityError(
+            f"Invalid input: 'schema_version' is {state}. Every source document must "
+            f"declare which input contract it targets. {_expected}"
+        )
 
     raw = str(schema_version).strip()
     if not raw:
-        raise VersionCompatibilityError(
-            "Invalid input: 'schema_version' is present but blank. "
-            f"Expected a semantic version in range {SUPPORTED_SCHEMA_RANGE} "
-            f"(for example 'generator-ready-v1.0.0')."
-        )
+        raise VersionCompatibilityError(f"Invalid input: 'schema_version' is present but blank. {_expected}")
 
     match = _VERSION_TOKEN_RE.search(raw)
     if not match:
-        raise VersionCompatibilityError(
-            f"Invalid input: unparseable 'schema_version' value {raw!r}. "
-            f"Expected a semantic version in range {SUPPORTED_SCHEMA_RANGE} "
-            f"(for example 'generator-ready-v1.0.0')."
-        )
+        raise VersionCompatibilityError(f"Invalid input: unparseable 'schema_version' value {raw!r}. {_expected}")
 
     try:
         version = _coerce_semver(match.group(1))
     except ValueError as exc:
         raise VersionCompatibilityError(
-            f"Invalid input: unparseable 'schema_version' value {raw!r}. "
-            f"Expected a semantic version in range {SUPPORTED_SCHEMA_RANGE}."
+            f"Invalid input: unparseable 'schema_version' value {raw!r}. {_expected}"
         ) from exc
 
     lower = semver.Version.parse(SUPPORTED_SCHEMA_RANGE_MIN)
