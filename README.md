@@ -258,6 +258,11 @@ Where the `schema_version` lives depends on the `document-type`:
 |-----------------|---------------------------|---------------|
 | `technical-project`, `coverage-matrix` | top-level `schema_version` (e.g. `"generator-ready-v1.0.0"`) | hard error (exit 1) |
 | `ui-test-catalog` | top-level `schema_version` if present, else `metadata.original_metadata.schema_version` (written by `living-doc-collector-gh`, e.g. `"1.0.0"`) | tolerated — the vendored `ui-tests-v1.0.0-schema.json` pins the contract, so structural validation is the compatibility check |
+| _no `document-type`_ (bare `template-path` run) | top-level `schema_version` | hard error (exit 1) |
+
+A bare `template-path` run with no `document-type` has no vendored contract to
+fall back on, so it is treated like the required-top-level types: the source must
+carry a top-level `schema_version` or the run fails fast with exit code 1.
 
 When a `schema_version` is present, the action checks its embedded semantic
 version against the supported range `>=1.0.0,<2.0.0`, **before** any optional
