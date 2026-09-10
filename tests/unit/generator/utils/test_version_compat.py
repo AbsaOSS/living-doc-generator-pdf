@@ -69,6 +69,14 @@ def test_unparseable_raises_value_error(value) -> None:
     assert "schema_version" in str(exc_info.value)
 
 
+@pytest.mark.parametrize("value", [1.0, 2, 0, True, ["1.0.0"], {"v": "1.0.0"}])
+def test_non_string_raises_value_error(value) -> None:
+    with pytest.raises(VersionCompatibilityError) as exc_info:
+        check_schema_version(value)
+    assert isinstance(exc_info.value, ValueError)
+    assert "must be a string" in str(exc_info.value)
+
+
 def test_compatibility_warning_to_dict_shape() -> None:
     warning = CompatibilityWarning(code="c", message="m", context="ctx")
     assert warning.to_dict() == {"code": "c", "message": "m", "context": "ctx"}

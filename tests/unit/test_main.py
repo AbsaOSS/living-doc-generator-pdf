@@ -143,6 +143,45 @@ def test_run_out_of_range_schema_version_still_renders(base_env, mocker) -> None
     assert warnings[0]["code"] == "schema_version_out_of_range"
 
 
+def test_run_out_of_range_skips_structural_validation(base_env, monkeypatch, tmp_path, mocker) -> None:
+    """An out-of-range schema_version renders best-effort: structural validation is skipped
+    so a schema pinning the version (const) cannot pre-empt the warn-and-render path."""
+    monkeypatch.setenv("INPUT_SCHEMA_PATH", str(tmp_path / "schema.json"))
+    mocker.patch("main.load_json", return_value={"items": [], "schema_version": "coverage-matrix-v2.0.0"})
+    renderer = mocker.Mock()
+    renderer.render.return_value = "<html></html>"
+    renderer.base_dir = "/tmp"
+    mocker.patch("main.TemplateRenderer", return_value=renderer)
+    generate_pdf = mocker.patch("main.PdfGenerator").return_value.generate_pdf
+    validate_source = mocker.patch("main.validate_source")
+    mocker.patch("main.generate_pdf_report", return_value="pdf_report.json")
+    mocker.patch("main.set_action_output")
+    set_failed = mocker.patch("main.set_action_failed")
+
+    main.run()
+
+    set_failed.assert_not_called()
+    validate_source.assert_not_called()
+    generate_pdf.assert_called_once()
+
+
+def test_run_no_schema_path_logs_skip_step(base_env, mocker, caplog) -> None:
+    """The direct load path still emits the canonical 'skipping validation' step log."""
+    mocker.patch("main.load_json", return_value={"items": [], "schema_version": "generator-ready-v1.0.0"})
+    renderer = mocker.Mock()
+    renderer.render.return_value = "<html></html>"
+    renderer.base_dir = "/tmp"
+    mocker.patch("main.TemplateRenderer", return_value=renderer)
+    mocker.patch("main.PdfGenerator").return_value.generate_pdf = mocker.Mock()
+    mocker.patch("main.generate_pdf_report", return_value="pdf_report.json")
+    mocker.patch("main.set_action_output")
+
+    with caplog.at_level("INFO"):
+        main.run()
+
+    assert any("skipping validation" in r.message for r in caplog.records)
+
+
 def test_run_unparseable_schema_version_exit_code_1(base_env, mocker) -> None:
     """A present-but-unparseable schema_version maps to exit code 1."""
     mocker.patch("main.load_json", return_value={"items": [], "schema_version": "generator-ready"})

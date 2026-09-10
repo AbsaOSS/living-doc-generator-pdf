@@ -56,9 +56,19 @@ def load_source(source_path: str, schema_path: Optional[str] = None) -> dict[str
     if schema_path:
         validate_source(data, schema_path, source_path)
     else:
-        logger.info("No schema-path provided; skipping validation for '%s'.", source_path)
+        log_validation_skipped(source_path)
 
     return data
+
+
+def log_validation_skipped(source_path: str) -> None:
+    """Emit the canonical 'no schema-path' step log.
+
+    Shared by :func:`load_source` and callers that run :func:`load_json` /
+    :func:`validate_source` directly, so the ``run()`` step log is identical
+    regardless of which path parsed the source.
+    """
+    logger.info("No schema-path provided; skipping validation for '%s'.", source_path)
 
 
 def load_json(file_path: str) -> dict[str, Any]:

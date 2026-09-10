@@ -33,7 +33,12 @@ from generator.action_inputs import ActionInputs
 from generator.models import build_meta
 from generator.pdf_generator import FileIOError, PdfGenerator, RenderingError
 from generator.report_generator import generate_pdf_report
-from generator.schema_validator import SchemaValidationError, load_json, validate_source
+from generator.schema_validator import (
+    SchemaValidationError,
+    load_json,
+    log_validation_skipped,
+    validate_source,
+)
 from generator.template_renderer import TemplateError, TemplateRenderer
 from generator.utils.constants import DEFAULT_DOCUMENT_TITLES
 from generator.utils.gh_action import set_action_failed, set_action_output
@@ -79,21 +84,28 @@ def _resolve_document_title(document_type: str | None, source_path: str) -> str:
 
 def _load_and_check_source(source_path: str, schema_path: str | None) -> tuple[dict, list[dict]]:
     """Parse the source JSON, enforce ``schema_version`` compatibility, then run
-    optional structural validation — in that order.
+    optional structural validation.
 
-    The version check runs *before* ``schema_path`` validation so a bundled schema
-    that pins one exact ``schema_version`` cannot pre-empt the out-of-range warning
-    path with a hard ``SchemaValidationError``.
+    When ``schema_version`` parses but falls outside the supported range the
+    document is rendered best-effort: structural validation is skipped entirely,
+    because a schema for the supported range no longer describes the document
+    (its pinned ``schema_version`` ``const`` would reject it, and every other
+    rule is equally unreliable against an out-of-range document).
 
     Returns the parsed data and the ``pdf_report.json`` ``warnings`` list. Raises
-    ``ValueError`` (exit code 1) for a missing/null/blank/unparseable
+    ``ValueError`` (exit code 1) for a missing/null/non-string/blank/unparseable
     ``schema_version`` and ``SchemaValidationError`` (exit code 2) for a structural
     mismatch.
     """
     data = load_json(source_path)
-    report_warnings = [w.to_dict() for w in check_schema_version(data.get("schema_version", MISSING))]
-    if schema_path:
+    warnings = check_schema_version(data.get("schema_version", MISSING))
+    report_warnings = [w.to_dict() for w in warnings]
+    out_of_range = any(w.code == "schema_version_out_of_range" for w in warnings)
+
+    if schema_path and not out_of_range:
         validate_source(data, schema_path, source_path)
+    else:
+        log_validation_skipped(source_path)
     return data, report_warnings
 
 

@@ -20,8 +20,8 @@ This helper mirrors the ``living-doc-toolkit`` adapter pattern: a canonical
 source document declares a ``schema_version`` and the consumer checks it against
 a supported semver range. An out-of-range but parseable version produces a
 captured warning and rendering still proceeds; every other case — the key
-missing, an explicit JSON ``null``, a blank string, or an unparseable value — is
-a hard error with a single structured message (exit code 1).
+missing, an explicit JSON ``null``, a non-string value, a blank string, or an
+unparseable value — is a hard error with a single structured message (exit code 1).
 
 The module has no PDF-specific dependencies so other generators (for example a
 future Markdown generator) can reuse it verbatim.
@@ -57,7 +57,7 @@ _VERSION_TOKEN_RE = re.compile(
 
 
 class VersionCompatibilityError(ValueError):
-    """Raised when ``schema_version`` is absent, null, blank, or unparseable (exit code 1)."""
+    """Raised when ``schema_version`` is absent, null, non-string, blank, or unparseable (exit code 1)."""
 
 
 @dataclass(frozen=True)
@@ -110,8 +110,8 @@ def check_schema_version(schema_version: Any = MISSING) -> list[CompatibilityWar
 
     Raises:
         VersionCompatibilityError: When ``schema_version`` is absent, ``null``,
-            blank, or does not contain a parseable version token. The exception
-            message is a single structured line (exit code 1).
+            not a string, blank, or does not contain a parseable version token.
+            The exception message is a single structured line (exit code 1).
     """
     _expected = f"Expected a semantic version in range {SUPPORTED_SCHEMA_RANGE} (for example 'generator-ready-v1.0.0')."
 
@@ -122,7 +122,13 @@ def check_schema_version(schema_version: Any = MISSING) -> list[CompatibilityWar
             f"declare which input contract it targets. {_expected}"
         )
 
-    raw = str(schema_version).strip()
+    if not isinstance(schema_version, str):
+        raise VersionCompatibilityError(
+            f"Invalid input: 'schema_version' must be a string, got "
+            f"{type(schema_version).__name__}. {_expected}"
+        )
+
+    raw = schema_version.strip()
     if not raw:
         raise VersionCompatibilityError(f"Invalid input: 'schema_version' is present but blank. {_expected}")
 
