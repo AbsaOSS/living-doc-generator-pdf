@@ -27,6 +27,10 @@ logger = logging.getLogger(__name__)
 
 def _count_items(data: dict[str, Any]) -> int:
     """Count top-level renderable items in a generic source document."""
+    content = data.get("content")
+    if isinstance(content, dict) and isinstance(content.get("user_stories"), list):
+        return len(content["user_stories"])
+
     for key in ("items", "user_stories"):
         value = data.get(key)
         if isinstance(value, list):

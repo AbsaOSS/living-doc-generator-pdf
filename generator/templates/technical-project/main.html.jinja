@@ -8,7 +8,13 @@
     </style>
 </head>
 <body>
-    {% if 'features' in data %}
+    {% if data.get('content') is mapping %}
+        {# generator-ready v1.0.0: normalized {meta, content} envelope #}
+        {% set features = [] %}
+        {% set user_stories = data.content.get('user_stories', []) | natural_sort(attribute='id') %}
+        {% set functionalities = [] %}
+        {% set items = [] %}
+    {% elif 'features' in data %}
         {# doc-source format: 3-layer living doc (Features + User Stories + Functionalities) #}
         {% set features = data.get('features', []) | natural_sort(attribute='id') %}
         {% set user_stories = data.get('user_stories', []) | natural_sort(attribute='id') %}

@@ -41,10 +41,16 @@ from generator.schema_validator import (
     validate_source,
 )
 from generator.template_renderer import TemplateError, TemplateRenderer
-from generator.utils.constants import DEFAULT_DOCUMENT_TITLES
+from generator.utils.constants import (
+    DEFAULT_DOCUMENT_TITLES,
+    DEFAULT_GENERATOR_READY_SCHEMA_PATH,
+    DOCUMENT_TYPE_TECHNICAL_PROJECT,
+)
 from generator.utils.gh_action import set_action_failed, set_action_output
 from generator.utils.logging_config import setup_logging
 from generator.utils.version_compat import MISSING, check_schema_version
+
+logger = logging.getLogger(__name__)
 
 
 def _save_debug_html(html: str, output_path: str) -> str:
@@ -60,7 +66,6 @@ def _save_debug_html(html: str, output_path: str) -> str:
     Raises:
         OSError: If the file cannot be written.
     """
-    logger = logging.getLogger(__name__)
     output_file = Path(output_path)
     html_filename = f"{output_file.stem}_rendered.html"
     html_path = str(output_file.parent / html_filename)
@@ -83,7 +88,45 @@ def _resolve_document_title(document_type: str | None, source_path: str) -> str:
     return Path(source_path).stem
 
 
-def _load_and_check_source(source_path: str, schema_path: str | None) -> tuple[dict, list[dict]]:
+def _resolve_schema_path(document_type: str | None, schema_path: str | None) -> tuple[str | None, bool]:
+    """Resolve the schema used for structural validation.
+
+    An explicit ``schema-path`` always wins. Otherwise the ``technical-project``
+    document type defaults to the vendored generator-ready schema, so a run with
+    no ``schema-path`` still validates the normalized envelope. Every other
+    document type keeps validation opt-in.
+
+    Returns the schema path (or ``None``) and whether it was applied as the
+    ``technical-project`` default.
+    """
+    if schema_path:
+        return schema_path, False
+    if document_type == DOCUMENT_TYPE_TECHNICAL_PROJECT:
+        return DEFAULT_GENERATOR_READY_SCHEMA_PATH, True
+    return None, False
+
+
+def _reject_raw_collector_source(data: dict, source_path: str) -> None:
+    """Fail a defaulted ``technical-project`` run that was handed raw collector output.
+
+    Raw collector files have no normalized ``meta`` / ``content`` envelope. Point
+    the caller at the normalization step instead of emitting a generic schema error.
+    """
+    if "meta" in data and "content" in data:
+        return
+    message = (
+        f"Schema validation failed: '{source_path}' looks like raw collector output "
+        f"(missing the normalized 'meta'/'content' envelope). The 'technical-project' "
+        f"document type expects a generator-ready document — run the source through the "
+        f"living-doc-toolkit normalization step, or pass an explicit 'schema-path' to override."
+    )
+    logger.error(message)
+    raise SchemaValidationError(message)
+
+
+def _load_and_check_source(
+    source_path: str, schema_path: str | None, schema_is_default: bool = False
+) -> tuple[dict, list[dict]]:
     """Parse the source JSON, enforce ``schema_version`` compatibility, then run
     optional structural validation.
 
@@ -103,6 +146,12 @@ def _load_and_check_source(source_path: str, schema_path: str | None) -> tuple[d
     report_warnings = [w.to_dict() for w in warnings]
     out_of_range = any(w.code == "schema_version_out_of_range" for w in warnings)
 
+    # The raw-collector rejection is a hard guarantee for a defaulted
+    # ``technical-project`` run: it must hold even when structural validation is
+    # later skipped because ``schema_version`` is out of the supported range.
+    if schema_path and schema_is_default:
+        _reject_raw_collector_source(data, source_path)
+
     if out_of_range:
         log_validation_skipped_out_of_range(source_path)
     elif schema_path:
@@ -115,7 +164,6 @@ def _load_and_check_source(source_path: str, schema_path: str | None) -> tuple[d
 def run() -> None:
     """Run the Living Doc Generator PDF action."""
     setup_logging()
-    logger = logging.getLogger(__name__)
     verbose = ActionInputs.get_verbose()
     logger.info("Starting 'Living Doc Generator PDF' GitHub Action")
 
@@ -125,13 +173,13 @@ def run() -> None:
 
         # Step 2: Load source JSON (optionally validate against a schema)
         source_path = ActionInputs.get_source_path()
-        schema_path = ActionInputs.get_schema_path()
-        logger.info("Loading source JSON from %s", source_path)
-        data, report_warnings = _load_and_check_source(source_path, schema_path)
-
-        # Step 3: Resolve template set
         template_path = ActionInputs.get_template_path()
         document_type = ActionInputs.get_document_type()
+        schema_path, schema_is_default = _resolve_schema_path(document_type, ActionInputs.get_schema_path())
+        logger.info("Loading source JSON from %s", source_path)
+        data, report_warnings = _load_and_check_source(source_path, schema_path, schema_is_default)
+
+        # Step 3: Resolve template set
         if template_path:
             template_pack_type = "custom"
             template_pack_path = template_path

@@ -45,7 +45,7 @@ def test_empty_items_array(temp_output_dir: Path) -> None:
     """An empty items array still renders a PDF."""
     source = _write(temp_output_dir, "empty.json", {"items": []})
     output_pdf = temp_output_dir / "empty.pdf"
-    _render_pdf(source, "user-stories", output_pdf)
+    _render_pdf(source, "technical-project", output_pdf)
     assert output_pdf.exists()
     assert output_pdf.stat().st_size > 0
 
@@ -55,7 +55,7 @@ def test_item_with_minimal_fields(temp_output_dir: Path) -> None:
     payload = {"items": [{"id": "US-1", "title": "Minimal", "acceptance_criteria": []}]}
     source = _write(temp_output_dir, "minimal_item.json", payload)
     output_pdf = temp_output_dir / "minimal_item.pdf"
-    html = _render_pdf(source, "user-stories", output_pdf)
+    html = _render_pdf(source, "technical-project", output_pdf)
     assert "Minimal" in html
     assert output_pdf.exists()
 
@@ -77,7 +77,7 @@ def test_large_markdown_content(temp_output_dir: Path) -> None:
     }
     source = _write(temp_output_dir, "large.json", payload)
     output_pdf = temp_output_dir / "large.pdf"
-    html = _render_pdf(source, "user-stories", output_pdf)
+    html = _render_pdf(source, "technical-project", output_pdf)
 
     assert "Section 50" in html
     assert "Section 99" in html
@@ -101,7 +101,7 @@ def test_special_characters_in_content(temp_output_dir: Path) -> None:
     }
     source = _write(temp_output_dir, "special.json", payload)
     output_pdf = temp_output_dir / "special.pdf"
-    html = _render_pdf(source, "user-stories", output_pdf)
+    html = _render_pdf(source, "technical-project", output_pdf)
 
     assert "中文" in html
     # Autoescaping renders angle brackets safely.

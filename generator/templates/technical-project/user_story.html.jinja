@@ -1,6 +1,8 @@
 {% set short_id = item.id.split('/') | last %}
 {% set anchor_id = item.id | replace('/', '-') %}
 {% set repo_context = item.id.rsplit('/', 1)[0] if '/' in item.id else '' %}
+{# generator-ready v1.0.0 nests prose under `sections`; the flat legacy shape keeps it on the item. #}
+{% set sec = item.sections if item.sections is mapping else item %}
 <section class="chapter user-story" id="{{ anchor_id }}">
     <header class="story-header">
         <h2 class="story-title">
@@ -33,19 +35,19 @@
     {% endif %}
 
     <div class="story-content">
-        {% if item.description %}
+        {% if sec.description %}
         <div class="section">
             <h3 class="section-title">Description</h3>
-            <div class="section-content">{{ item.description | markdown | safe }}</div>
+            <div class="section-content">{{ sec.description | markdown | safe }}</div>
         </div>
         {% endif %}
 
-        {% if item.business_value %}
+        {% if sec.business_value %}
         <div class="section">
             <h3 class="section-title">Business Value</h3>
             <div class="section-content">
                 <ul>
-                    {% for value in item.business_value %}
+                    {% for value in sec.business_value %}
                     <li>{{ value | markdown | safe }}</li>
                     {% endfor %}
                 </ul>
@@ -53,12 +55,12 @@
         </div>
         {% endif %}
 
-        {% if item.preconditions %}
+        {% if sec.preconditions %}
         <div class="section">
             <h3 class="section-title">Preconditions</h3>
             <div class="section-content">
                 <ul>
-                    {% for precondition in item.preconditions %}
+                    {% for precondition in sec.preconditions %}
                     <li>{{ precondition | markdown | safe }}</li>
                     {% endfor %}
                 </ul>
@@ -66,7 +68,7 @@
         </div>
         {% endif %}
 
-        {% if item.acceptance_criteria %}
+        {% if sec.acceptance_criteria %}
         <div class="section">
             <h3 class="section-title">Acceptance Criteria</h3>
             <div class="section-content">
@@ -80,7 +82,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        {% for ac in item.acceptance_criteria %}
+                        {% for ac in sec.acceptance_criteria %}
                         <tr class="ac-row ac-state-{{ ac.state | lower if ac.state else 'unknown' }}">
                             <td class="ac-id">{{ ac.id | default_if_none('') }}</td>
                             <td class="ac-state">{{ ac.state | default_if_none('') }}</td>

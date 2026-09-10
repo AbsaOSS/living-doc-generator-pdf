@@ -33,9 +33,9 @@ def _render(source: Path, document_type: str) -> str:
     return renderer.render(data, meta)
 
 
-def test_debug_html_saved(user_stories_json: Path, temp_output_dir: Path) -> None:
+def test_debug_html_saved(technical_project_json: Path, temp_output_dir: Path) -> None:
     """Rendered HTML can be written via the production debug-HTML save path."""
-    html = _render(user_stories_json, "user-stories")
+    html = _render(technical_project_json, "technical-project")
     output_pdf = temp_output_dir / "documentation.pdf"
     
     # Use production save logic
@@ -49,9 +49,9 @@ def test_debug_html_saved(user_stories_json: Path, temp_output_dir: Path) -> Non
     assert "Debug Doc" in content
 
 
-def test_debug_html_renders_markdown(user_stories_json: Path) -> None:
+def test_debug_html_renders_markdown(technical_project_json: Path) -> None:
     """Markdown in rendered fields is converted to HTML elements without injection."""
-    html = _render(user_stories_json, "user-stories")
+    html = _render(technical_project_json, "technical-project")
     # Verify markdown is converted and HTML is sanitized
     assert "<html" in html.lower()
 

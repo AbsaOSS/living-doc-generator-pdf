@@ -1,29 +1,19 @@
 {
   "schema_version": "generator-ready-v1.0.0",
-  "user_stories": [],
-  "functionalities": [],
-  "features": [],
-  "metadata": {
-    "producer": {
-      "name": "living-doc-collector",
-      "version": "1.0.0",
-      "build": null
-    },
-    "run": {
-      "run_id": null,
-      "run_attempt": null,
-      "actor": null,
-      "workflow": null,
-      "ref": null,
-      "sha": null
-    },
-    "source": {
-      "systems": ["documentation-system"],
-      "repositories": ["example/repo"],
-      "organization": "example",
-      "enterprise": null
-    },
-    "original_metadata": {}
+  "meta": {
+    "document_title": "Minimal Example",
+    "document_version": "1.0.0",
+    "generated_at": "2024-02-10T15:00:00Z",
+    "source_set": [
+      "github:example/repo"
+    ],
+    "selection_summary": {
+      "total_items": 0,
+      "included_items": 0,
+      "excluded_items": 0
+    }
   },
-  "warnings": []
+  "content": {
+    "user_stories": []
+  }
 }

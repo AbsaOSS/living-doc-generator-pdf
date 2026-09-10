@@ -55,7 +55,7 @@ def test_custom_template_full_override(minimal_json: Path, temp_output_dir: Path
     assert output_pdf.stat().st_size > 0
 
 
-def test_partial_override_falls_back_to_builtin(user_stories_json: Path, temp_output_dir: Path) -> None:
+def test_partial_override_falls_back_to_builtin(technical_project_json: Path, temp_output_dir: Path) -> None:
     """A partial override directory falls back to the built-in set for missing partials."""
     custom_dir = temp_output_dir / "partial_custom"
     custom_dir.mkdir(exist_ok=True)
@@ -65,9 +65,9 @@ def test_partial_override_falls_back_to_builtin(user_stories_json: Path, temp_ou
         encoding="utf-8",
     )
 
-    data = load_source(str(user_stories_json))
-    renderer = TemplateRenderer(template_path=str(custom_dir), document_type="user-stories")
-    html = renderer.render(data, _meta(user_stories_json))
+    data = load_source(str(technical_project_json))
+    renderer = TemplateRenderer(template_path=str(custom_dir), document_type="technical-project")
+    html = renderer.render(data, _meta(technical_project_json))
 
     assert "CUSTOM COVER" in html
     # Built-in main still rendered the user stories.

@@ -17,7 +17,7 @@ The action is a generic JSON-to-PDF engine: you provide a JSON source file and e
 
 | `document-type` | Purpose | Typical source |
 |-----------------|---------|----------------|
-| `user-stories` | User Stories with acceptance criteria | `doc-source.json` |
+| `technical-project` | User stories, features, and acceptance criteria | `generator-ready.json` |
 | `ui-test-catalog` | BDD/UI test scenarios grouped by feature file | `ui-tests.json` |
 | `coverage-matrix` | AC-to-test coverage report | `coverage-matrix.json` |
 
@@ -42,8 +42,8 @@ The action is a generic JSON-to-PDF engine: you provide a JSON source file and e
 - name: Generate PDF
   uses: AbsaOSS/living-doc-generator-pdf@v1
   with:
-    source-path: 'doc-source.json'
-    document-type: 'user-stories'
+    source-path: 'generator-ready.json'
+    document-type: 'technical-project'
     output-path: 'documentation.pdf'
 ```
 
@@ -66,11 +66,11 @@ jobs:
       - name: Generate PDF
         uses: AbsaOSS/living-doc-generator-pdf@v1
         with:
-          source-path: 'doc-source.json'
-          document-type: 'user-stories'
+          source-path: 'generator-ready.json'
+          document-type: 'technical-project'
           output-path: 'documentation.pdf'
           document-title: 'Product Backlog'
-          schema-path: 'generator/schemas/doc-issues-v1.0.0-schema.json'
+          schema-path: 'generator/schemas/generator-ready-v1.0.0-schema.json'
           debug-html: 'true'
           verbose: 'true'
 
@@ -92,7 +92,7 @@ None. All configuration is passed through the `with:` inputs below.
 | Input | Type | Required | Default | Description |
 |-------|------|----------|---------|-------------|
 | `source-path` | string (path) | **Yes** | - | Path to the source JSON file to render |
-| `document-type` | string | Conditional | - | Built-in set: `user-stories`, `ui-test-catalog`, or `coverage-matrix` |
+| `document-type` | string | Conditional | - | Built-in set: `technical-project`, `ui-test-catalog`, or `coverage-matrix` |
 | `template-path` | string (path) | Conditional | - | Custom template directory (overrides or extends a built-in set) |
 | `output-path` | string (path) | No | `output.pdf` | Path for the generated PDF |
 | `document-title` | string | No | _(derived)_ | Cover-page title |
@@ -101,7 +101,9 @@ None. All configuration is passed through the `with:` inputs below.
 | `verbose` | boolean | No | `false` | Enable verbose logging |
 | `pdf_ready_json` | string (path) | No | - | **Deprecated** alias for `source-path` |
 
-At least one of `document-type` or `template-path` must be provided. When `document-title` is not set, the title is derived from the document type's default (e.g. "User Stories") or the source file name.
+At least one of `document-type` or `template-path` must be provided. When `document-title` is not set, the title is derived from the document type's default (e.g. "Technical Project") or the source file name.
+
+The `technical-project` document type is **validated by default**: when no `schema-path` is given, the source is checked against the vendored `generator-ready-v1.0.0-schema.json`. A raw collector file (one with no normalized `meta`/`content` envelope) fails with a message directing you to the `living-doc-toolkit` normalization step. Pass an explicit `schema-path` to override the default.
 
 ## Action Outputs
 
@@ -132,19 +134,24 @@ For local setup, static analysis, testing, coverage, running the action locally,
 
 The action does not transform the source JSON — it is exposed to templates as `data` exactly as parsed. Each built-in document type expects a particular shape; see [examples/](./examples/) for runnable samples:
 
-- [examples/user_stories.json](./examples/user_stories.json) — `user-stories`
+- [examples/generator-ready.json](./examples/generator-ready.json) — `technical-project`
 - [examples/ui_tests.json](./examples/ui_tests.json) — `ui-test-catalog`
 - [examples/coverage_matrix.json](./examples/coverage_matrix.json) — `coverage-matrix`
 
-#### Optional schema validation
+#### Schema validation
 
-Validation is opt-in. Pass `schema-path` to validate the source before rendering; omit it to render as-is. Built-in schemas live in [generator/schemas/](./generator/schemas/):
+`technical-project` is validated by default against the vendored
+`generator-ready-v1.0.0-schema.json`; raw collector output (no normalized
+`meta`/`content` envelope) fails with a pointer to the `living-doc-toolkit`
+normalization step. For every other document type, validation is opt-in: pass
+`schema-path` to validate the source before rendering; omit it to render as-is.
+Built-in schemas live in [generator/schemas/](./generator/schemas/):
 
 ```yaml
 with:
-  source-path: 'doc-source.json'
-  document-type: 'user-stories'
-  schema-path: 'generator/schemas/doc-issues-v1.0.0-schema.json'
+  source-path: 'generator-ready.json'
+  document-type: 'technical-project'
+  # schema-path optional here; pass one to override the default schema
 ```
 
 #### Input schema-version compatibility
@@ -208,7 +215,7 @@ See the full [template override guide](./docs/template-override-guide.md) for co
 
 **`Invalid input: File '...' not found`** — `source-path` points to a missing file; verify the path.
 
-**`Schema validation failed: ...`** — the source does not match the schema passed via `schema-path`; fix the data or omit `schema-path` to skip validation.
+**`Schema validation failed: ...`** — the source does not match the active schema. For `technical-project` this is `generator-ready-v1.0.0-schema.json` by default; if the file is raw collector output, run it through the `living-doc-toolkit` normalization step first. For other document types, fix the data or omit `schema-path` to skip validation.
 
 **`Invalid input: 'schema_version' is absent ...`** / **`... unparseable 'schema_version' ...`** — every source must declare a parseable `schema_version` (for example `generator-ready-v1.0.0`); add or fix the key. Omitting it is not allowed.
 

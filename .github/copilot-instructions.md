@@ -38,7 +38,7 @@ Module map — the `generator/` package:
 | `generator/pdf_generator.py` | `PdfGenerator` — HTML to PDF via WeasyPrint, raises `RenderingError` / `FileIOError` |
 | `generator/report_generator.py` | `generate_pdf_report()` — writes `pdf_report.json` |
 | `generator/schemas/` | Bundled `*-v1.0.0-schema.json` files |
-| `generator/templates/` | Built-in template packs — `user-stories/`, `ui-test-catalog/`, `coverage-matrix/` |
+| `generator/templates/` | Built-in template packs — `technical-project/`, `ui-test-catalog/`, `coverage-matrix/` |
 | `generator/utils/` | `constants.py`, `enums.py`, `gh_action.py`, `logging_config.py`, `decorators.py` |
 
 - Must treat `main.py` function `run()` as the entry point — it orchestrates validate inputs → load source (optional schema validation) → resolve template set → render HTML → optional debug HTML → generate PDF → generate report.
@@ -50,7 +50,7 @@ Inputs — `INPUT_*` environment variables, parsed only in `ActionInputs`:
 |---|---|---|---|
 | `source-path` | `INPUT_SOURCE_PATH` | yes | deprecated alias `pdf_ready_json` / `INPUT_PDF_READY_JSON` (logs a warning) |
 | `output-path` | `INPUT_OUTPUT_PATH` | no | defaults to `output.pdf` |
-| `document-type` | `INPUT_DOCUMENT_TYPE` | conditional | one of `user-stories` / `ui-test-catalog` / `coverage-matrix`; `template-path` or `document-type` must be set |
+| `document-type` | `INPUT_DOCUMENT_TYPE` | conditional | one of `technical-project` / `ui-test-catalog` / `coverage-matrix`; `template-path` or `document-type` must be set |
 | `template-path` | `INPUT_TEMPLATE_PATH` | conditional | custom Jinja template directory |
 | `schema-path` | `INPUT_SCHEMA_PATH` | no | when set, the source JSON is validated before rendering |
 | `document-title` | `INPUT_DOCUMENT_TITLE` | no | cover-page title override |

@@ -44,7 +44,7 @@
             <div class="section-content">
                 <ul class="ref-list">
                     {% for us_id in item.user_stories %}
-                    <li><a class="ref-link" href="#{{ us_id.split('/') | last }}">{{ us_id }}</a></li>
+                    <li><a class="ref-link" href="#{{ us_id | replace('/', '-') }}">{{ us_id }}</a></li>
                     {% endfor %}
                 </ul>
             </div>
@@ -57,7 +57,7 @@
             <div class="section-content">
                 <ul class="ref-list">
                     {% for func_id in item.functionalities %}
-                    <li><a class="ref-link" href="#{{ func_id.split('/') | last }}">{{ func_id }}</a></li>
+                    <li><a class="ref-link" href="#{{ func_id | replace('/', '-') }}">{{ func_id }}</a></li>
                     {% endfor %}
                 </ul>
             </div>

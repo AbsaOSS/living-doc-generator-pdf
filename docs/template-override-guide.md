@@ -25,8 +25,8 @@ Use a shipped template set; provide no custom templates.
 
 ```yaml
 with:
-  source-path: doc-source.json
-  document-type: user-stories
+  source-path: generator-ready.json
+  document-type: technical-project
 ```
 
 ### 2. Custom only (full override)
@@ -47,8 +47,8 @@ any partial you do not provide falls back to the built-in set.
 
 ```yaml
 with:
-  source-path: doc-source.json
-  document-type: user-stories
+  source-path: generator-ready.json
+  document-type: technical-project
   template-path: templates/my-overrides   # e.g. only cover.html.jinja
 ```
 
@@ -58,7 +58,7 @@ The simplest way to build a full custom pack is to copy a built-in set and edit
 it. The built-in sets live under `generator/templates/<document-type>/`:
 
 ```bash
-cp -r generator/templates/user-stories templates/my-pack
+cp -r generator/templates/technical-project templates/my-pack
 # edit templates/my-pack/*.jinja and styles.css
 ```
 
