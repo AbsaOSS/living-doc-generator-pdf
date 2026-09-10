@@ -80,18 +80,25 @@ def check_schema_version(schema_version: Optional[str]) -> list[CompatibilityWar
 
     Returns:
         A list of :class:`CompatibilityWarning` (empty when the version is in
-        range). Absent ``schema_version`` is treated as compatible and returns an
-        empty list.
+        range). Absent ``schema_version`` (``None``) is treated as compatible and
+        returns an empty list.
 
     Raises:
-        VersionCompatibilityError: When ``schema_version`` is present but does not
-            contain a parseable version token.
+        VersionCompatibilityError: When ``schema_version`` is present but blank,
+            or present but does not contain a parseable version token.
     """
-    if schema_version is None or not str(schema_version).strip():
+    if schema_version is None:
         logger.warning("No 'schema_version' in source; skipping version compatibility check.")
         return []
 
     raw = str(schema_version).strip()
+    if not raw:
+        raise VersionCompatibilityError(
+            "Invalid input: 'schema_version' is present but blank. "
+            f"Expected a semantic version in range {SUPPORTED_SCHEMA_RANGE} "
+            f"(for example 'generator-ready-v1.0.0')."
+        )
+
     match = _VERSION_TOKEN_RE.search(raw)
     if not match:
         raise VersionCompatibilityError(

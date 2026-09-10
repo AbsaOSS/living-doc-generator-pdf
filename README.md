@@ -156,9 +156,10 @@ against the supported range `>=1.0.0,<2.0.0`:
 - **In range** — rendered normally.
 - **Out of range** — a warning is logged and recorded in `pdf_report.json`
   (`warnings[]`, code `schema_version_out_of_range`); rendering still proceeds.
-- **Present but unparseable** — the run fails fast with exit code 1 and a single
-  `Invalid input: unparseable 'schema_version' ...` message.
-- **Absent** — a warning is logged and the check is skipped; the source renders as-is.
+- **Present but unparseable, or present but blank** — the run fails fast with exit
+  code 1 and a single `Invalid input: ... 'schema_version' ...` message.
+- **Absent** (key omitted entirely) — a warning is logged and the check is
+  skipped; the source renders as-is.
 
 The check lives in a dependency-free helper
 ([generator/utils/version_compat.py](./generator/utils/version_compat.py)) so

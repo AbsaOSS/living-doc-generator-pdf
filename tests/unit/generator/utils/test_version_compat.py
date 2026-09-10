@@ -7,9 +7,15 @@ from generator.utils.version_compat import (
 )
 
 
-@pytest.mark.parametrize("value", [None, "", "   ", "\t\n"])
-def test_absent_or_blank_returns_empty(value) -> None:
-    assert check_schema_version(value) == []
+def test_absent_returns_empty() -> None:
+    assert check_schema_version(None) == []
+
+
+@pytest.mark.parametrize("value", ["", "   ", "\t\n"])
+def test_blank_declared_raises_value_error(value) -> None:
+    with pytest.raises(VersionCompatibilityError) as exc_info:
+        check_schema_version(value)
+    assert "schema_version" in str(exc_info.value)
 
 
 @pytest.mark.parametrize(
@@ -30,7 +36,9 @@ def test_out_of_range_returns_single_warning(value) -> None:
     assert warning.context == value
 
 
-@pytest.mark.parametrize("value", ["generator-ready", "abc", "v-nope"])
+@pytest.mark.parametrize(
+    "value", ["generator-ready", "abc", "v-nope", "1.0.0-rc.1", "1.0.0+build.7"]
+)
 def test_unparseable_raises_value_error(value) -> None:
     with pytest.raises(VersionCompatibilityError) as exc_info:
         check_schema_version(value)
