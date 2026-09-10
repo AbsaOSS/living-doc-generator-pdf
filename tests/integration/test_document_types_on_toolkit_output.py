@@ -93,6 +93,29 @@ def test_document_type_renders_toolkit_output_end_to_end(
         assert marker in html
 
 
+@pytest.mark.parametrize(
+    "document_type, fixture_name",
+    [
+        ("technical-project", "generator_ready_json"),
+        ("ui-test-catalog", "ui_tests_json"),
+        ("coverage-matrix", "coverage_matrix_json"),
+    ],
+)
+def test_load_and_check_source_accepts_unmodified_producer_output(
+    request, document_type: str, fixture_name: str
+) -> None:
+    """The real entrypoint path (``_load_and_check_source``) accepts each shipped
+    producer artifact as-is — including ``ui-tests.json``, which carries no
+    top-level ``schema_version``."""
+    source: Path = request.getfixturevalue(fixture_name)
+    schema_path, envelope = main._resolve_schema_path(document_type, None)
+
+    data, warnings = main._load_and_check_source(str(source), schema_path, envelope, document_type)
+
+    assert data
+    assert warnings == []
+
+
 def test_ui_test_catalog_rejects_structurally_invalid_source(ui_tests_json: Path, tmp_path: Path) -> None:
     """A ``ui-tests.json`` missing a required top-level key fails default validation."""
     data = load_json(str(ui_tests_json))

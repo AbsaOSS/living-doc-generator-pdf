@@ -266,6 +266,50 @@ def test_resolve_schema_path_opt_in_without_document_type() -> None:
     assert main._resolve_schema_path(None, None) == (None, False)
 
 
+def test_resolve_schema_version_top_level_required_by_default() -> None:
+    """technical-project / coverage-matrix read a required top-level schema_version."""
+    for doc_type in ("technical-project", "coverage-matrix", None):
+        assert main._resolve_schema_version({"schema_version": "v1.0.0"}, doc_type) == ("v1.0.0", True)
+        raw, required = main._resolve_schema_version({}, doc_type)
+        assert raw is main.MISSING
+        assert required is True
+
+
+def test_resolve_schema_version_ui_test_catalog_reads_original_metadata() -> None:
+    """ui-test-catalog has no top-level version; it comes from metadata.original_metadata."""
+    data = {"metadata": {"original_metadata": {"schema_version": "1.0.0"}}}
+    assert main._resolve_schema_version(data, "ui-test-catalog") == ("1.0.0", False)
+
+
+def test_resolve_schema_version_top_level_wins_for_ui_test_catalog() -> None:
+    """When collector-gh grows a top-level schema_version it is used and checked,
+    even for a type that also has a nested fallback path."""
+    data = {
+        "schema_version": "ui-tests-v1.0.0",
+        "metadata": {"original_metadata": {"schema_version": "1.0.0"}},
+    }
+    assert main._resolve_schema_version(data, "ui-test-catalog") == ("ui-tests-v1.0.0", True)
+
+
+def test_resolve_schema_version_ui_test_catalog_absent_is_tolerated() -> None:
+    """A real ui-tests.json with no version anywhere is not a hard error."""
+    raw, required = main._resolve_schema_version({"metadata": {"original_metadata": {}}}, "ui-test-catalog")
+    assert raw is main.MISSING
+    assert required is False
+
+
+def test_load_and_check_source_ui_test_catalog_without_top_level_version(tmp_path) -> None:
+    """An unmodified ui-tests.json (no top-level schema_version) loads without exit code 1."""
+    source = tmp_path / "ui-tests.json"
+    source.write_text(
+        json.dumps({"items": [], "metadata": {"original_metadata": {}}, "warnings": []}),
+        encoding="utf-8",
+    )
+    data, warnings = main._load_and_check_source(str(source), None, False, "ui-test-catalog")
+    assert data["items"] == []
+    assert warnings == []
+
+
 def test_run_raw_collector_source_rejected_with_normalization_hint(base_env, mocker) -> None:
     """A raw collector file under the defaulted technical-project schema fails, pointing at normalization."""
     mocker.patch(

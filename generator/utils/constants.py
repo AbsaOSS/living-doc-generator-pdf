@@ -82,3 +82,23 @@ DOCUMENT_TYPE_DEFAULT_SCHEMA = {
     DOCUMENT_TYPE_UI_TEST_CATALOG: str(_SCHEMAS_DIR / UI_TESTS_SCHEMA_FILENAME),
     DOCUMENT_TYPE_COVERAGE_MATRIX: str(_SCHEMAS_DIR / COVERAGE_MATRIX_SCHEMA_FILENAME),
 }
+
+# Fallback ``schema_version`` location for collector/adapter contracts that do
+# not (yet) carry a top-level ``schema_version``. A top-level key, when present,
+# always wins and is always checked (see ``main._resolve_schema_version``); this
+# map only says where else to look, and that an entirely absent value is
+# tolerated for that type.
+#
+# Toolkit *final* artifacts (``generator-ready``, ``coverage-matrix``) require a
+# top-level ``schema_version`` and are absent here. Collector/adapter artifacts
+# (``ui-tests``, and likewise ``doc-issues`` / ``doc-source``) share the
+# ``{<entities>, metadata, warnings}`` shape and today put the version at
+# ``metadata.original_metadata.schema_version`` (collector-gh's
+# ``_get_file_metadata`` writes ``"1.0.0"``), with ``$schema_version`` on the
+# schema file itself. This entry is a bridge: once ``living-doc-collector-gh``
+# emits a top-level ``schema_version`` (and the vendored ui-tests schema requires
+# it), ``ui-test-catalog`` can be dropped from this map and it falls back to the
+# default required-top-level path with no other change.
+DOCUMENT_TYPE_SCHEMA_VERSION_PATH = {
+    DOCUMENT_TYPE_UI_TEST_CATALOG: ("metadata", "original_metadata", "schema_version"),
+}

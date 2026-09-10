@@ -252,19 +252,25 @@ with:
 
 #### Input schema-version compatibility
 
-Every source JSON must declare a top-level `schema_version` (for example
-`"generator-ready-v1.0.0"`) naming the input contract it targets. The action
-checks the embedded semantic version against the supported range
-`>=1.0.0,<2.0.0`, **before** any optional `schema-path` validation:
+Where the `schema_version` lives depends on the `document-type`:
+
+| `document-type` | `schema_version` location | Missing value |
+|-----------------|---------------------------|---------------|
+| `technical-project`, `coverage-matrix` | top-level `schema_version` (e.g. `"generator-ready-v1.0.0"`) | hard error (exit 1) |
+| `ui-test-catalog` | top-level `schema_version` if present, else `metadata.original_metadata.schema_version` (written by `living-doc-collector-gh`, e.g. `"1.0.0"`) | tolerated — the vendored `ui-tests-v1.0.0-schema.json` pins the contract, so structural validation is the compatibility check |
+
+When a `schema_version` is present, the action checks its embedded semantic
+version against the supported range `>=1.0.0,<2.0.0`, **before** any optional
+`schema-path` validation:
 
 - **In range** — rendered normally.
 - **Out of range** but parseable — a warning is logged and recorded in
   `pdf_report.json` (`warnings[]`, code `schema_version_out_of_range`); rendering
   still proceeds, so a newer canonical artifact is a best-effort render, not a
   hard stop.
-- **Absent, `null`, blank, or unparseable** — the run fails fast with exit code 1
-  and a single structured `Invalid input: ... 'schema_version' ...` message. A
-  document with no declared contract is never rendered.
+- **`null`, blank, or unparseable** (or absent, for the types that require it) —
+  the run fails fast with exit code 1 and a single structured
+  `Invalid input: ... 'schema_version' ...` message.
 
 Because the compatibility check runs first, a bundled `schema-path` that pins one
 exact `schema_version` cannot pre-empt the out-of-range warning path with an
@@ -346,7 +352,7 @@ See the full [template override guide](./docs/template-override-guide.md) for co
 
 **`Schema validation failed: ...`** — the source does not match the active schema. For `technical-project` this is `generator-ready-v1.0.0-schema.json` by default; if the file is raw collector output, run it through the [`living-doc-toolkit` `normalize-issues` step][toolkit-normalize] first. For other document types, fix the data or omit `schema-path` to skip validation.
 
-**`Invalid input: 'schema_version' is absent ...`** / **`... unparseable 'schema_version' ...`** — every source must declare a parseable `schema_version` (for example `generator-ready-v1.0.0`); add or fix the key. Omitting it is not allowed.
+**`Invalid input: 'schema_version' is absent ...`** / **`... unparseable 'schema_version' ...`** — every source must declare a parseable `schema_version` (for example `generator-ready-v1.0.0`); add or fix the key. `technical-project` and `coverage-matrix` require a top-level `schema_version`; `ui-test-catalog` does not (see [Input schema-version compatibility](#input-schema-version-compatibility)).
 
 **`Template error: Template 'main.html.jinja' not found`** — a custom `template-path` lacks `main.html.jinja`; add it or also set `document-type` for fallback.
 

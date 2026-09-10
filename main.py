@@ -28,6 +28,7 @@ Implements the processing pipeline:
 
 import logging
 from pathlib import Path
+from typing import Any
 
 from generator.action_inputs import ActionInputs
 from generator.models import build_meta
@@ -44,6 +45,7 @@ from generator.template_renderer import TemplateError, TemplateRenderer
 from generator.utils.constants import (
     DEFAULT_DOCUMENT_TITLES,
     DOCUMENT_TYPE_DEFAULT_SCHEMA,
+    DOCUMENT_TYPE_SCHEMA_VERSION_PATH,
     DOCUMENT_TYPE_TECHNICAL_PROJECT,
 )
 from generator.utils.gh_action import set_action_failed, set_action_output
@@ -127,11 +129,50 @@ def _reject_raw_collector_source(data: dict, source_path: str) -> None:
     raise SchemaValidationError(message)
 
 
+def _resolve_schema_version(data: dict, document_type: str | None) -> tuple[Any, bool]:
+    """Locate the source's declared ``schema_version``.
+
+    A top-level ``schema_version`` always wins and is always checked — this is
+    the shape of the toolkit *final* artifacts (``technical-project``'s
+    generator-ready document, ``coverage-matrix``) and the shape the ``ui-tests``
+    collector is expected to grow.
+
+    For a collector/adapter contract that does not yet carry one
+    (``ui-test-catalog`` today; see ``DOCUMENT_TYPE_SCHEMA_VERSION_PATH``) the
+    version is read from its nested fallback location
+    (``metadata.original_metadata.schema_version``) and an entirely absent value
+    is tolerated: the vendored schema pins the contract, so structural validation
+    is the compatibility check.
+
+    Returns the raw value (or :data:`MISSING`) and whether a missing value is a
+    hard error for this document type.
+    """
+    if isinstance(data, dict) and "schema_version" in data:
+        return data["schema_version"], True
+    path = DOCUMENT_TYPE_SCHEMA_VERSION_PATH.get(document_type or "")
+    if path is None:
+        return MISSING, True
+    node: Any = data
+    for key in path:
+        if not isinstance(node, dict) or key not in node:
+            return MISSING, False
+        node = node[key]
+    return node, False
+
+
 def _load_and_check_source(
-    source_path: str, schema_path: str | None, enforce_generator_ready_envelope: bool = False
+    source_path: str,
+    schema_path: str | None,
+    enforce_generator_ready_envelope: bool = False,
+    document_type: str | None = None,
 ) -> tuple[dict, list[dict]]:
     """Parse the source JSON, enforce ``schema_version`` compatibility, then run
     optional structural validation.
+
+    ``schema_version`` is read from the location its ``document-type`` uses
+    (:func:`_resolve_schema_version`). For a contract with no data-level version
+    (``ui-test-catalog``) an absent value is not an error: the vendored schema
+    pins the contract, so structural validation is the compatibility check.
 
     When ``schema_version`` parses but falls outside the supported range the
     document is rendered best-effort: structural validation is skipped entirely,
@@ -145,7 +186,16 @@ def _load_and_check_source(
     mismatch.
     """
     data = load_json(source_path)
-    warnings = check_schema_version(data.get("schema_version", MISSING))
+    raw_version, version_required = _resolve_schema_version(data, document_type)
+    if raw_version is MISSING and not version_required:
+        logger.info(
+            "Source declares no 'schema_version'; the '%s' contract pins its version in "
+            "the vendored schema, so structural validation is the compatibility check.",
+            document_type,
+        )
+        warnings: list = []
+    else:
+        warnings = check_schema_version(raw_version)
     report_warnings = [w.to_dict() for w in warnings]
     out_of_range = any(w.code == "schema_version_out_of_range" for w in warnings)
 
@@ -182,7 +232,9 @@ def run() -> None:
             document_type, ActionInputs.get_schema_path()
         )
         logger.info("Loading source JSON from %s", source_path)
-        data, report_warnings = _load_and_check_source(source_path, schema_path, enforce_generator_ready_envelope)
+        data, report_warnings = _load_and_check_source(
+            source_path, schema_path, enforce_generator_ready_envelope, document_type
+        )
 
         # Step 3: Resolve template set
         if template_path:
