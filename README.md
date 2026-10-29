@@ -151,9 +151,9 @@ jobs:
 > [the toolkit's `normalize-issues` cookbook][toolkit-normalize] and
 > [its GitHub Actions recipe][toolkit-recipe] for the authoritative commands.
 
-[toolkit-normalize]: https://github.com/AbsaOSS/living-doc-toolkit/blob/master/docs/cookbooks/normalize-issues.md
-[toolkit-recipe]: https://github.com/AbsaOSS/living-doc-toolkit/blob/master/docs/recipes/github-actions-normalize-issues.md
-[ecosystem-dataflow]: https://github.com/AbsaOSS/living-doc-toolkit/blob/master/docs/architecture.md
+[toolkit-normalize]: https://github.com/AbsaOSS/living-doc-toolkit/blob/b4cce52373f178bfb619bf375b55b7bdb605d70e/docs/cookbooks/normalize-issues.md
+[toolkit-recipe]: https://github.com/AbsaOSS/living-doc-toolkit/blob/b4cce52373f178bfb619bf375b55b7bdb605d70e/docs/recipes/github-actions-normalize-issues.md
+[ecosystem-dataflow]: https://github.com/AbsaOSS/living-doc-toolkit/blob/b4cce52373f178bfb619bf375b55b7bdb605d70e/docs/architecture.md
 
 For how `generator-ready.json` fits the wider ecosystem contract, see the
 [Living Documentation data-flow architecture][ecosystem-dataflow].
@@ -315,7 +315,7 @@ another in Azure DevOps. `coverage-matrix` cannot reconcile colliding IDs after
 the fact.
 
 See the toolkit's
-[`coverage-matrix` service — "Multi-source coverage matrices"](https://github.com/AbsaOSS/living-doc-toolkit/blob/master/packages/services/coverage_matrix/README.md#multi-source-coverage-matrices--merge-before-you-run)
+[`coverage-matrix` service — "Multi-source coverage matrices"](https://github.com/AbsaOSS/living-doc-toolkit/blob/b4cce52373f178bfb619bf375b55b7bdb605d70e/packages/services/coverage_matrix/README.md#multi-source-coverage-matrices--merge-before-you-run)
 and the
 [Living Doc Glossary — "ID uniqueness"](https://github.com/AbsaOSS/living-doc/blob/master/docs/guides/living-doc-glossary.md#id-uniqueness).
 

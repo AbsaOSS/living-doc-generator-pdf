@@ -65,9 +65,10 @@ jobs:
             echo "python_changed=false" >> "$GITHUB_OUTPUT"
           fi
 
+  # Always runs, and its steps skip when no Python changed: a job-level `if` would skip the matrix before it
+  # expands, so the required per-version checks would never report.
   static-analysis-and-tests:
     needs: detect
-    if: needs.detect.outputs.python_changed == 'true'
     runs-on: ubuntu-latest
     name: ${{ matrix.task.name }} (Python ${{ matrix.python-version }})
     strategy:
@@ -87,24 +88,29 @@ jobs:
             target: coverage
     steps:
       - name: Checkout repository
+        if: needs.detect.outputs.python_changed == 'true'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           persist-credentials: false
 
       - name: Set up Python
+        if: needs.detect.outputs.python_changed == 'true'
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
 
       - name: Install WeasyPrint system dependencies
+        if: needs.detect.outputs.python_changed == 'true'
         run: sudo apt-get update && sudo apt-get install -y libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev libcairo2
 
       - name: Install dependencies
+        if: needs.detect.outputs.python_changed == 'true'
         run: make install
 
       - name: Run ${{ matrix.task.name }}
+        if: needs.detect.outputs.python_changed == 'true'
         run: make ${{ matrix.task.target }}
 
   integration-tests:
