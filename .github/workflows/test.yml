@@ -103,7 +103,7 @@ jobs:
 
       - name: Install WeasyPrint system dependencies
         if: needs.detect.outputs.python_changed == 'true'
-        run: sudo apt-get update && sudo apt-get install -y libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev libcairo2
+        run: sudo apt-get update && sudo apt-get install -y libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 libffi-dev libcairo2
 
       - name: Install dependencies
         if: needs.detect.outputs.python_changed == 'true'
@@ -132,7 +132,7 @@ jobs:
           cache: 'pip'
 
       - name: Install WeasyPrint system dependencies
-        run: sudo apt-get update && sudo apt-get install -y libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf2.0-0 libffi-dev libcairo2
+        run: sudo apt-get update && sudo apt-get install -y libpango-1.0-0 libpangocairo-1.0-0 libgdk-pixbuf-2.0-0 libffi-dev libcairo2
 
       - name: Install dependencies
         run: make install

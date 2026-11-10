@@ -40,7 +40,7 @@ end-to-end `collector → toolkit normalize → generator-pdf` workflow.
 ### Prerequisites
 
 - **Python 3.10 or later.**
-- **System dependencies** (WeasyPrint): `libpango-1.0-0`, `libpangocairo-1.0-0`, `libgdk-pixbuf2.0-0`, `libffi-dev`, `libcairo2`. These are installed automatically by the action on Ubuntu runners.
+- **System dependencies** (WeasyPrint): `libpango-1.0-0`, `libpangocairo-1.0-0`, `libgdk-pixbuf-2.0-0`, `libffi-dev`, `libcairo2`. These are installed automatically by the action on Ubuntu runners.
 
 ### Adding the Action to Your Workflow
 
@@ -317,7 +317,7 @@ the fact.
 See the toolkit's
 [`coverage-matrix` service — "Multi-source coverage matrices"](https://github.com/AbsaOSS/living-doc-toolkit/blob/b4cce52373f178bfb619bf375b55b7bdb605d70e/packages/services/coverage_matrix/README.md#multi-source-coverage-matrices--merge-before-you-run)
 and the
-[Living Doc Glossary — "ID uniqueness"](https://github.com/AbsaOSS/living-doc/blob/master/docs/guides/living-doc-glossary.md#id-uniqueness).
+[Living Doc Glossary — "ID uniqueness"](https://github.com/AbsaOSS/living-doc/blob/master/docs/reference/glossary.md#id-uniqueness).
 
 ### Template customization
 
