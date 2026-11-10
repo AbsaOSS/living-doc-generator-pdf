@@ -18,6 +18,12 @@ permissions:
 jobs:
   check-pr:
     name: PR Requirements
+    # Dependabot cannot write the issue-number title, the template sections,
+    # a closing reference or a ticket branch, so its PRs would never pass.
+    # Check the PR author, not github.actor, so the skip holds when a person
+    # pushes to or labels Dependabot's branch. A job skipped by `if` reports
+    # success, so the required check still passes.
+    if: github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     steps:
       - name: Check PR requirements
