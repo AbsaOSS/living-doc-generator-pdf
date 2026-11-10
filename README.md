@@ -317,7 +317,7 @@ the fact.
 See the toolkit's
 [`coverage-matrix` service — "Multi-source coverage matrices"](https://github.com/AbsaOSS/living-doc-toolkit/blob/b4cce52373f178bfb619bf375b55b7bdb605d70e/packages/services/coverage_matrix/README.md#multi-source-coverage-matrices--merge-before-you-run)
 and the
-[Living Doc Glossary — "ID uniqueness"](https://github.com/AbsaOSS/living-doc/blob/master/docs/guides/living-doc-glossary.md#id-uniqueness).
+[Living Doc Glossary — "ID uniqueness"](https://github.com/AbsaOSS/living-doc/blob/master/docs/reference/glossary.md#id-uniqueness).
 
 ### Template customization
 
