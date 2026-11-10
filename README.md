@@ -40,7 +40,7 @@ end-to-end `collector → toolkit normalize → generator-pdf` workflow.
 ### Prerequisites
 
 - **Python 3.10 or later.**
-- **System dependencies** (WeasyPrint): `libpango-1.0-0`, `libpangocairo-1.0-0`, `libgdk-pixbuf2.0-0`, `libffi-dev`, `libcairo2`. These are installed automatically by the action on Ubuntu runners.
+- **System dependencies** (WeasyPrint): `libpango-1.0-0`, `libpangocairo-1.0-0`, `libgdk-pixbuf-2.0-0`, `libffi-dev`, `libcairo2`. These are installed automatically by the action on Ubuntu runners.
 
 ### Adding the Action to Your Workflow
 
