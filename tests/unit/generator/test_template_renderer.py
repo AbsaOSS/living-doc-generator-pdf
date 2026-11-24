@@ -94,3 +94,78 @@ def test_render_syntax_error_raises(tmp_path, meta) -> None:
 
     with pytest.raises(TemplateError, match="Syntax error"):
         renderer.render({}, meta)
+
+
+def _scenario(
+    scenario_id: str,
+    name: str,
+    tags: list[str],
+    ac_ids: list[str],
+    us_id: str | None = "US-1",
+    func_id: str | None = None,
+) -> dict:
+    """A ui-tests scenario, linked to US-1 by default, with the given tags and criteria."""
+    return {
+        "id": scenario_id,
+        "us_id": us_id,
+        "func_id": func_id,
+        "ac_ids": ac_ids,
+        "scenario_name": name,
+        "scenario_type": "Scenario",
+        "tags": tags,
+        "steps": [],
+        "source": {"org": "o", "repo": "r", "file": "features/a.feature", "line": 1},
+    }
+
+
+def _render_catalog_articles(meta, *scenarios: dict) -> dict[str, str]:
+    """Render the built-in ui-test-catalog and return each scenario's article HTML by scenario name."""
+    html = TemplateRenderer(document_type="ui-test-catalog").render({"items": list(scenarios)}, meta)
+    articles = html.split('<article class="scenario">')[1:]
+    return {name: next(a for a in articles if name in a) for name in (s["scenario_name"] for s in scenarios)}
+
+
+@pytest.mark.parametrize(
+    "us_id, func_id",
+    [("US-1", None), (None, "F-1"), (None, None)],
+    ids=["user-story", "functionality", "unlinked"],
+)
+def test_ui_test_catalog_skipped_scenario_lists_criteria_as_not_counted(meta, us_id, func_id) -> None:
+    """A scenario tagged @skip is marked Skipped and lists its criteria as not counted, keeping its tags,
+    in every catalog section."""
+    articles = _render_catalog_articles(
+        meta,
+        _scenario("t-1", "Skipped one", ["@smoke", "@skip"], ["US-1-1", "US-1-2"], us_id, func_id),
+        _scenario("t-2", "Active one", ["@smoke"], ["US-1-3"], us_id, func_id),
+    )
+
+    skipped = articles["Skipped one"]
+    assert 'class="scenario-skipped">Skipped</span>' in skipped
+    assert "Skipped, not counted:" in skipped
+    assert "Covers:" not in skipped
+    assert '<span class="ac-ref">US-1-1</span>' in skipped
+    assert '<span class="ac-ref">US-1-2</span>' in skipped
+    assert '<span class="tag">@skip</span>' in skipped
+
+    active = articles["Active one"]
+    assert "Covers:" in active
+    assert "scenario-skipped" not in active
+    assert "Skipped, not counted:" not in active
+
+
+@pytest.mark.parametrize("tag", ["@Skip", "@SKIP", "@skip-ci", "skip"])
+def test_ui_test_catalog_only_exact_skip_tag_marks_scenario(meta, tag: str) -> None:
+    """Only the exact, case-sensitive @skip tag marks a scenario skipped, as the toolkit counts it."""
+    article = _render_catalog_articles(meta, _scenario("t-1", "Look-alike", [tag], ["US-1-1"]))["Look-alike"]
+
+    assert "Covers:" in article
+    assert "scenario-skipped" not in article
+
+
+def test_ui_test_catalog_skipped_scenario_without_criteria_shows_only_marker(meta) -> None:
+    """A @skip scenario with no criteria gets the Skipped marker and no criteria line."""
+    article = _render_catalog_articles(meta, _scenario("t-1", "Bare skip", ["@skip"], []))["Bare skip"]
+
+    assert 'class="scenario-skipped">Skipped</span>' in article
+    assert "Skipped, not counted:" not in article
+    assert "Covers:" not in article

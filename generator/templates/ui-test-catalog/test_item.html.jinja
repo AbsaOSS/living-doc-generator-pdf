@@ -1,7 +1,12 @@
+{# Only the scenario's own exact `@skip` tag counts, as the toolkit's coverage-matrix `_is_skipped` matches it. #}
+{% set skipped = '@skip' in (scenario.tags or []) %}
 <article class="scenario">
     <h4 class="scenario-name">
         {{ scenario.scenario_name }}
         <span class="scenario-type type-{{ scenario.scenario_type | lower | replace(' ', '-') }}">{{ scenario.scenario_type }}</span>
+        {% if skipped %}
+        <span class="scenario-skipped">Skipped</span>
+        {% endif %}
     </h4>
     {% if scenario.tags %}
     <div class="scenario-tags">
@@ -12,7 +17,7 @@
     {% endif %}
     {% if scenario.ac_ids %}
     <div class="scenario-acs">
-        <span class="acs-label">Covers:</span>
+        <span class="acs-label">{{ 'Skipped, not counted:' if skipped else 'Covers:' }}</span>
         {% for ac in scenario.ac_ids %}
         <span class="ac-ref">{{ ac }}</span>
         {% endfor %}
