@@ -319,6 +319,13 @@ See the toolkit's
 and the
 [Living Doc Glossary — "ID uniqueness"](https://github.com/AbsaOSS/living-doc/blob/master/docs/reference/glossary.md#id-uniqueness).
 
+### `ui-test-catalog`: skipped scenarios
+
+Since [living-doc-toolkit#125](https://github.com/AbsaOSS/living-doc-toolkit/pull/125), a scenario tagged `@skip`
+covers nothing: the toolkit's `coverage-matrix` counts it nowhere. The catalog agrees. It marks the scenario
+**Skipped** and lists its criteria under **Skipped, not counted:** instead of **Covers:**. Only the scenario's own tag,
+exactly `@skip` (case-sensitive), counts; `@Skip` or `@skip-ci` renders like any other tag.
+
 ### Template customization
 
 Templates always have a single entry point: `main.html.jinja`. They receive two variables:
