@@ -166,6 +166,18 @@ body {
     color: #0c5460;
 }
 
+.scenario-skipped {
+    display: inline-block;
+    font-size: 8pt;
+    font-weight: bold;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 10px;
+    vertical-align: middle;
+    background: #fff3cd;
+    color: #856404;
+}
+
 .scenario-tags {
     display: flex;
     gap: 6px;
